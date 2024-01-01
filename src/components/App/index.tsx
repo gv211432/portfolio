@@ -13,31 +13,10 @@ import gaurav_logo_5 from "../../assets/img/gaurav_5.png";
 
 import Typewriter from "typewriter-effect";
 import { useState } from "react";
-import { faSun } from "@fortawesome/free-solid-svg-icons";
+import { faSun, faBook } from "@fortawesome/free-solid-svg-icons";
 import { faMoon } from "@fortawesome/free-regular-svg-icons";
 import { darkModeAtom } from "@/Atoms/globalAtoms";
 
-function Data() {
-  return (
-    <div className="block">
-      Lorem ipsum dolor sit amet, consectetur adipisicing elit. Quod enim beatae
-      quos similique quibusdam recusandae aut voluptate deleniti ipsam esse,
-      quasi id expedita, quo sapiente a doloribus officia odit. FSapiente! Lorem
-      ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quo. Dolore
-      ab nihil nemo nostrum repellat minima laudantium, numquam quod, voluptatem
-      quae eius natus soluta tempore facere id aliquam? Doloremque.
-      <br />
-      <br />
-      <br />
-      <br />
-      <br />
-      <br />
-      <br />
-      <br />
-      <br />
-    </div>
-  );
-}
 
 export default function App() {
   const [showPlace, setShowPlace] = useState(false);
@@ -113,7 +92,7 @@ export default function App() {
           </div>
 
           <motion.div className="flex justify-center">
-            <a href="https://www.linkedin.com/in/gaurav-vishwakarma-33469a225/">
+            <a href="https://www.linkedin.com/in/vishwakarmagaurav/">
               <FontAwesomeIcon
                 height={30}
                 className="m-2 h-8 text-gray-700 dark:text-white hover:scale-110 cursor-pointer"
@@ -125,6 +104,13 @@ export default function App() {
                 height={30}
                 className="m-2 h-8 text-gray-700 dark:text-white hover:scale-110 cursor-pointer"
                 icon={faGithub}
+              />
+            </a>
+            <a href="https://blogs.gauravvishwakarma.com">
+              <FontAwesomeIcon
+                height={30}
+                className="m-2 h-8 text-gray-700 dark:text-white hover:scale-110 cursor-pointer"
+                icon={faBook}
               />
             </a>
             <a href="https://twitter.com/formal_gaurav">

@@ -8,14 +8,23 @@ import { darkModeAtom } from "@/Atoms/globalAtoms";
 
 const inter = Inter({ subsets: ["latin"] });
 
-export const metadata = {
+const metadata = {
   title: "Gaurav Vishwakaram",
   description:
     "Portfolio of Gaurav Vishwakarma, Full Stack Developer from Mumbai",
   author: "Gaurav Vishwakarma",
   charset: "UTF-8",
   keywords:
-    "Fullstack Developer, web3 developer, typescript, HTML, CSS, JavaScript",
+    `Fullstack Developer, web3 developer, typescript, HTML, CSS, JavaScript, solidity, 
+    React, Next.js, Node.js, Express.js, MongoDB, PostgreSQL, MySQL, 
+    Ethereum, Web3, Solidity, Smart Contracts, Blockchain, Python, FastAPI, Django,
+    Eth-Brownie, Hardhat, Truffle, Ganache, Mocha, Chai, Jest, React Native, Expo,
+    TailwindCSS, MaterialUI, Styled-Components, Git, Github, Gitlab, Bitbucket,
+    AWS, Heroku, Vercel, Netlify, Firebase, Google Cloud, Digital Ocean,
+    Docker, Kubernetes, Linux, Ubuntu, Debian, Windows, MacOS, Raspberry Pi, Arduino,
+    C, C++, Rust, D3.js, Webpack, Babel, Gatsby, GraphQL, Apollo, Prisma,
+    Socket.io, WebSockets, REST API, OAuth, JWT, OAuth2, SAML, OpenID Connect
+    `
 };
 
 export default function RootLayout({
