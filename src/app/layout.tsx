@@ -23,7 +23,8 @@ const metadata = {
     AWS, Heroku, Vercel, Netlify, Firebase, Google Cloud, Digital Ocean,
     Docker, Kubernetes, Linux, Ubuntu, Debian, Windows, MacOS, Raspberry Pi, Arduino,
     C, C++, Rust, D3.js, Webpack, Babel, Gatsby, GraphQL, Apollo, Prisma,
-    Socket.io, WebSockets, REST API, OAuth, JWT, OAuth2, SAML, OpenID Connect
+    Socket.io, WebSockets, REST API, OAuth, JWT, OAuth2, SAML, OpenID Connect, Gemini,
+    OpenAI, ChatGPT, AI, Machine Learning, Deep Learning
     `
 };
 
