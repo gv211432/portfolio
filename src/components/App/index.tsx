@@ -1,20 +1,19 @@
 "use client";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { faArrowUp } from "@fortawesome/free-solid-svg-icons";
 import LeftStickyBar from "../sections/LeftStickyBar";
 import RightScrollSection from "../sections/ RightScrollSection";
-import SnakeLadderIntro from "../sections/SnakeLadderIntro";
 import SnakeLadderIntro2 from "../sections/SnakeLadderInto2";
 
 
 export default function App() {
-  const rightSectionRef = React.useRef<HTMLDivElement>(null);
+  const rightSectionRef = useRef<HTMLDivElement>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
 
   // Use a ref to avoid re-rendering too often
-  const scrollAnimFrame = React.useRef<number>();
+  const scrollAnimFrame = useRef<number>(null);
 
   const updateScrollProgress = () => {
     const container = rightSectionRef.current;
@@ -58,6 +57,7 @@ export default function App() {
 
   return (
     <>
+      {/* On pageload full screen animation */}
       <SnakeLadderIntro2 />
 
       <div className="relative h-full bg-white">
@@ -85,7 +85,7 @@ export default function App() {
 
         <div
           className="lg:flex min-h-[100vh] h-[97vh] lg:overflow-hidden
-      dark:bg-slate-950 text-slate-900 bg-white py-3">
+          dark:bg-slate-950 text-slate-900 bg-white py-3">
 
           <LeftStickyBar />
 
@@ -95,9 +95,10 @@ export default function App() {
             <button
               onClick={handleScrollToTop}
               className="fixed bottom-12 right-12 z-[9999] bg-primaryDark text-white p-3 w-[48px] 
-            rounded-full shadow-lg hover:scale-105 transition"
+              rounded-full shadow-lg hover:scale-105 transition"
               aria-label="Scroll to top"
             >
+              {/* @ts-ignore */}
               <FontAwesomeIcon icon={faArrowUp} />
             </button>
           )}

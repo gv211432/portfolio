@@ -1,0 +1,13 @@
+.animate-block {
+  animation: block 5s linear infinite;
+}
+
+@keyframes block {
+  0% {
+    transform: translateX(8rem) translateY(-13rem) rotate(45deg);
+  }
+
+  100% {
+    transform: translateX(-18rem) translateY(13rem) rotate(45deg);
+  }
+}

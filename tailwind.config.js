@@ -30,7 +30,7 @@ module.exports = {
           "0%": { transform: "translateX(0%)" },
           "100%": { transform: "translateX(-50%)" },
         },
-        fadeIn: {
+        "fade-in": {
           '0%': { opacity: '0' },
           '100%': { opacity: '1' },
         },

@@ -29,9 +29,10 @@ export default function LeftStickyBar() {
       {/* Biometrics + Others info */}
       <div
         className="bg-white h-[98vh] lg:w-[35rem] border-[1px] border-gray-400
-        px-2 mx-4 rounded-2xl relative  max-[250px]:hidden
+         mx-4 rounded-2xl relative  max-[250px]:hidden
         dark:bg-slate-950 dark:border-slate-400 dark:text-slate-200 md:mx-20 lg:mx-4 ">
         <br />
+
         <motion.div
           className=""
         // animate={{
@@ -57,6 +58,7 @@ export default function LeftStickyBar() {
               Full Stack Developer
             </span>
           </div>
+
           <div className="flex justify-between h-[40vh]">
             <motion.img
               animate={{
@@ -71,6 +73,7 @@ export default function LeftStickyBar() {
               className={`h-[14rem] rounded-3xl mx-auto my-auto`}
             />
           </div>
+
           <div
             className="text-center max-[450px]:text-[1.3rem] text-[1.8rem] p-1 max-[345px]:text-sm
             font-light"
@@ -83,6 +86,7 @@ export default function LeftStickyBar() {
             <br />
             Based in Mumbai, India
           </div>
+
           <div className="text-center text-[1rem]">
             © 2025 Gaurav. All Rights Reserved
           </div>
@@ -128,7 +132,7 @@ export default function LeftStickyBar() {
 
           <DarkModeToggleButton />
 
-          <div className="relative -ml-2 w-[104%] overflow-hidden h-[2rem] my-[5rem] bg-gradient-to-r from-primaryGray to-slate-800">
+          <div className="relative  overflow-hidden h-[2rem] my-[5rem] bg-gradient-to-r from-primaryGray to-slate-800">
 
             <div className="absolute  whitespace-nowrap animate-marquee text-white text-[0.9rem] font-semibold flex">
               {skills.map((skill, index) => (

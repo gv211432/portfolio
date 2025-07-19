@@ -6,7 +6,7 @@ import Typewriter from "typewriter-effect";
 export default function RightScrollSection({
   rightSectionRef,
 }: {
-  rightSectionRef: React.RefObject<HTMLDivElement>;
+  rightSectionRef: React.RefObject<HTMLDivElement | null>;
 }) {
   return (
     <div
@@ -24,7 +24,7 @@ export default function RightScrollSection({
             <Typewriter
               onInit={(typewriter) => {
                 typewriter
-                  .pauseFor(2000)
+                  .pauseFor(3000)
                   .typeString("Welcome")
                   .pauseFor(2000)
                   .deleteChars(7)

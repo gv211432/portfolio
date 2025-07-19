@@ -5,13 +5,14 @@ import { useAtom } from "jotai";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRef, useEffect } from "react";
 import { darkModeAtom } from "@/Atoms/globalAtoms";
+import "@/index.css";
 
 const inter = Inter({ subsets: ["latin"] });
 
 const metadata = {
   title: "Gaurav Vishwakaram",
   description:
-    "Portfolio of Gaurav Vishwakarma, Full Stack Developer from Mumbai",
+    "Gaurav Vishwakarma, a Full Stack Developer from Mumbai works on ReactJS, NodeJS and Blockchain Technologies.",
   author: "Gaurav Vishwakarma",
   charset: "UTF-8",
   keywords:
