@@ -34,7 +34,10 @@ const Card = ({ title, subtitle, description, icon, link }: CardProps) => (
       <div className="text-xl text-[#444A6E]">{icon}</div>
       <div>
         {link ?
-          <a href={link} className="" target="_blank" style={{ textDecoration: "none" }}>
+          <a href={link} className=""
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ textDecoration: "none" }}>
             <h3 className="text-lg font-semibold dark:text-white text-gray-900">
               {title}
             </h3>
@@ -45,6 +48,42 @@ const Card = ({ title, subtitle, description, icon, link }: CardProps) => (
         <p className="text-sm text-gray-500 dark:text-slate-400">{subtitle}</p>
       </div>
     </div>
+    <p className="text-sm text-gray-600 dark:text-slate-300">
+      {description || "Description goes here..."}
+    </p>
+  </motion.div>
+);
+
+
+const Card2 = ({ title, subtitle, description, icon, link }: CardProps) => (
+  <motion.div
+    className="rounded-xl border-[1px] border-gray-300 dark:border-slate-700 dark:bg-slate-900 shadow-sm hover:shadow-xl transition-all p-5"
+    whileHover={{ scale: 1.03 }}
+  >
+    <div className="flex items-start justify-between mb-3">
+      <div className="flex items-center gap-3">
+        <div className="text-xl text-[#444A6E]">{icon}</div>
+        <div>
+          <h3 className="text-lg font-semibold dark:text-white text-gray-900">
+            {title}
+          </h3>
+          <p className="text-sm text-gray-500 dark:text-slate-400">{subtitle}</p>
+        </div>
+      </div>
+
+      {/* new-tab opener */}
+      {link && (
+        <button
+          type="button"
+          title="Open in new tab"
+          onClick={() => window.open(link, "_blank", "noopener,noreferrer")}
+          className="text-xs text-blue-500 hover:text-blue-700 dark:text-blue-400"
+        >
+          ↗
+        </button>
+      )}
+    </div>
+
     <p className="text-sm text-gray-600 dark:text-slate-300">
       {description || "Description goes here..."}
     </p>
@@ -63,17 +102,46 @@ const myBio: CardProps[] = [
 const myPapers: CardProps[] = [
   {
     title: "Skin Cancer Detection using AI",
-    subtitle: "Academic Research",
-    description: "Developed a machine learning model to detect skin cancer using image classification techniques.",
+    subtitle: "Melanoma Classification via CNNs",
+    description: "Reviewed deep-learning techniques (CNNs & transfer learning) to boost early melanoma diagnosis accuracy.",
     icon: <MdArticle />,
-    link: "",
+    link: "https://www.irjmets.com/uploadedfiles/paper//issue_6_june_2024/59339/final/fin_irjmets1718969606.pdf"
+  },
+  {
+    title: "Tackling Racism and Negativity using AI",
+    subtitle: "Generative AI Content Moderation",
+    description: "Built a FastAPI + Gemini-1.5 service that flags racist or toxic comments with 92 % accuracy.",
+    icon: <MdArticle />,
+    link: "https://www.irjmets.com/uploadedfiles/paper//issue_11_november_2024/63333/final/fin_irjmets1732825335.pdf"
+  },
+  {
+    title: "Transformative Potential of AR",
+    subtitle: "AR/VR/CV in Industrial Training",
+    description: "Evaluated how AR, VR and Computer Vision cut training time, boost retention and deliver measurable ROI.",
+    icon: <MdArticle />,
+    link: "https://www.irjmets.com/upload_newfiles/irjmets70600042549/paper_file/irjmets70600042549.pdf"
+  },
+  {
+    title: "AI in Performance Management",
+    subtitle: "Real-Time HR Analytics",
+    description: "Showed how AI-driven feedback loops, predictive analytics and VR/AR tools modernize workforce reviews.",
+    icon: <MdArticle />,
+    link: "https://www.irjmets.com/upload_newfiles/irjmets70600044325/paper_file/irjmets70600044325.pdf"
   },
   {
     title: "Distributed Micro Computing",
-    subtitle: "Computer Networks & Parallelism",
+    subtitle: "Clustered Microservices",
     description: "Explored decentralized computing models and task distribution using cluster-based microservices.",
     icon: <MdArticle />,
-  }
+    link: ""
+  },
+  {
+    title: "Detecting Text Sentiments in DBs",
+    subtitle: "Semantic Duplicate Detection",
+    description: "Designed a FastAPI + PostgreSQL pipeline that uses sentence embeddings to eliminate near-duplicate text in real time.",
+    icon: <MdArticle />,
+    link: "https://www.irjmets.com/uploadedfiles/paper//issue_11_november_2024/63431/final/fin_irjmets1732730207.pdf"
+  },
 ];
 
 const myExperiences: CardProps[] = [
