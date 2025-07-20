@@ -4,8 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "bun x next dev",
-    "build": "bun x next build",
-    "start": "bun x serve@latest out",
+    "build": "next build",
+    "start": "serve@latest out",
+    "build:bun": "bun x next build",
+    "start:bun": "bun x serve@latest out",
     "lint": "bun x next lint"
   },
   "dependencies": {
