@@ -2,6 +2,7 @@
 import React from 'react';
 import PortfolioSections from './Graphics';
 import Typewriter from "typewriter-effect";
+import Footer from '../Footer';
 
 export default function RightScrollSection({
   rightSectionRef,
@@ -65,6 +66,9 @@ export default function RightScrollSection({
       </div>
 
       <PortfolioSections />
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }

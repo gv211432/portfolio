@@ -13,9 +13,10 @@ import {
   MdBusinessCenter,
 } from "react-icons/md";
 import { Cert, CertCarousel } from "../inputs/CertCarousel";
+import { CardProps } from "../../types/section";
 
-const SectionWrapper = ({ title, icon, children }: any) => (
-  <section className="px-4 py-8 lg:px-12">
+const SectionWrapper = ({ title, icon, children, ...rest }: any) => (
+  <section className="px-4 py-8 lg:px-12" {...rest}>
     <div className="flex items-center gap-3 mb-6">
       <div className="text-2xl text-[#444A6E]">{icon}</div>
       <h2 className="text-xl font-bold dark:text-white text-gray-800">{title}</h2>
@@ -24,7 +25,7 @@ const SectionWrapper = ({ title, icon, children }: any) => (
   </section>
 );
 
-const Card = ({ title, subtitle, description, icon }: any) => (
+const Card = ({ title, subtitle, description, icon, link }: CardProps) => (
   <motion.div
     className="rounded-xl border-[1px] border-gray-300 dark:border-slate-700 dark:bg-slate-900 shadow-sm hover:shadow-xl transition-all p-5"
     whileHover={{ scale: 1.03 }}
@@ -32,9 +33,15 @@ const Card = ({ title, subtitle, description, icon }: any) => (
     <div className="flex items-center gap-3 mb-3">
       <div className="text-xl text-[#444A6E]">{icon}</div>
       <div>
-        <h3 className="text-lg font-semibold dark:text-white text-gray-900">
-          {title}
-        </h3>
+        {link ?
+          <a href={link} className="" target="_blank" style={{ textDecoration: "none" }}>
+            <h3 className="text-lg font-semibold dark:text-white text-gray-900">
+              {title}
+            </h3>
+          </a>
+          : <h3 className="text-lg font-semibold dark:text-white text-gray-900">
+            {title}
+          </h3>}
         <p className="text-sm text-gray-500 dark:text-slate-400">{subtitle}</p>
       </div>
     </div>
@@ -44,6 +51,87 @@ const Card = ({ title, subtitle, description, icon }: any) => (
   </motion.div>
 );
 
+const myBio: CardProps[] = [
+  {
+    title: "Introduction",
+    subtitle: "Who am I?",
+    description: "A relentless full-stack and Web3 developer from Mumbai, part hustler, part degen, driven by innovation, late-night builds, and the pursuit of scalable, cutting-edge solutions.",
+    icon: <MdPerson />,
+  }
+];
+
+const myPapers: CardProps[] = [
+  {
+    title: "Skin Cancer Detection using AI",
+    subtitle: "Academic Research",
+    description: "Developed a machine learning model to detect skin cancer using image classification techniques.",
+    icon: <MdArticle />,
+    link: "",
+  },
+  {
+    title: "Distributed Micro Computing",
+    subtitle: "Computer Networks & Parallelism",
+    description: "Explored decentralized computing models and task distribution using cluster-based microservices.",
+    icon: <MdArticle />,
+  }
+];
+
+const myExperiences: CardProps[] = [
+  {
+    title: "Full Stack Engineer",
+    subtitle: "Motilal Oswal Financial Services",
+    description: "Contributed to internal tools and dashboards used for financial reporting and investment tracking.",
+    icon: <FaBriefcase />,
+  },
+  {
+    title: "Full Stack Web3 Developer",
+    subtitle: "Nurture Labs",
+    description: "Led dApp architecture and smart contract development using Solidity, Hardhat, and Next.js.",
+    icon: <FaBriefcase />,
+  },
+  {
+    title: "Full Stack Developer",
+    subtitle: "Oyesters Trainings",
+    description: "Built scalable learning platforms and student dashboards using MERN stack.",
+    icon: <FaBriefcase />,
+  },
+  {
+    title: "Tech Associate",
+    subtitle: "Inox Leisure Ltd.",
+    description: "Worked on cinema-tech integrations, including payment APIs and mobile app enhancements.",
+    icon: <FaBriefcase />,
+  }
+];
+
+const myFreelancing: CardProps[] = [
+  {
+    title: "Founder",
+    subtitle: "Phrase.Trade | Personal Project",
+    description: "Bootstrapped a complete Web3 marketplace with zero external funding; handled end-to-end product dev.",
+    icon: <MdBusinessCenter />,
+  },
+  {
+    title: "Core Dev",
+    subtitle: "Algora Call Bot | Algora Labs",
+    description: "Engineered backend infra and trading logic for a profitable meme trading AI bot.",
+    icon: <MdBusinessCenter />,
+  },
+  {
+    title: "Tech Lead",
+    subtitle: "Rewardroot | Opinosoft",
+    description: "Oversaw product design, architecture, and scalability decisions for reward-based engagement platform.",
+    icon: <MdBusinessCenter />,
+  }
+];
+
+const myEducation: CardProps[] = [
+  {
+    title: "MS in Information Technology",
+    subtitle: "University of Mumbai",
+    description: "Graduated with deep focus in distributed systems, Web development, and artificial intelligence.",
+    icon: <FaGraduationCap />,
+  }
+];
 
 const myCerts: Cert[] = [
   {
@@ -138,119 +226,119 @@ const myCerts: Cert[] = [
   },
 ];
 
+const myProjects: CardProps[] = [
+  {
+    title: "Phrase.Trade",
+    subtitle: "Web3 NFT Dapp",
+    description: "Built a text-based NFT marketplace on Arbitrum using React, Express, and Solidity.",
+    icon: <FaCode />,
+    link: "https://www.phrase.trade",
+  },
+  {
+    title: "Rewardroot",
+    subtitle: "Survey Platform",
+    description: "Manage, schedule, and post content across multiple social media platforms with ease.",
+    icon: <FaCode />,
+    link: "https://www.rewardroot.com",
+  },
+  {
+    title: "Social Bee",
+    subtitle: "Social Media Manager",
+    description: "Manage, schedule, and post content across multiple social media platforms with ease.",
+    icon: <FaCode />,
+    link: "https://www.socialbee.social",
+  },
+  {
+    title: "Algora Call Bot",
+    subtitle: "AI Call Automation",
+    description: "AI-powered call bot providing precise buy signals for memecoins, built for degens by degens",
+    icon: <FaCode />,
+    link: "https://www.algoracallbot.com",
+  }
+];
+
 export default function PortfolioSections() {
   return (
     <div className="pb-24 dark:bg-slate-950">
-      <SectionWrapper title="Bio" icon={<MdPerson />}>
-        <Card
-          title="Introduction"
-          subtitle="Who am I?"
-          description="A relentless full-stack and Web3 developer from Mumbai — part hustler, part degen — driven by innovation, late-night builds, and the pursuit of scalable, cutting-edge solutions."
-          icon={<MdPerson />}
-        />
+      <SectionWrapper id="about" title="Bio" icon={<MdPerson />}>
+        {myBio.map((item, i) => (
+          <Card
+            key={i}
+            title={item.title}
+            subtitle={item.subtitle}
+            description={item.description}
+            icon={item.icon}
+            link={item.link}
+          />
+        ))}
       </SectionWrapper>
 
-      <SectionWrapper title="Projects" icon={<FaCode />}>
-        <Card
-          title="Phrase.Trade"
-          subtitle="Web3 NFT Dapp"
-          description="Built a text-based NFT marketplace on Arbitrum using React, Express, and Solidity."
-          icon={<FaCode />}
-        />
-        <Card
-          title="Rewardroot"
-          subtitle="Survey Platform"
-          description="A mobile-first rewards platform where users earn by completing surveys, watching videos, and engaging with brands."
-          icon={<FaCode />}
-        />
-        <Card
-          title="Social Bee"
-          subtitle="Social Media Manager"
-          description="Manage, schedule, and post content across multiple social media platforms with ease."
-          icon={<FaCode />}
-        />
-        <Card
-          title="Algora Call Bot"
-          subtitle="AI Call Automation"
-          description="AI-powered call bot providing precise buy signals for memecoins — built for degens by degens."
-          icon={<FaCode />}
-        />
+      <SectionWrapper id="projects" title="Projects" icon={<FaCode />}>
+        {myProjects.map((p, i) => (
+          <Card
+            key={i}
+            title={p.title}
+            subtitle={p.subtitle}
+            description={p.description}
+            icon={p.icon}
+            link={p.link}
+          />
+        ))}
       </SectionWrapper>
 
-      <SectionWrapper title="Papers" icon={<MdArticle />}>
-        <Card
-          title="Skin Cancer Detection using AI"
-          subtitle="Academic Research"
-          description="Developed a machine learning model to detect skin cancer using image classification techniques."
-          icon={<MdArticle />}
-        />
-        <Card
-          title="Distributed Micro Computing"
-          subtitle="Computer Networks & Parallelism"
-          description="Explored decentralized computing models and task distribution using cluster-based microservices."
-          icon={<MdArticle />}
-        />
+      <SectionWrapper id="papers" title="Papers" icon={<MdArticle />}>
+        {myPapers.map((paper, i) => (
+          <Card
+            key={i}
+            title={paper.title}
+            subtitle={paper.subtitle}
+            description={paper.description}
+            icon={paper.icon}
+            link={paper.link}
+          />
+        ))}
       </SectionWrapper>
 
       <SectionWrapper title="Experiences" icon={<FaBriefcase />}>
-        <Card
-          title="Full Stack Engineer"
-          subtitle="Motilal Oswal Financial Services"
-          description="Contributed to internal tools and dashboards used for financial reporting and investment tracking."
-          icon={<FaBriefcase />}
-        />
-        <Card
-          title="Full Stack Web3 Developer"
-          subtitle="Nurture Labs"
-          description="Led dApp architecture and smart contract development using Solidity, Hardhat, and Next.js."
-          icon={<FaBriefcase />}
-        />
-        <Card
-          title="Full Stack Developer"
-          subtitle="Oyesters Trainings"
-          description="Built scalable learning platforms and student dashboards using MERN stack."
-          icon={<FaBriefcase />}
-        />
-        <Card
-          title="Tech Associate"
-          subtitle="Inox Leisure Ltd."
-          description="Worked on cinema-tech integrations, including payment APIs and mobile app enhancements."
-          icon={<FaBriefcase />}
-        />
+        {myExperiences.map((exp, i) => (
+          <Card
+            key={i}
+            title={exp.title}
+            subtitle={exp.subtitle}
+            description={exp.description}
+            icon={exp.icon}
+            link={exp.link}
+          />
+        ))}
       </SectionWrapper>
 
       <SectionWrapper title="Freelancing" icon={<MdBusinessCenter />}>
-        <Card
-          title="Founder"
-          subtitle="Phrase.Trade | Personal Project"
-          description="Bootstrapped a complete Web3 marketplace with zero external funding; handled end-to-end product dev."
-          icon={<MdBusinessCenter />}
-        />
-        <Card
-          title="Co-Founder"
-          subtitle="Algora Call Bot | Algora Labs"
-          description="Engineered backend infra and trading logic for a profitable meme trading AI bot."
-          icon={<MdBusinessCenter />}
-        />
-        <Card
-          title="Tech Lead"
-          subtitle="Rewardroot | Opinosoft"
-          description="Oversaw product design, architecture, and scalability decisions for reward-based engagement platform."
-          icon={<MdBusinessCenter />}
-        />
+        {myFreelancing.map((item, i) => (
+          <Card
+            key={i}
+            title={item.title}
+            subtitle={item.subtitle}
+            description={item.description}
+            icon={item.icon}
+            link={item.link}
+          />
+        ))}
       </SectionWrapper>
 
       <SectionWrapper title="Education" icon={<FaGraduationCap />}>
-        <Card
-          title="MS in Information Technology"
-          subtitle="University of Mumbai"
-          description="Graduated with deep focus in distributed systems, Web development, and artificial intelligence."
-          icon={<FaGraduationCap />}
-        />
+        {myEducation.map((edu, i) => (
+          <Card
+            key={i}
+            title={edu.title}
+            subtitle={edu.subtitle}
+            description={edu.description}
+            icon={edu.icon}
+            link={edu.link}
+          />
+        ))}
       </SectionWrapper>
 
       <CertCarousel certs={myCerts} />
-
     </div>
   );
 }

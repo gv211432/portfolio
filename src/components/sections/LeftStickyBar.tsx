@@ -15,11 +15,20 @@ import DarkModeToggleButton from "../inputs/DarkModeToggleButton";
 
 export default function LeftStickyBar() {
   const skills = [
+    "D3.js",
+    "MongoDB",
+    "Postgres",
+    "Python",
+    "FastAPI",
+    "Prisma",
     "Node.js",
-    "React",
+    "React.js",
     "Next.js",
+    "Nest.js",
     "Solidity",
+    "Rust Lang",
     "Express.js",
+    "Solana",
     "Redhat Certified",
     "Google Certified Python Dev",
   ];
@@ -106,7 +115,7 @@ export default function LeftStickyBar() {
                 icon={faGithub}
               />
             </a>
-            <a href="https://blogs.gauravvishwakarma.com">
+            <a href="https://blogs.gaurav.one">
               <FontAwesomeIcon
                 height={30}
                 className="m-2 h-8 text-gray-700 dark:text-white hover:scale-110 cursor-pointer"
@@ -161,10 +170,10 @@ export default function LeftStickyBar() {
 
 
           <center className="absolute w-full bottom-8 text-[1.5rem]">
-            <a href="mailto:hi@gauravvishwakarma.com;gaurav.ram@hotmail.com">
+            <a href="mailto:hi@gaurav.one;gaurav.ram@hotmail.com">
               <div
                 className="border-[1px]  border-gray-500 mx-8 rounded-lg hover:bg-primaryGray
-              hover:border-0 dark:hover:text-slate-950 cursor-pointer hover:text-slate-100
+              hover:border-0 dark:hover:text-white cursor-pointer hover:text-slate-100
               "
               >
                 Hire Me
