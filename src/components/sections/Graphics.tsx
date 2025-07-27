@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useState } from "react";
 import {
   FaCode,
   FaBriefcase,
@@ -28,7 +29,15 @@ export const HooksImages = ({ isFirst = false }) => {
   </div>;
 };
 
-const SectionWrapper = ({ title, icon, children, isFirst = false, ...rest }: any) => (
+interface SectionWrapperProps {
+  title: string;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+  isFirst?: boolean;
+  [key: string]: any;
+}
+
+const SectionWrapper = ({ title, icon, children, isFirst = false, ...rest }: SectionWrapperProps) => (
   <section
     className={`dark:bg-slate-950 border-[1px] border-gray-400 shadow-lg my-4 rounded-[16px] px-4 py-16 ${isFirst ? 'lg:pt-8' : ''} lg:px-12`}
     {...rest}>
@@ -42,6 +51,43 @@ const SectionWrapper = ({ title, icon, children, isFirst = false, ...rest }: any
     <div className="grid xl:grid-cols-3 sm:grid-cols-2 gap-6">{children}</div>
   </section>
 );
+
+interface ExpandableSectionProps {
+  items: CardProps[];
+  renderItem: (item: CardProps, index: number) => React.ReactNode;
+  initialVisibleCount?: number;
+}
+
+const ExpandableSection = ({ items, renderItem, initialVisibleCount = 2 }: ExpandableSectionProps) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const hasMoreItems = items.length > initialVisibleCount;
+  const visibleItems = isExpanded ? items : items.slice(0, initialVisibleCount);
+
+  return (
+    <>
+      {visibleItems.map((item, index) => renderItem(item, index))}
+
+      {hasMoreItems && (
+        <div className="xl:col-span-3 sm:col-span-2 flex justify-center mt-4">
+          <motion.button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="px-6 py-2 bg-[#444A6E] text-white rounded-lg hover:bg-[#333A5E] transition-colors duration-200 flex items-center gap-2 shadow-md hover:shadow-lg"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <span>{isExpanded ? 'Show Less' : `Show More (${items.length - initialVisibleCount} more)`}</span>
+            <motion.span
+              animate={{ rotate: isExpanded ? 180 : 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              ▼
+            </motion.span>
+          </motion.button>
+        </div>
+      )}
+    </>
+  );
+};
 
 const Card = ({ title, subtitle, description, icon, link }: CardProps) => (
   <motion.div
@@ -386,16 +432,19 @@ export default function PortfolioSections() {
       </SectionWrapper>
 
       <SectionWrapper id="papers" title="Papers" icon={<MdArticle />}>
-        {myPapers.map((paper, i) => (
-          <Card
-            key={i}
-            title={paper.title}
-            subtitle={paper.subtitle}
-            description={paper.description}
-            icon={paper.icon}
-            link={paper.link}
-          />
-        ))}
+        <ExpandableSection
+          items={myPapers}
+          renderItem={(paper, i) => (
+            <Card
+              key={i}
+              title={paper.title}
+              subtitle={paper.subtitle}
+              description={paper.description}
+              icon={paper.icon}
+              link={paper.link}
+            />
+          )}
+        />
       </SectionWrapper>
 
       <SectionWrapper title="Freelancing" icon={<MdBusinessCenter />}>
