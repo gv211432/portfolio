@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import useEmblaCarousel from "embla-carousel-react";
+import Autoplay from "embla-carousel-autoplay";
 import { FaCertificate } from "react-icons/fa";
 import { motion } from "framer-motion";
 import axios from "axios";
@@ -54,9 +55,14 @@ const Card = ({ title, subtitle, description, link, image, staticImage }: Enrich
 );
 
 export const CertCarousel: React.FC<CertCarouselProps> = ({ certs }) => {
-  const [emblaRef] = useEmblaCarousel({ loop: true });
+  const [emblaRef] = useEmblaCarousel(
+    {
+      loop: true,
+      skipSnaps: false,
+    },
+    [Autoplay({ delay: 3000, stopOnInteraction: false, stopOnMouseEnter: true })]
+  );
   const [enrichedCerts, setEnrichedCerts] = useState<EnrichedCert[]>([]);
-
   useEffect(() => {
     const fetchPreviews = async () => {
       const previews = await Promise.all(
@@ -87,7 +93,7 @@ export const CertCarousel: React.FC<CertCarouselProps> = ({ certs }) => {
 
   return (
     <section className="relative dark:bg-slate-950 border-[1px] border-gray-400 shadow-lg my-4 rounded-[16px] px-4 py-16 lg:px-12">
-      <HooksImages showHook={true} />
+      <HooksImages />
 
       <div className="flex items-center gap-3 mb-6">
         <div className="text-2xl text-[#444A6E]">

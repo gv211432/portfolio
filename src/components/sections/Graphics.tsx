@@ -14,26 +14,26 @@ import { CardProps } from "../../types/section";
 import hook from "../../assets/img/conn.webp";
 import Image from "next/image";
 
-export const HooksImages = ({ showHook = true }) => {
+export const HooksImages = ({ isFirst = false }) => {
   return <div className="relative w-full">
     {/* Book Hooks */}
-    {showHook && <div className="absolute flex  px-16 justify-between w-full -mt-[6.5rem]">
+    <div className={`absolute flex  ${isFirst ? "lg:hidden" : ""}  px-16 justify-between w-full -mt-[6.5rem]`}>
       <Image src={hook} width={30} height={40} alt="hook" />
       <Image src={hook} width={30} height={40} alt="hook" />
-    </div>}
-    {showHook && <div className="absolute flex  px-12 justify-between w-full -mt-[6.5rem]">
+    </div>
+    <div className={`absolute flex ${isFirst ? "lg:hidden" : ""}  px-12 justify-between w-full -mt-[6.5rem]`}>
       <Image src={hook} width={30} height={40} alt="hook" />
       <Image src={hook} width={30} height={40} alt="hook" />
-    </div>}
+    </div>
   </div>;
 };
 
-const SectionWrapper = ({ title, icon, children, showHook = true, ...rest }: any) => (
+const SectionWrapper = ({ title, icon, children, isFirst = false, ...rest }: any) => (
   <section
-    className={"dark:bg-slate-950 border-[1px] border-gray-400 shadow-lg my-4 rounded-[16px] px-4 py-16 lg:px-12"}
+    className={`dark:bg-slate-950 border-[1px] border-gray-400 shadow-lg my-4 rounded-[16px] px-4 py-16 ${isFirst ? 'lg:pt-8' : ''} lg:px-12`}
     {...rest}>
 
-    <HooksImages showHook={showHook} />
+    <HooksImages isFirst={isFirst} />
 
     <div className="flex items-center gap-3 mb-6">
       <div className="text-2xl text-[#444A6E]">{icon}</div>
@@ -346,7 +346,7 @@ const myProjects: CardProps[] = [
 export default function PortfolioSections() {
   return (
     <div className="pb-24 px-4 md:px-0 mt-[3rem] lg:mt-0">
-      <SectionWrapper showHook={false} id="about" title="Bio" icon={<MdPerson />}>
+      <SectionWrapper isFirst={true} id="about" title="Bio" icon={<MdPerson />}>
         {myBio.map((item, i) => (
           <Card
             key={i}

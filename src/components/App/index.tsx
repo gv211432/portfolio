@@ -61,12 +61,12 @@ export default function App() {
       <SnakeLadderIntro2 />
 
       {/* Star animation show */}
-      <div className="relative  bg-white">
+      {/* <div className="relative  bg-white">
         <div className="star-bg z-0">
           <div id='stars'></div>
           <div id='stars3'></div>
         </div>
-      </div>
+      </div> */}
 
       <div className="relative h-full lg:overflow-hidden bg-transparent z-10">
 

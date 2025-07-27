@@ -40,8 +40,9 @@ export default function LeftStickyBar() {
       {/* Biometrics + Others info */}
       <div
         className="bg-white h-[98vh] lg:w-[35rem] border-[1px] border-gray-400
-         mx-4 rounded-2xl relative  max-[250px]:hidden
-        dark:bg-slate-950 dark:border-slate-400 dark:text-slate-200 md:mx-20 lg:mx-4 ">
+         mx-4 rounded-2xl relative  max-[250px]:hidden shadow-lg
+        dark:bg-slate-950 dark:border-slate-400 dark:text-slate-200 md:mx-20 lg:mx-4 pb-12 lg:pb-0 -mb-8 ">
+
         <br />
 
         <div className="flex flex-col justify-between h-full">

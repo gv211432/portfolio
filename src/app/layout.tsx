@@ -77,7 +77,15 @@ export default function RootLayout({
         <meta name="description" content={metadata.description} />
         <meta name="keywords" content={metadata.keywords} />
       </head>
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        <div className="relative bg-white">
+          <div className="star-bg z-0">
+            <div id='stars'></div>
+            <div id='stars3'></div>
+          </div>
+        </div>
+        {children}
+      </body>
     </html>
   );
 }
