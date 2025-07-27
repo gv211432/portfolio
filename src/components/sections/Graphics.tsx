@@ -119,6 +119,27 @@ const myBio: CardProps[] = [
 
 const myPapers: CardProps[] = [
   {
+    title: "Distributed Micro Computing",
+    subtitle: "Clustered Microservices",
+    description: "Explored decentralized computing models and task distribution using cluster-based microservices.",
+    icon: <MdArticle />,
+    link: "https://www.irjmets.com/uploadedfiles/paper//issue_6_june_2024/59059/final/fin_irjmets1718302740.pdf"
+  },
+  {
+    title: "Transformative Potential of AR",
+    subtitle: "AR/VR/CV in Industrial Training",
+    description: "Evaluated how AR, VR and Computer Vision cut training time, boost retention and deliver measurable ROI.",
+    icon: <MdArticle />,
+    link: "https://www.irjmets.com/upload_newfiles/irjmets70600042549/paper_file/irjmets70600042549.pdf"
+  },
+  {
+    title: "Detecting Text Sentiments in DBs",
+    subtitle: "Semantic Duplicate Detection",
+    description: "Designed a FastAPI + PostgreSQL pipeline that uses sentence embeddings to eliminate near-duplicate text in real time.",
+    icon: <MdArticle />,
+    link: "https://www.irjmets.com/uploadedfiles/paper//issue_11_november_2024/63431/final/fin_irjmets1732730207.pdf"
+  },
+  {
     title: "Skin Cancer Detection using AI",
     subtitle: "Melanoma Classification via CNNs",
     description: "Reviewed deep-learning techniques (CNNs & transfer learning) to boost early melanoma diagnosis accuracy.",
@@ -133,32 +154,11 @@ const myPapers: CardProps[] = [
     link: "https://www.irjmets.com/uploadedfiles/paper//issue_11_november_2024/63333/final/fin_irjmets1732825335.pdf"
   },
   {
-    title: "Transformative Potential of AR",
-    subtitle: "AR/VR/CV in Industrial Training",
-    description: "Evaluated how AR, VR and Computer Vision cut training time, boost retention and deliver measurable ROI.",
-    icon: <MdArticle />,
-    link: "https://www.irjmets.com/upload_newfiles/irjmets70600042549/paper_file/irjmets70600042549.pdf"
-  },
-  {
     title: "AI in Performance Management",
     subtitle: "Real-Time HR Analytics",
     description: "Showed how AI-driven feedback loops, predictive analytics and VR/AR tools modernize workforce reviews.",
     icon: <MdArticle />,
     link: "https://www.irjmets.com/upload_newfiles/irjmets70600044325/paper_file/irjmets70600044325.pdf"
-  },
-  {
-    title: "Distributed Micro Computing",
-    subtitle: "Clustered Microservices",
-    description: "Explored decentralized computing models and task distribution using cluster-based microservices.",
-    icon: <MdArticle />,
-    link: ""
-  },
-  {
-    title: "Detecting Text Sentiments in DBs",
-    subtitle: "Semantic Duplicate Detection",
-    description: "Designed a FastAPI + PostgreSQL pipeline that uses sentence embeddings to eliminate near-duplicate text in real time.",
-    icon: <MdArticle />,
-    link: "https://www.irjmets.com/uploadedfiles/paper//issue_11_november_2024/63431/final/fin_irjmets1732730207.pdf"
   },
 ];
 
@@ -323,7 +323,7 @@ const myProjects: CardProps[] = [
   {
     title: "Rewardroot",
     subtitle: "Survey Platform",
-    description: "Manage, schedule, and post content across multiple social media platforms with ease.",
+    description: "Developed a website that seamlessly integrated multiple offerwalls and survey providers, attracting and securing over 1,000 users.",
     icon: <FaCode />,
     link: "https://www.rewardroot.com",
   },
@@ -359,6 +359,19 @@ export default function PortfolioSections() {
         ))}
       </SectionWrapper>
 
+      <SectionWrapper title="Experiences" icon={<FaBriefcase />}>
+        {myExperiences.map((exp, i) => (
+          <Card
+            key={i}
+            title={exp.title}
+            subtitle={exp.subtitle}
+            description={exp.description}
+            icon={exp.icon}
+            link={exp.link}
+          />
+        ))}
+      </SectionWrapper>
+
       <SectionWrapper id="projects" title="Projects" icon={<FaCode />}>
         {myProjects.map((p, i) => (
           <Card
@@ -381,19 +394,6 @@ export default function PortfolioSections() {
             description={paper.description}
             icon={paper.icon}
             link={paper.link}
-          />
-        ))}
-      </SectionWrapper>
-
-      <SectionWrapper title="Experiences" icon={<FaBriefcase />}>
-        {myExperiences.map((exp, i) => (
-          <Card
-            key={i}
-            title={exp.title}
-            subtitle={exp.subtitle}
-            description={exp.description}
-            icon={exp.icon}
-            link={exp.link}
           />
         ))}
       </SectionWrapper>
