@@ -60,7 +60,15 @@ export default function App() {
       {/* On pageload full screen animation */}
       <SnakeLadderIntro2 />
 
-      <div className="relative h-full bg-white">
+      {/* Star animation show */}
+      <div className="relative  bg-white">
+        <div className="star-bg z-0">
+          <div id='stars'></div>
+          <div id='stars3'></div>
+        </div>
+      </div>
+
+      <div className="relative h-full lg:overflow-hidden bg-transparent z-10">
 
         {/* Top scroll progress bar */}
         <div className="fixed top-0 left-0 w-full h-[0.6rem] z-[9999] bg-transparent pointer-events-none">
@@ -84,8 +92,8 @@ export default function App() {
         </div>
 
         <div
-          className="lg:flex min-h-[100vh] h-[97vh] lg:overflow-hidden
-          dark:bg-slate-950 text-slate-900 bg-white py-3">
+          className="relative lg:flex min-h-[100vh] h-[97vh] lg:overflow-hidden
+           text-slate-900 dark:bg-transparent bg-white py-3">
 
           <LeftStickyBar />
 

@@ -3,6 +3,7 @@ import useEmblaCarousel from "embla-carousel-react";
 import { FaCertificate } from "react-icons/fa";
 import { motion } from "framer-motion";
 import axios from "axios";
+import { HooksImages } from "../sections/Graphics";
 
 export type Cert = {
   title: string;
@@ -85,7 +86,9 @@ export const CertCarousel: React.FC<CertCarouselProps> = ({ certs }) => {
   }, [certs]);
 
   return (
-    <section className="px-4 py-8 lg:px-12">
+    <section className="relative dark:bg-slate-950 border-[1px] border-gray-400 shadow-lg my-4 rounded-[16px] px-4 py-16 lg:px-12">
+      <HooksImages showHook={true} />
+
       <div className="flex items-center gap-3 mb-6">
         <div className="text-2xl text-[#444A6E]">
           <FaCertificate />

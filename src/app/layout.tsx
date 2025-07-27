@@ -49,7 +49,7 @@ export default function RootLayout({
   };
 
   useEffect(() => {
-    console.log("Changed mode", JSON.stringify(darkMode));
+    // console.log("Changed mode", JSON.stringify(darkMode));
     if (readStoredModeRef.current) {
       loadMode();
     }
@@ -70,7 +70,7 @@ export default function RootLayout({
   }, []);
 
   return (
-    <html lang="en" id="root-node">
+    <html lang="en" id="root-node" className=" lg:overflow-hidden">
       <head>
         <meta name="title" content={metadata.title} />
         <meta name="author" content={metadata.author} />

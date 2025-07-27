@@ -14,6 +14,7 @@ import DarkModeToggleButton from "../inputs/DarkModeToggleButton";
 
 
 export default function LeftStickyBar() {
+
   const skills = [
     "D3.js",
     "MongoDB",
@@ -32,6 +33,7 @@ export default function LeftStickyBar() {
     "Redhat Certified",
     "Google Certified Python Dev",
   ];
+
   return (
     <>
       {/* left side bar */}
@@ -42,107 +44,110 @@ export default function LeftStickyBar() {
         dark:bg-slate-950 dark:border-slate-400 dark:text-slate-200 md:mx-20 lg:mx-4 ">
         <br />
 
-        <motion.div
-          className=""
-        // animate={{
-        //   opacity: showPlace ? [1, 0.2] : [0, 1],
-        // }}
-        >
-          <div className="flex justify-between">
-            <span
-              className={`ml-2 flex font-bold text-[2.3rem] text-gray-600 dark:text-slate-100`}
-            >
-              <motion.img
-                className="h-[2.9rem] rounded-full ml-1 m-2 mr-0 grayscale"
-                src={gaurav_logo_5.src}
-                alt="gaurav"
-              />
-              aurav
-              <span className=" invisible">gaurav</span>
-            </span>
-            <span
-              className={`mr-2 font-bold my-auto text-[1rem] text-gray-500 
+        <div className="flex flex-col justify-between h-full">
+
+          {/* Top section */}
+          <div className="">
+            <div className="flex justify-between">
+              <span
+                className={`ml-2 flex font-bold text-[2.3rem] text-gray-600 dark:text-slate-100`}
+              >
+                <motion.img
+                  className="h-[2.9rem] rounded-full ml-1 m-2 mr-0 grayscale"
+                  src={gaurav_logo_5.src}
+                  alt="gaurav"
+                />
+                aurav
+                <span className=" invisible">gaurav</span>
+              </span>
+              <span
+                className={`mr-2 font-bold my-auto text-[1rem] text-gray-500 
               max-[364px]:hidden dark:text-slate-100`}
-            >
-              Full Stack Developer
-            </span>
+              >
+                Full Stack Developer
+              </span>
+            </div>
           </div>
 
-          <div className="flex justify-between h-[40vh]">
-            <motion.img
-              animate={{
-                scale: [0.8, 1],
-              }}
-              transition={{
-                type: "spring",
-                duration: 1,
-              }}
-              src={gaurav_img.src}
-              alt="Gaurav Vishwakarma"
-              className={`h-[14rem] rounded-3xl mx-auto my-auto`}
-            />
-          </div>
+          {/* Text Section */}
+          <div className="">
 
-          <div
-            className="text-center max-[450px]:text-[1.3rem] text-[1.8rem] p-1 max-[345px]:text-sm
-            font-light"
-          >
-            <span className="">
-              hi@
-              <span className="text-primary">gaurav</span>
-              .one
-            </span>
-            <br />
-            Based in Mumbai, India
-          </div>
-
-          <div className="text-center text-[1rem]">
-            © 2025 Gaurav. All Rights Reserved
-          </div>
-
-          <motion.div className="flex justify-center">
-            <a href="https://www.linkedin.com/in/vishwakarmagaurav/">
-              <FontAwesomeIcon
-                height={30}
-                className="m-2 h-8 text-gray-700 dark:text-white hover:scale-110 cursor-pointer"
-                icon={faLinkedin}
-              />
-            </a>
-            <a href="https://github.com/gv211432">
-              <FontAwesomeIcon
-                height={30}
-                className="m-2 h-8 text-gray-700 dark:text-white hover:scale-110 cursor-pointer"
-                icon={faGithub}
-              />
-            </a>
-            <a href="https://blogs.gaurav.one">
-              <FontAwesomeIcon
-                height={30}
-                className="m-2 h-8 text-gray-700 dark:text-white hover:scale-110 cursor-pointer"
-                icon={faBook}
-              />
-            </a>
-            <a href="https://twitter.com/formal_gaurav">
-              <FontAwesomeIcon
-                height={30}
-                className="m-2 h-8 text-gray-700 dark:text-white hover:scale-110 cursor-pointer"
-                icon={faTwitter}
-              />
-            </a>
-            <a href="https://leetcode.com/v_gaurav/">
+            <div className="flex justify-between pb-4">
               <motion.img
-                className="h-[2rem] rounded-full m-2 hover:scale-110 
-              dark:border-0 border-[2px] border-gray-700  cursor-pointer grayscale"
-                src="https://th.bing.com/th?id=OIP.jlFRTpn75iQt63ANsB7DTgHaHa&w=250&h=250&c=8&rs=1&qlt=90&o=6&pid=3.1&rm=2"
-                alt="leetcode"
+                animate={{
+                  scale: [0.8, 1],
+                }}
+                transition={{
+                  type: "spring",
+                  duration: 1,
+                }}
+                src={gaurav_img.src}
+                alt="Gaurav Vishwakarma"
+                className={`h-[14rem] rounded-3xl mx-auto my-auto`}
               />
-            </a>
-          </motion.div>
+            </div>
 
-          <DarkModeToggleButton />
+            <div
+              className="text-center max-[450px]:text-[1.3rem] text-[1.8rem] p-1 max-[345px]:text-sm
+            font-light"
+            >
+              <span className="">
+                hi@
+                <span className="text-primary">gaurav</span>
+                .one
+              </span>
+              <br />
+              Based in Mumbai, India
+            </div>
 
-          <div className="relative  overflow-hidden h-[2rem] my-[5rem] bg-gradient-to-r from-primaryGray to-slate-800">
+            <div className="text-center text-[1rem]">
+              © 2025 Gaurav. All Rights Reserved
+            </div>
 
+            <motion.div className="flex justify-center">
+              <a href="https://www.linkedin.com/in/vishwakarmagaurav/">
+                <FontAwesomeIcon
+                  height={30}
+                  className="m-2 h-8 text-gray-700 dark:text-white hover:scale-110 cursor-pointer"
+                  icon={faLinkedin}
+                />
+              </a>
+              <a href="https://github.com/gv211432">
+                <FontAwesomeIcon
+                  height={30}
+                  className="m-2 h-8 text-gray-700 dark:text-white hover:scale-110 cursor-pointer"
+                  icon={faGithub}
+                />
+              </a>
+              <a href="https://blogs.gaurav.one">
+                <FontAwesomeIcon
+                  height={30}
+                  className="m-2 h-8 text-gray-700 dark:text-white hover:scale-110 cursor-pointer"
+                  icon={faBook}
+                />
+              </a>
+              <a href="https://twitter.com/formal_gaurav">
+                <FontAwesomeIcon
+                  height={30}
+                  className="m-2 h-8 text-gray-700 dark:text-white hover:scale-110 cursor-pointer"
+                  icon={faTwitter}
+                />
+              </a>
+              <a href="https://leetcode.com/v_gaurav/">
+                <motion.img
+                  className="h-[2rem] rounded-full m-2 hover:scale-110 
+              dark:border-0 border-[2px] border-gray-700  cursor-pointer grayscale"
+                  src="https://th.bing.com/th?id=OIP.jlFRTpn75iQt63ANsB7DTgHaHa&w=250&h=250&c=8&rs=1&qlt=90&o=6&pid=3.1&rm=2"
+                  alt="leetcode"
+                />
+              </a>
+            </motion.div>
+
+            <DarkModeToggleButton />
+          </div>
+
+          {/* Skills Section */}
+          <div className="relative  overflow-hidden h-[2rem] bg-gradient-to-r from-primaryGray to-slate-800">
             <div className="absolute  whitespace-nowrap animate-marquee text-white text-[0.9rem] font-semibold flex">
               {skills.map((skill, index) => (
                 <span
@@ -168,8 +173,9 @@ export default function LeftStickyBar() {
             </div>
           </div>
 
+          {/* Bottom/Hire Button Section */}
+          <center className=" w-full pb-10 text-[1.5rem]">
 
-          <center className="absolute w-full bottom-8 text-[1.5rem]">
             <a href="mailto:hi@gaurav.one;gaurav.ram@hotmail.com">
               <div
                 className="border-[1px]  border-gray-500 mx-8 rounded-lg hover:bg-primaryGray
@@ -181,7 +187,7 @@ export default function LeftStickyBar() {
             </a>
           </center>
 
-        </motion.div>
+        </div>
       </div>
     </>
   );

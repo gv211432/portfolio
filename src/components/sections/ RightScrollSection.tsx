@@ -12,13 +12,15 @@ export default function RightScrollSection({
   return (
     <div
       ref={rightSectionRef}
-      className=" bg-white dark:bg-slate-950 overflow-y-auto w-full md:px-20 lg:px-0">
+      className=" bg-transparent bg-white dark:bg-transparent overflow-y-auto w-full md:px-20 lg:px-0">
+
       {/* Demographics */}
       <div
-        className="bg-white lg:h-[100vh] lg:w-[100%]
-         dark:bg-slate-950  dark:text-slate-200
+        className=" bg-transparent lg:h-[100vh] lg:w-[100%]
+           dark:text-slate-200
           lg:overflow-y-auto"
       >
+
         {/* introduction */}
         <center className="lg:flex hidden justify-center h-[100vh] text-center bg-orange-400x">
           <div id="intro_space" className="my-auto text-[2.5rem] ">
