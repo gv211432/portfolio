@@ -1,0 +1,15 @@
+{
+  "typescript.preferences.importModuleSpecifier": "non-relative",
+  "typescript.suggest.paths": true,
+  "javascript.preferences.importModuleSpecifier": "non-relative",
+  "javascript.suggest.paths": true,
+  "path-intellisense.mappings": {
+    "@": "${workspaceFolder}/src"
+  },
+  "eslint.workingDirectories": [
+    {
+      "directory": "src",
+      "changeProcessCWD": true
+    }
+  ]
+}

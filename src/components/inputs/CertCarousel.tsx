@@ -4,7 +4,7 @@ import Autoplay from "embla-carousel-autoplay";
 import { FaCertificate } from "react-icons/fa";
 import { motion } from "framer-motion";
 import axios from "axios";
-import { HooksImages } from "../sections/Graphics";
+import HooksImages from "@/components/helpers/HooksImages";
 
 export type Cert = {
   title: string;
@@ -20,13 +20,14 @@ type CertCarouselProps = {
   certs: Cert[];
 };
 
-const Card = ({ title, subtitle, description, link, image, staticImage }: EnrichedCert) => (
+const CarouselCard = ({ title, subtitle, description, link, image, staticImage }: EnrichedCert) => (
   <motion.a
     // @ts-ignore
     href={link}
     target="_blank"
     rel="noopener noreferrer"
-    className="rounded-xl border border-gray-300 dark:border-slate-700 dark:bg-slate-900 shadow-sm hover:shadow-xl transition-all p-5 block"
+    className="rounded-xl border border-gray-300 dark:border-slate-700
+     dark:bg-slate-900 shadow-sm hover:shadow-xl transition-all p-5 block"
     whileHover={{ scale: 1.03 }}
   >
     {image && (
@@ -92,7 +93,8 @@ export const CertCarousel: React.FC<CertCarouselProps> = ({ certs }) => {
   }, [certs]);
 
   return (
-    <section className="relative dark:bg-slate-950 border-[1px] border-gray-400 shadow-lg my-4 rounded-[16px] px-4 py-16 lg:px-12">
+    <section className="relative dark:bg-slate-950 border-[1px]
+     border-gray-400 shadow-lg my-4 rounded-[16px] px-4 py-16 lg:px-12">
       <HooksImages />
 
       <div className="flex items-center gap-3 mb-6">
@@ -116,7 +118,7 @@ export const CertCarousel: React.FC<CertCarouselProps> = ({ certs }) => {
               key={idx}
               className="min-w-1/3"
             >
-              <Card {...cert} />
+              <CarouselCard {...cert} />
             </div>
           ))}
         </div>

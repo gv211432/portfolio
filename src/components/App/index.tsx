@@ -1,11 +1,10 @@
 "use client";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React, { useEffect, useRef, useState } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowUp } from "@fortawesome/free-solid-svg-icons";
-import LeftStickyBar from "../sections/LeftStickyBar";
-import RightScrollSection from "../sections/ RightScrollSection";
-import SnakeLadderIntro2 from "../sections/SnakeLadderInto2";
-
+import SnakeLadderIntro2 from "@/components/sections/SnakeLadderInto2";
+import LeftStickyBar from "@/components/sections/LeftStickyBar";
+import RightScrollSection from "@/components/sections/RightScrollSection";
 
 export default function App() {
   const rightSectionRef = useRef<HTMLDivElement>(null);
