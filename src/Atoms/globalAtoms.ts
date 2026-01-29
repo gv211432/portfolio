@@ -1,9 +1,13 @@
-import { atom, useAtom } from "jotai";
+import { create } from "zustand";
 
-const dark_mode = atom<Boolean>(false);
-export const darkModeAtom = atom(
-  (get) => get(dark_mode),
-  (get, set, value) => {
-    set(dark_mode, !get(dark_mode));
-  }
-);
+interface DarkModeState {
+  darkMode: boolean;
+  setDarkMode: (value: boolean) => void;
+  toggleDarkMode: () => void;
+}
+
+export const useDarkModeStore = create<DarkModeState>((set) => ({
+  darkMode: false,
+  setDarkMode: (value) => set({ darkMode: value }),
+  toggleDarkMode: () => set((state) => ({ darkMode: !state.darkMode })),
+}));

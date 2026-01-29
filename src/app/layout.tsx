@@ -1,10 +1,9 @@
 "use client";
 import "./globals.css";
 import { Inter } from "next/font/google";
-import { useAtom } from "jotai";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRef, useEffect } from "react";
-import { darkModeAtom } from "@/Atoms/globalAtoms";
+import { useDarkModeStore } from "@/Atoms/globalAtoms";
 import "@/index.css";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -16,8 +15,8 @@ const metadata = {
   author: "Gaurav Vishwakarma",
   charset: "UTF-8",
   keywords:
-    `Fullstack Developer, web3 developer, typescript, HTML, CSS, JavaScript, solidity, 
-    React, Next.js, Node.js, Express.js, MongoDB, PostgreSQL, MySQL, 
+    `Fullstack Developer, web3 developer, typescript, HTML, CSS, JavaScript, solidity,
+    React, Next.js, Node.js, Express.js, MongoDB, PostgreSQL, MySQL,
     Ethereum, Web3, Solidity, Smart Contracts, Blockchain, Python, FastAPI, Django,
     Eth-Brownie, Hardhat, Truffle, Ganache, Mocha, Chai, Jest, React Native, Expo,
     TailwindCSS, MaterialUI, Styled-Components, Git, Github, Gitlab, Bitbucket,
@@ -34,7 +33,7 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [darkMode, setDarkMode] = useAtom(darkModeAtom);
+  const { darkMode, setDarkMode } = useDarkModeStore();
   const readStoredModeRef = useRef(false);
 
   const loadMode = () => {

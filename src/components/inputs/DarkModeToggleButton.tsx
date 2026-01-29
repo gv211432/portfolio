@@ -2,13 +2,12 @@ import React from 'react';
 import { faSun, faBook } from "@fortawesome/free-solid-svg-icons";
 import { faMoon } from "@fortawesome/free-regular-svg-icons";
 import { motion } from "framer-motion";
-import { darkModeAtom } from "@/Atoms/globalAtoms";
-import { atom, useAtom } from "jotai";
+import { useDarkModeStore } from "@/Atoms/globalAtoms";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 
 export default function DarkModeToggleButton() {
-  const [darkMode, setDarkMode] = useAtom(darkModeAtom);
+  const { darkMode, toggleDarkMode } = useDarkModeStore();
 
   return (
     <div className="flex justify-center mt-2">
@@ -20,7 +19,7 @@ export default function DarkModeToggleButton() {
             x: darkMode ? '1.35rem' : '0rem',
           }}
           transition={{ type: "spring", stiffness: 300, damping: 20 }}
-          onClick={() => setDarkMode(!darkMode)}
+          onClick={toggleDarkMode}
         />
         {/* @ts-ignore */}
         <FontAwesomeIcon

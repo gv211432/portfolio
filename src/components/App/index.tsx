@@ -5,11 +5,13 @@ import { faArrowUp } from "@fortawesome/free-solid-svg-icons";
 import SnakeLadderIntro2 from "@/components/sections/SnakeLadderInto2";
 import LeftStickyBar from "@/components/sections/LeftStickyBar";
 import RightScrollSection from "@/components/sections/RightScrollSection";
+import { useDarkModeStore } from "@/Atoms/globalAtoms";
 
 export default function App() {
   const rightSectionRef = useRef<HTMLDivElement>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
+  const isDark = useDarkModeStore((state) => state.darkMode);
 
   // Use a ref to avoid re-rendering too often
   const scrollAnimFrame = useRef<number>(null);
@@ -73,10 +75,7 @@ export default function App() {
         <div className="fixed top-0 left-0 w-full h-[0.6rem] z-[9999] bg-transparent pointer-events-none">
           {/* Blur aura layer */}
           <div
-            className="absolute top-0 h-full rounded-r-full 
-               w-full 
-               bg-gradient-to-r from-primary to-primaryDark 
-               blur-md opacity-50"
+            className={`absolute top-0 h-full rounded-r-full w-full bg-gradient-to-r ${isDark ? "from-primaryDark to-primary" : "from-primary to-primaryDark"} blur-md opacity-50`}
             style={{ width: `${scrollProgress}%` }}
           />
 
