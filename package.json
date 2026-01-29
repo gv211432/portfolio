@@ -13,6 +13,8 @@
     "@types/react-dom": "^19.1.6",
     "autoprefixer": "10.4.14",
     "axios": "^1.10.0",
+    "baseline-browser-mapping": "^2.9.19",
+    "caniuse-lite": "^1.0.30001766",
     "classnames": "^2.5.1",
     "embla-carousel-autoplay": "^8.6.0",
     "embla-carousel-react": "^8.6.0",
