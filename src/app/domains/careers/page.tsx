@@ -1,0 +1,19 @@
+export const metadata = {
+  title: "Careers | Gaurav.one",
+  description: "Join our team and build the future with us",
+};
+
+export default function CareersPage() {
+  return (
+    <main className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white flex items-center justify-center">
+      <div className="text-center px-6">
+        <div className="text-6xl mb-6">🚀</div>
+        <h1 className="text-4xl font-bold mb-4">Careers</h1>
+        <p className="text-gray-400 text-lg mb-8">Join our team and build amazing things</p>
+        <div className="inline-block px-6 py-3 bg-gray-800 rounded-lg text-gray-300">
+          Coming Soon
+        </div>
+      </div>
+    </main>
+  );
+}
