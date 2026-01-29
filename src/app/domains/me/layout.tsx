@@ -1,4 +1,6 @@
 "use client";
+import "@/app/globals.css";
+import "@/index.css";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRef, useEffect } from "react";
 import { useDarkModeStore } from "@/Atoms/globalAtoms";

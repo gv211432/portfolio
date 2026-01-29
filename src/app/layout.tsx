@@ -1,5 +1,3 @@
-import "./globals.css";
-import "@/index.css";
 import { Inter } from "next/font/google";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -15,7 +13,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" id="root-node" className="lg:overflow-hidden">
+    <html lang="en" id="root-node">
       <body className={inter.className}>{children}</body>
     </html>
   );

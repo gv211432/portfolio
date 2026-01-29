@@ -25,6 +25,9 @@ export default function middleware(req: NextRequest) {
   const url = req.nextUrl.clone();
   const hostname = req.headers.get('host') || '';
 
+  // Debug logging - check terminal for output
+  console.log(`[Middleware] hostname: ${hostname}, pathname: ${url.pathname}`);
+
   // Handle localhost development
   // me.localhost:3000 -> subdomain = 'me'
   // localhost:3000 -> subdomain = null (root)
@@ -66,16 +69,18 @@ export default function middleware(req: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 
+  console.log(`[Middleware] subdomain detected: ${subdomain}`);
+
   // Root domain - serve from /(root)
   if (!subdomain) {
-    // Rewrite to /(root) route group
-    // The (root) folder is for organization only, doesn't affect URL
+    console.log(`[Middleware] No subdomain, serving root page`);
     return NextResponse.next();
   }
 
   // Valid subdomains - rewrite to /domains/[subdomain]/...
   if (SUBDOMAIN_CONFIG.valid.includes(subdomain as typeof SUBDOMAIN_CONFIG.valid[number])) {
     url.pathname = `/domains/${subdomain}${url.pathname}`;
+    console.log(`[Middleware] Rewriting to: ${url.pathname}`);
     return NextResponse.rewrite(url);
   }
 

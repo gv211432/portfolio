@@ -41,10 +41,11 @@
   "scripts": {
     "dev": "bun x next dev",
     "build": "next build",
-    "start": "bunx serve@latest out",
+    "start": "next start",
+    "serve": "bunx serve@latest out",
     "build:bun": "bun x next build",
     "build:bun:webscreenshot": "bun tools/screenshot && bun x next build",
-    "start:bun": "bun x serve@latest out",
+    "start:bun": "bun x next start",
     "lint": "bun x next lint"
   }
 }
