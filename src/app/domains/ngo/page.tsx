@@ -464,7 +464,7 @@ export default function NgoPage() {
               viewport={{ once: true }}
               className="relative"
             >
-              <div className="bg-white dark:bg-gradient-to-br dark:from-[#198754]/20 dark:to-[#20c997]/10 rounded-3xl p-8 border border-[#198754]/30 shadow-xl dark:shadow-none">
+              <div className="bg-white dark:bg-[#0F5132]/80 dark:backdrop-blur-sm rounded-3xl p-8 border border-[#198754]/30 dark:border-[#20c997]/30 shadow-xl dark:shadow-[#20c997]/5">
                 <div className="text-center mb-8">
                   <span className="text-6xl">🎯</span>
                   <h3 className="text-2xl font-bold text-[#0F5132] dark:text-white mt-4">Who Can Apply?</h3>
@@ -490,20 +490,20 @@ export default function NgoPage() {
                   ].map((item) => (
                     <div
                       key={item.title}
-                      className="flex items-center gap-4 p-4 bg-[#f0fdf4] dark:bg-[#0A3622]/50 rounded-xl border border-[#198754]/20 hover:border-[#20c997]/40 transition-all"
+                      className="flex items-center gap-4 p-4 bg-[#f0fdf4] dark:bg-[#0A3622] rounded-xl border border-[#198754]/20 dark:border-[#20c997]/20 hover:border-[#20c997]/40 dark:hover:border-[#20c997]/60 transition-all"
                     >
                       <span className="text-2xl">{item.icon}</span>
                       <div>
-                        <h4 className="text-[#0F5132] dark:text-white font-semibold">{item.title}</h4>
-                        <p className="text-gray-500 dark:text-gray-400 text-sm">{item.desc}</p>
+                        <h4 className="text-[#0F5132] dark:text-[#20c997] font-semibold">{item.title}</h4>
+                        <p className="text-gray-500 dark:text-gray-300 text-sm">{item.desc}</p>
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
               {/* Decorative */}
-              <div className="absolute -top-4 -right-4 w-24 h-24 bg-[#20c997]/20 rounded-full blur-2xl" />
-              <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-[#198754]/20 rounded-full blur-2xl" />
+              <div className="absolute -top-4 -right-4 w-24 h-24 bg-[#20c997]/20 dark:bg-[#20c997]/30 rounded-full blur-2xl" />
+              <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-[#198754]/20 dark:bg-[#198754]/30 rounded-full blur-2xl" />
             </motion.div>
           </div>
         </div>
@@ -1143,7 +1143,7 @@ Be specific about the positive change this will enable."
       {/* Impact Section */}
       <section id="impact" className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white dark:bg-gradient-to-r dark:from-[#198754]/20 dark:to-[#20c997]/10 rounded-3xl border border-[#198754]/30 p-8 md:p-12 shadow-xl dark:shadow-none">
+          <div className="bg-white dark:bg-[#0F5132]/80 dark:backdrop-blur-sm rounded-3xl border border-[#198754]/30 dark:border-[#20c997]/30 p-8 md:p-12 shadow-xl dark:shadow-[#20c997]/5">
             <div className="grid lg:grid-cols-2 gap-12 items-center">
               <div>
                 <span className="text-[#198754] dark:text-[#20c997] font-semibold uppercase tracking-wider text-sm">
@@ -1166,19 +1166,19 @@ Be specific about the positive change this will enable."
                     { value: "500+", label: "Volunteers Connected", sub: "through our platforms" },
                     { value: "10+", label: "States Covered", sub: "pan-India presence" },
                   ].map((stat) => (
-                    <div key={stat.label} className="p-4 bg-[#f0fdf4] dark:bg-[#0A3622]/50 rounded-xl">
+                    <div key={stat.label} className="p-4 bg-[#f0fdf4] dark:bg-[#0A3622] rounded-xl border border-transparent dark:border-[#20c997]/20">
                       <div className="text-2xl md:text-3xl font-bold text-[#198754] dark:text-[#20c997]">
                         {stat.value}
                       </div>
                       <div className="text-[#0F5132] dark:text-white font-medium">{stat.label}</div>
-                      <div className="text-gray-500 text-xs">{stat.sub}</div>
+                      <div className="text-gray-500 dark:text-gray-400 text-xs">{stat.sub}</div>
                     </div>
                   ))}
                 </div>
               </div>
 
               <div className="relative">
-                <div className="aspect-square bg-gradient-to-br from-[#198754]/30 to-[#20c997]/20 rounded-3xl flex items-center justify-center">
+                <div className="aspect-square bg-gradient-to-br from-[#198754]/30 to-[#20c997]/20 dark:from-[#0A3622] dark:to-[#198754]/40 rounded-3xl flex items-center justify-center border border-transparent dark:border-[#20c997]/20">
                   <div className="text-center">
                     <span className="text-8xl">🌱</span>
                     <p className="text-[#0F5132] dark:text-white text-xl font-medium mt-4">Growing Together</p>
@@ -1186,8 +1186,8 @@ Be specific about the positive change this will enable."
                   </div>
                 </div>
                 {/* Decorative circles */}
-                <div className="absolute -top-4 -right-4 w-20 h-20 border-2 border-[#20c997]/30 rounded-full" />
-                <div className="absolute -bottom-4 -left-4 w-16 h-16 border-2 border-[#198754]/30 rounded-full" />
+                <div className="absolute -top-4 -right-4 w-20 h-20 border-2 border-[#20c997]/30 dark:border-[#20c997]/50 rounded-full" />
+                <div className="absolute -bottom-4 -left-4 w-16 h-16 border-2 border-[#198754]/30 dark:border-[#198754]/50 rounded-full" />
               </div>
             </div>
           </div>
