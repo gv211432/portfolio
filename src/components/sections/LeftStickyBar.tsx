@@ -11,6 +11,7 @@ import gaurav_img from "../../assets/img/gaurav_sq_img.webp";
 import gaurav_logo_5 from "../../assets/img/gaurav_5.png";
 import { faBook } from "@fortawesome/free-solid-svg-icons";
 import DarkModeToggleButton from "../inputs/DarkModeToggleButton";
+import { domainUrls, globalConfig } from "@/config/global";
 
 
 export default function LeftStickyBar() {
@@ -120,7 +121,7 @@ export default function LeftStickyBar() {
                   icon={faGithub}
                 />
               </a>
-              <a href="https://blogs.gaurav.one">
+              <a href={domainUrls.blogs}>
                 <FontAwesomeIcon
                   height={30}
                   className="m-2 h-8 text-gray-700 dark:text-white hover:scale-110 cursor-pointer"
@@ -177,7 +178,7 @@ export default function LeftStickyBar() {
           {/* Bottom/Hire Button Section */}
           <center className=" w-full pb-10 text-[1.5rem]">
 
-            <a href="mailto:hi@gaurav.one;gaurav.ram@hotmail.com">
+            <a href={`mailto:${globalConfig.email};${globalConfig.email2}`}>
               <div
                 className="border-[1px]  border-gray-500 mx-8 rounded-lg hover:bg-primaryGray
               hover:border-0 dark:hover:text-white cursor-pointer hover:text-slate-100

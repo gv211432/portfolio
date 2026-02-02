@@ -2,14 +2,15 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { domainUrls, globalConfig } from "@/config/global";
 
 const navLinks = [
   { name: "About", href: "#about" },
   { name: "Services", href: "#services" },
-  { name: "Case Study", href: "https://casestudy.gaurav.one", external: true },
-  { name: "Whitelabel", href: "https://whitelabel.gaurav.one", external: true },
-  { name: "Blogs", href: "https://blogs.gaurav.one", external: true },
-  { name: "NGO", href: "https://ngo.gaurav.one", external: true },
+  { name: "Case Study", href: domainUrls.casestudy, external: true },
+  { name: "Whitelabel", href: domainUrls.whitelabel, external: true },
+  { name: "Blogs", href: domainUrls.blogs, external: true },
+  { name: "NGO", href: domainUrls.ngo, external: false },
   { name: "Contact", href: "#contact" },
 ];
 
@@ -189,7 +190,7 @@ export default function LandingPage() {
                   Explore Services
                 </a>
                 <a
-                  href="https://me.gaurav.one"
+                  href={domainUrls.me}
                   className="border-2 border-white text-white hover:bg-white hover:text-primaryDark px-8 py-4 rounded-lg font-semibold transition-all"
                 >
                   View Portfolio
@@ -293,7 +294,7 @@ export default function LandingPage() {
                 ))}
               </ul>
               <a
-                href="https://me.gaurav.one"
+                href={domainUrls.me}
                 className="inline-flex items-center gap-2 bg-primaryDark hover:bg-primary text-white px-6 py-3 rounded-lg font-semibold transition-all"
               >
                 Learn More
@@ -411,8 +412,8 @@ export default function LandingPage() {
                   </div>
                   <div>
                     <div className="text-sm text-primaryGray">Email</div>
-                    <a href="mailto:hi@gaurav.one" className="text-primaryDark font-medium hover:text-primary">
-                      hi@gaurav.one
+                    <a href={`mailto:${globalConfig.email}`} className="text-primaryDark font-medium hover:text-primary">
+                      {globalConfig.email}
                     </a>
                   </div>
                 </div>
