@@ -283,9 +283,45 @@ export default function NgoPage() {
 
       {/* Hero Section */}
       <section className="pt-32 pb-20 relative overflow-hidden">
-        {/* Decorative elements */}
-        <div className="absolute top-20 left-10 w-72 h-72 bg-[#20c997]/20 dark:bg-[#20c997]/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-10 right-10 w-96 h-96 bg-[#198754]/20 dark:bg-[#198754]/10 rounded-full blur-3xl" />
+        {/* Decorative elements - Blinking blur circles */}
+        <motion.div
+          className="absolute top-20 left-10 w-72 h-72 bg-[#20c997]/20 dark:bg-[#20c997]/10 rounded-full blur-3xl"
+          animate={{
+            opacity: [0.3, 0.7, 0.3],
+            scale: [1, 1.1, 1],
+          }}
+          transition={{
+            duration: 4,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+        <motion.div
+          className="absolute bottom-10 right-10 w-96 h-96 bg-[#198754]/20 dark:bg-[#198754]/10 rounded-full blur-3xl"
+          animate={{
+            opacity: [0.4, 0.8, 0.4],
+            scale: [1, 1.15, 1],
+          }}
+          transition={{
+            duration: 5,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 1,
+          }}
+        />
+        <motion.div
+          className="absolute top-1/2 right-1/4 w-48 h-48 bg-[#20c997]/15 dark:bg-[#20c997]/8 rounded-full blur-3xl"
+          animate={{
+            opacity: [0.2, 0.6, 0.2],
+            scale: [1, 1.2, 1],
+          }}
+          transition={{
+            duration: 3.5,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 0.5,
+          }}
+        />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <motion.div
@@ -339,16 +375,25 @@ export default function NgoPage() {
             </div>
           </motion.div>
 
-          {/* Stats Cards */}
+          {/* Stats Cards - with levitating animation */}
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.3 }}
             className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-4"
           >
-            {impactStats.map((stat) => (
-              <div
+            {impactStats.map((stat, index) => (
+              <motion.div
                 key={stat.label}
+                animate={{
+                  y: [0, -8, 0],
+                }}
+                transition={{
+                  duration: 3 + index * 0.5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: index * 0.3,
+                }}
                 className="bg-white dark:bg-[#0F5132]/50 backdrop-blur-sm border border-[#198754]/30 rounded-2xl p-6 text-center hover:border-[#20c997]/50 transition-all hover:scale-105 shadow-lg dark:shadow-none"
               >
                 <span className="text-3xl mb-2 block">{stat.icon}</span>
@@ -356,7 +401,7 @@ export default function NgoPage() {
                   {stat.number}
                 </div>
                 <div className="text-gray-500 dark:text-gray-400 text-sm">{stat.label}</div>
-              </div>
+              </motion.div>
             ))}
           </motion.div>
         </div>
