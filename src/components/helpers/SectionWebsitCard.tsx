@@ -20,7 +20,7 @@ const SectionWebsiteCard = ({ title }: { title: string; }) => (
           <div className="w-full bg-white rounded-lg">
             <Image
               className={` rounded-md shadow-md`}
-              src={`img/websites/${title}.webp`}
+              src={`/img/websites/${title}.webp`}
               height={SCREENSHOT_CONFIG.height}
               width={SCREENSHOT_CONFIG.width}
               alt={title}

@@ -17,7 +17,7 @@ const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'gaurav.one';
 export const config = {
   matcher: [
     // Match all paths except static files and Next.js internals
-    '/((?!api/|_next/|_static/|_vercel|[\\w-]+\\.\\w+).*)',
+    '/((?!api/|_next/|_static/|_vercel|img/|fonts/|favicon.ico|.*\\.(?:png|jpg|jpeg|gif|webp|svg|ico|css|js|woff|woff2|ttf|eot)$).*)',
   ],
 };
 

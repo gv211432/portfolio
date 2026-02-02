@@ -81,10 +81,7 @@ export default function App() {
 
           {/* Foreground solid layer */}
           <div
-            className="relative h-full rounded-r-full 
-               bg-gradient-to-r from-primary to-primaryDark 
-               shadow-[0_0_10px_rgba(100,116,255,0.8)] 
-               transition-all duration-75 ease-out"
+            className={`relative h-full rounded-r-full bg-gradient-to-r ${isDark ? "from-primaryDark to-primary" : "from-primary to-primaryDark"} shadow-[0_0_10px_rgba(100,116,255,0.8)] transition-all duration-75 ease-out`}
             style={{ width: `${scrollProgress}%` }}
           />
         </div>
