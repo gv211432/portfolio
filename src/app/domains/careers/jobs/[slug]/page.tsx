@@ -357,14 +357,24 @@ export default function JobDetailPage() {
         <header className="fixed top-0 left-0 right-0 z-50 bg-light/80 dark:bg-obsidian/80 backdrop-blur-md border-b border-primary/10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
-              <Link href={domainUrls.root} className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan to-primary flex items-center justify-center">
-                  <span className="text-obsidian font-bold text-sm">G</span>
-                </div>
-                <span className="font-bold text-primaryDark dark:text-white">
-                  {globalConfig.displayName}
-                </span>
-              </Link>
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => router.back()}
+                  className="flex items-center gap-2 text-primaryDark/60 dark:text-gray-400 hover:text-cyan transition-colors"
+                >
+                  <FaArrowLeft className="w-4 h-4" />
+                  <span className="hidden sm:inline">Back</span>
+                </button>
+                <div className="h-6 w-px bg-primary/20" />
+                <Link href={domainUrls.root} className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan to-primary flex items-center justify-center">
+                    <span className="text-obsidian font-bold text-sm">G</span>
+                  </div>
+                  <span className="font-bold text-primaryDark dark:text-white">
+                    {globalConfig.displayName}
+                  </span>
+                </Link>
+              </div>
 
               <nav className="hidden md:flex items-center gap-6">
                 <Link href={domainUrls.root} className="text-primaryDark/70 dark:text-gray-400 hover:text-cyan transition-colors text-sm">
@@ -411,18 +421,7 @@ export default function JobDetailPage() {
 
         {/* Content */}
         <div className="relative z-10 max-w-6xl mx-auto px-4 pt-24 pb-16">
-        {/* Back Button */}
-        <motion.button
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          onClick={() => router.back()}
-          className="inline-flex items-center gap-2 mb-8 text-gray-500 dark:text-gray-400 hover:text-cyan transition-colors"
-        >
-          <FaArrowLeft />
-          Go Back
-        </motion.button>
-
-        <div className="grid lg:grid-cols-3 gap-8">
+          <div className="grid lg:grid-cols-3 gap-8">
           {/* Job Details - Left Column */}
           <div className="lg:col-span-2 space-y-8">
             {/* Header */}
