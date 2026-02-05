@@ -32,6 +32,7 @@ export const domainUrls = {
 export const domainEmail = `hi@${ROOT_DOMAIN.replace(/:\d+$/, '')}`;
 
 export const globalConfig = {
+  displayName: "Gaurav.one",
   email: domainEmail,
   email2: "gaurav.ram@hotmail.com",
   github: "https://github.com/gv211432",

@@ -15,12 +15,30 @@ const terminalLines = [
   { text: "Ready to build your next big thing_", delay: 6000 },
 ];
 
+// Main nav links (visible in header)
+const mainNavLinks = [
+  { name: "About", href: "#about" },
+  { name: "Services", href: "#services" },
+  { name: "Blogs", href: domainUrls.blogs, external: true },
+];
+
+// Dropdown links (More menu)
+const dropdownLinks = [
+  { name: "Open Source", href: domainUrls.opensource, external: true },
+  { name: "Whitelabel Products", href: domainUrls.whitelabel, external: true },
+  { name: "Case Study", href: domainUrls.casestudy, external: true },
+  { name: "NGO", href: domainUrls.ngo, external: false },
+  { name: "Estimate", href: "#calculator" },
+];
+
+// All nav links for mobile menu
 const navLinks = [
   { name: "About", href: "#about" },
   { name: "Services", href: "#services" },
-  { name: "Case Study", href: domainUrls.casestudy, external: true },
-  { name: "Whitelabel", href: domainUrls.whitelabel, external: true },
   { name: "Blogs", href: domainUrls.blogs, external: true },
+  { name: "Open Source", href: domainUrls.opensource, external: true },
+  { name: "Whitelabel", href: domainUrls.whitelabel, external: true },
+  { name: "Case Study", href: domainUrls.casestudy, external: true },
   { name: "NGO", href: domainUrls.ngo, external: false },
   { name: "Estimate", href: "#calculator" },
 ];
@@ -739,7 +757,7 @@ export default function LandingPage() {
 
             {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center gap-8">
-              {navLinks.map((link) => (
+              {mainNavLinks.map((link) => (
                 <a
                   key={link.name}
                   href={link.href}
@@ -750,6 +768,28 @@ export default function LandingPage() {
                   {link.name}
                 </a>
               ))}
+              {/* More Dropdown */}
+              <div className="relative group">
+                <button className="flex items-center gap-1 text-primaryDark/70 dark:text-gray-400 hover:text-primary transition-colors font-medium">
+                  More
+                  <svg className="w-4 h-4 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                <div className="absolute top-full right-0 mt-2 w-48 py-2 bg-white dark:bg-obsidian-50 rounded-xl shadow-xl border border-primary/20 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                  {dropdownLinks.map((link) => (
+                    <a
+                      key={link.name}
+                      href={link.href}
+                      target={link.external ? "_blank" : undefined}
+                      rel={link.external ? "noopener noreferrer" : undefined}
+                      className="block px-4 py-2.5 text-primaryDark/70 dark:text-gray-400 hover:text-primary hover:bg-primary/5 transition-colors text-sm font-medium"
+                    >
+                      {link.name}
+                    </a>
+                  ))}
+                </div>
+              </div>
             </nav>
 
             {/* CTA Button and Dark Mode Toggle */}

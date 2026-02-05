@@ -8,7 +8,7 @@ module.exports = {
     './src/data/**/*.{js,ts,jsx,tsx}',
   ],
   safelist: [
-    // Category info dynamic classes for whitelabel products
+    // Category info dynamic classes for whitelabel products & opensource projects
     'text-cyan', 'bg-cyan/10', 'border-cyan/30',
     'text-green-400', 'bg-green-400/10', 'border-green-400/30',
     'text-pink-400', 'bg-pink-400/10', 'border-pink-400/30',
@@ -16,6 +16,8 @@ module.exports = {
     'text-purple-400', 'bg-purple-400/10', 'border-purple-400/30',
     'text-blue-400', 'bg-blue-400/10', 'border-blue-400/30',
     'text-emerald-400', 'bg-emerald-400/10', 'border-emerald-400/30',
+    'text-orange-400', 'bg-orange-400/10', 'border-orange-400/30',
+    'text-indigo-400', 'bg-indigo-400/10', 'border-indigo-400/30',
   ],
   theme: {
     screens: {
