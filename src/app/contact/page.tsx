@@ -325,26 +325,44 @@ export default function ContactPage() {
 
                   {/* Message */}
                   <div className="mt-6">
-                    <label className="block text-sm font-medium text-primaryDark dark:text-gray-300 mb-2">
-                      Tell us about your project <span className="text-red-500">*</span>
-                    </label>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="block text-sm font-medium text-primaryDark dark:text-gray-300">
+                        Tell us about your project <span className="text-red-500">*</span>
+                      </label>
+                      <span
+                        className={`text-xs ${
+                          formData.message.length > 9500
+                            ? "text-orange-500"
+                            : formData.message.length > 10000
+                            ? "text-red-500"
+                            : "text-gray-400"
+                        }`}
+                      >
+                        {formData.message.length.toLocaleString()} / 10,000
+                      </span>
+                    </div>
                     <div className="relative">
                       <BsChatDots className="absolute left-4 top-4 w-5 h-5 text-gray-400" />
                       <textarea
                         name="message"
                         value={formData.message}
                         onChange={handleChange}
-                        rows={5}
-                        placeholder="Describe your project, goals, and any specific requirements..."
-                        className={`w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-obsidian border rounded-xl text-primaryDark dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 transition-all resize-none ${
+                        rows={8}
+                        maxLength={10000}
+                        placeholder="Describe your project, goals, timeline, and any specific requirements. The more detail you provide, the better we can understand your needs and provide an accurate estimate..."
+                        className={`w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-obsidian border rounded-xl text-primaryDark dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 transition-all resize-y min-h-[150px] ${
                           errors.message
                             ? "border-red-500 focus:ring-red-500/50"
                             : "border-gray-200 dark:border-gray-700 focus:ring-cyan/50 focus:border-cyan"
                         }`}
                       />
                     </div>
-                    {errors.message && (
+                    {errors.message ? (
                       <p className="mt-1 text-sm text-red-500">{errors.message}</p>
+                    ) : (
+                      <p className="mt-1 text-xs text-gray-400">
+                        Minimum 20 characters. Include project goals, features, timeline, and any technical requirements.
+                      </p>
                     )}
                   </div>
 

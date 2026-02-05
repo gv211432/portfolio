@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
 
 interface ContactFormData {
   name: string;
@@ -8,10 +9,25 @@ interface ContactFormData {
   message: string;
 }
 
+// Constants
+const MAX_MESSAGE_LENGTH = 10000;
+const MIN_MESSAGE_LENGTH = 20;
+
 // Validate email format
 function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
+
+// Valid budget options
+const VALID_BUDGETS = [
+  "< $5,000",
+  "$5,000 - $10,000",
+  "$10,000 - $25,000",
+  "$25,000 - $50,000",
+  "$50,000 - $100,000",
+  "> $100,000",
+  "Not sure",
+];
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,6 +42,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (name.trim().length > 100) {
+      return NextResponse.json(
+        { success: false, message: "Name must be less than 100 characters" },
+        { status: 400 }
+      );
+    }
+
     if (!email || !isValidEmail(email)) {
       return NextResponse.json(
         { success: false, message: "Valid email is required" },
@@ -33,59 +56,73 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!budget) {
+    if (email.length > 255) {
       return NextResponse.json(
-        { success: false, message: "Budget selection is required" },
+        { success: false, message: "Email must be less than 255 characters" },
         { status: 400 }
       );
     }
 
-    if (!message || message.trim().length < 20) {
+    if (phone && phone.length > 30) {
       return NextResponse.json(
-        { success: false, message: "Message must be at least 20 characters" },
+        { success: false, message: "Phone number must be less than 30 characters" },
         { status: 400 }
       );
     }
 
-    // Log the submission (in production, you'd send an email or save to database)
-    console.log("=== New Contact Form Submission ===");
-    console.log("Name:", name);
-    console.log("Email:", email);
-    console.log("Phone:", phone || "Not provided");
-    console.log("Budget:", budget);
-    console.log("Message:", message);
-    console.log("Timestamp:", new Date().toISOString());
-    console.log("===================================");
+    if (!budget || !VALID_BUDGETS.includes(budget)) {
+      return NextResponse.json(
+        { success: false, message: "Please select a valid budget range" },
+        { status: 400 }
+      );
+    }
 
-    // TODO: Implement actual email sending using a service like:
-    // - Resend (https://resend.com)
-    // - SendGrid
-    // - Nodemailer with SMTP
-    // - AWS SES
-    //
-    // Example with Resend:
+    if (!message || message.trim().length < MIN_MESSAGE_LENGTH) {
+      return NextResponse.json(
+        { success: false, message: `Message must be at least ${MIN_MESSAGE_LENGTH} characters` },
+        { status: 400 }
+      );
+    }
+
+    if (message.length > MAX_MESSAGE_LENGTH) {
+      return NextResponse.json(
+        { success: false, message: `Message must be less than ${MAX_MESSAGE_LENGTH} characters` },
+        { status: 400 }
+      );
+    }
+
+    // Save to database
+    const submission = await prisma.contactSubmission.create({
+      data: {
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
+        phone: phone?.trim() || null,
+        budget,
+        message: message.trim(),
+      },
+    });
+
+    console.log("=== New Contact Form Submission Saved ===");
+    console.log("ID:", submission.id);
+    console.log("Name:", submission.name);
+    console.log("Email:", submission.email);
+    console.log("Budget:", submission.budget);
+    console.log("Timestamp:", submission.createdAt);
+    console.log("=========================================");
+
+    // TODO: Optionally send email notification
     // const resend = new Resend(process.env.RESEND_API_KEY);
     // await resend.emails.send({
     //   from: 'contact@gaurav.one',
     //   to: 'contact@gaurav.one',
     //   subject: `New Project Inquiry from ${name}`,
-    //   html: `
-    //     <h2>New Contact Form Submission</h2>
-    //     <p><strong>Name:</strong> ${name}</p>
-    //     <p><strong>Email:</strong> ${email}</p>
-    //     <p><strong>Phone:</strong> ${phone || 'Not provided'}</p>
-    //     <p><strong>Budget:</strong> ${budget}</p>
-    //     <p><strong>Message:</strong></p>
-    //     <p>${message}</p>
-    //   `,
+    //   html: `...`,
     // });
-
-    // For now, we'll simulate success
-    // In production, replace this with actual email sending logic
 
     return NextResponse.json({
       success: true,
       message: "Thank you! We'll get back to you within 24 hours.",
+      id: submission.id,
     });
   } catch (error) {
     console.error("Contact form error:", error);
@@ -96,8 +133,32 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Health check
-export async function GET() {
+// Health check & list submissions (for admin)
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const adminKey = searchParams.get("admin_key");
+
+  // Basic admin check (in production, use proper authentication)
+  if (adminKey === process.env.ADMIN_API_KEY && process.env.ADMIN_API_KEY) {
+    try {
+      const submissions = await prisma.contactSubmission.findMany({
+        orderBy: { createdAt: "desc" },
+        take: 50,
+      });
+      return NextResponse.json({
+        success: true,
+        count: submissions.length,
+        submissions,
+      });
+    } catch (error) {
+      console.error("Error fetching submissions:", error);
+      return NextResponse.json(
+        { success: false, message: "Failed to fetch submissions" },
+        { status: 500 }
+      );
+    }
+  }
+
   return NextResponse.json({
     status: "ok",
     message: "Contact API is running",

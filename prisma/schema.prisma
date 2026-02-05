@@ -43,3 +43,31 @@ enum ApplicationStatus {
   REJECTED
   HIRED
 }
+
+model ContactSubmission {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Contact info
+  name      String
+  email     String
+  phone     String?
+
+  // Project details
+  budget    String
+  message   String   @db.VarChar(10000)
+
+  // Status tracking
+  status    ContactStatus @default(NEW)
+  notes     String?
+}
+
+enum ContactStatus {
+  NEW
+  CONTACTED
+  IN_DISCUSSION
+  PROPOSAL_SENT
+  CONVERTED
+  CLOSED
+}
