@@ -370,10 +370,10 @@ export default function OpenSourcePage() {
     <div className={`min-h-screen ${darkMode ? "dark" : ""}`}>
       <div className="bg-light dark:bg-obsidian transition-colors duration-300">
         {/* Header */}
-        <header className="fixed top-0 left-0 right-0 z-50 bg-light/80 dark:bg-obsidian/80 backdrop-blur-md border-b border-primary/10">
+        <header className="fixed top-0 left-0 right-0 z-50 bg-secondary/95 dark:bg-obsidian/95 backdrop-blur-sm border-b border-primary/10 transition-colors duration-300">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16">
-              <Logo showIcon size="md" href={domainUrls.root} />
+            <div className="flex justify-between items-center py-4">
+              <Logo size="lg" href={domainUrls.root} />
 
               <nav className="hidden md:flex items-center gap-6">
                 <Link href={domainUrls.root} className="text-primaryDark/70 dark:text-gray-400 hover:text-cyan transition-colors text-sm">

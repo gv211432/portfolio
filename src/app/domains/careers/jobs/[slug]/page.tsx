@@ -355,19 +355,19 @@ export default function JobDetailPage() {
     <div className={`min-h-screen ${darkMode ? "dark" : ""}`}>
       <div className="bg-light dark:bg-obsidian text-primaryDark dark:text-white transition-colors duration-300">
         {/* Header */}
-        <header className="fixed top-0 left-0 right-0 z-50 bg-light/80 dark:bg-obsidian/80 backdrop-blur-md border-b border-primary/10">
+        <header className="fixed top-0 left-0 right-0 z-50 bg-secondary/95 dark:bg-obsidian/95 backdrop-blur-sm border-b border-primary/10 transition-colors duration-300">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16">
+            <div className="flex justify-between items-center py-4">
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => router.back()}
-                  className="flex items-center gap-2 text-primaryDark/60 dark:text-gray-400 hover:text-cyan transition-colors"
+                  className="flex items-center gap-2 text-primaryDark/60 dark:text-gray-400 hover:text-primary transition-colors"
                 >
                   <FaArrowLeft className="w-4 h-4" />
                   <span className="hidden sm:inline">Back</span>
                 </button>
                 <div className="h-6 w-px bg-primary/20" />
-                <Logo showIcon size="md" href={domainUrls.root} />
+                <Logo size="md" href={domainUrls.root} />
               </div>
 
               <nav className="hidden md:flex items-center gap-6">
