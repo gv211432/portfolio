@@ -5,7 +5,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { domainUrls, globalConfig } from "@/config/global";
 import { useDarkModeStore } from "@/Atoms/globalAtoms";
 import DarkModeToggleButton from "@/components/inputs/DarkModeToggleButton";
-import { Logo } from "@/components/ui";
+import {
+  Logo,
+  PrimaryActionButton,
+  DarkActionButton,
+  FloroActionButton,
+  ContactDetails,
+} from "@/components/ui";
 
 // Terminal typewriter lines for hero section
 const terminalLines = [
@@ -716,18 +722,18 @@ const ProjectCalculator = () => {
       </div>
 
       <div className="mt-6 text-center">
-        <a
+        <DarkActionButton
           href={`mailto:${globalConfig.email}?subject=Project Inquiry - ${selectedCount} Features&body=Hi, I'm interested in a project with: ${Object.entries(features)
             .filter(([, v]) => v)
             .map(([k]) => featureDetails[k as keyof typeof featureDetails].label)
             .join(", ")}`}
-          className="inline-flex items-center gap-2 bg-gradient-to-r from-primary to-primaryDark hover:from-primaryDark hover:to-primary text-white px-8 py-4 rounded-xl font-semibold transition-all hover:shadow-lg hover:shadow-primary/20"
+          className="rounded-xl"
         >
           Get Detailed Quote
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
           </svg>
-        </a>
+        </DarkActionButton>
       </div>
     </div>
   );
@@ -883,18 +889,12 @@ export default function LandingPage() {
                 From Solana to Sui, we architect solutions that scale.
               </p>
               <div className="flex flex-wrap gap-4">
-                <a
-                  href="#services"
-                  className="bg-gradient-to-r from-cyan to-cyan-600 hover:from-cyan-600 hover:to-cyan text-obsidian px-8 py-4 rounded-lg font-semibold transition-all hover:shadow-xl hover:shadow-cyan/20"
-                >
+                <FloroActionButton href="#services">
                   Explore Services
-                </a>
-                <a
-                  href={domainUrls.me}
-                  className="border-2 border-primary/50 text-primary hover:bg-primary/10 px-8 py-4 rounded-lg font-semibold transition-all"
-                >
+                </FloroActionButton>
+                <PrimaryActionButton href={domainUrls.me}>
                   View Portfolio
-                </a>
+                </PrimaryActionButton>
               </div>
             </motion.div>
 
@@ -1054,11 +1054,8 @@ export default function LandingPage() {
               Let's discuss your project and create something that pushes the boundaries of DeFi.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
-              <a
-                href={`mailto:${globalConfig.email}`}
-                className="bg-gradient-to-r from-primary to-primaryDark hover:from-primaryDark hover:to-primary text-white px-8 py-4 rounded-lg font-semibold transition-all hover:shadow-xl hover:shadow-primary/20 flex items-center gap-2"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <DarkActionButton href={`mailto:${globalConfig.email}`}>
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -1067,13 +1064,10 @@ export default function LandingPage() {
                   />
                 </svg>
                 {globalConfig.email}
-              </a>
-              <a
-                href={domainUrls.me}
-                className="border-2 border-cyan text-cyan hover:bg-cyan/10 px-8 py-4 rounded-lg font-semibold transition-all"
-              >
+              </DarkActionButton>
+              <PrimaryActionButton href={domainUrls.me} className="border-cyan text-cyan hover:bg-cyan/10">
                 View Full Portfolio
-              </a>
+              </PrimaryActionButton>
             </div>
           </motion.div>
         </div>
@@ -1123,6 +1117,8 @@ export default function LandingPage() {
                   </svg>
                 </a>
               </div>
+              {/* Contact Details */}
+              <ContactDetails variant="vertical" className="mt-6" />
             </div>
 
             <div>

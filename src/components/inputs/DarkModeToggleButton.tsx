@@ -52,7 +52,7 @@ export default function DarkModeToggleButton() {
         animate={{
           x: darkMode ? 28 : 0,
           scale: [1, 1.1, 1],
-          backgroundColor: darkMode ? "#1a1a2e" : "#fbbf24",
+          backgroundColor: darkMode ? "#1a1a2e" : "#313854",
         }}
         transition={{
           x: { type: "spring", stiffness: 500, damping: 30 },

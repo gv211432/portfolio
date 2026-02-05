@@ -13,7 +13,7 @@ import {
 import { useDarkModeStore } from "@/Atoms/globalAtoms";
 import DarkModeToggleButton from "@/components/inputs/DarkModeToggleButton";
 import { globalConfig, domainUrls } from "@/config/global";
-import { Logo } from "@/components/ui";
+import { Logo, FloroActionButton } from "@/components/ui";
 
 // React Icons imports
 import {
@@ -606,13 +606,10 @@ export default function OpenSourcePage() {
                     <FaGithub className="w-5 h-5" />
                     Follow on GitHub
                   </a>
-                  <Link
-                    href={domainUrls.root}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-cyan text-obsidian font-semibold rounded-xl hover:bg-cyan/90 transition-colors"
-                  >
+                  <FloroActionButton href={domainUrls.root} asLink className="px-6 py-3 rounded-xl">
                     Contact Me
-                    <FaArrowRight className="w-4 h-4" />
-                  </Link>
+                    <FaArrowRight className="w-4 h-4 ml-2" />
+                  </FloroActionButton>
                 </div>
               </div>
             </section>

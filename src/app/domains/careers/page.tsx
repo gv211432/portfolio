@@ -13,7 +13,7 @@ import {
 import { useDarkModeStore } from "@/Atoms/globalAtoms";
 import DarkModeToggleButton from "@/components/inputs/DarkModeToggleButton";
 import { globalConfig, domainUrls } from "@/config/global";
-import { Logo } from "@/components/ui";
+import { Logo, FloroActionButton, DarkActionButton } from "@/components/ui";
 
 // React Icons imports
 import {
@@ -319,13 +319,10 @@ export default function CareersPage() {
 
                 {/* CTA */}
                 <div className="flex items-center justify-center gap-4 flex-wrap">
-                  <a
-                    href="#positions"
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-cyan text-obsidian font-semibold rounded-xl hover:bg-cyan/90 transition-colors"
-                  >
+                  <FloroActionButton href="#positions" className="px-6 py-3 rounded-xl">
                     View Open Positions
-                    <FaArrowRight className="w-4 h-4" />
-                  </a>
+                    <FaArrowRight className="w-4 h-4 ml-2" />
+                  </FloroActionButton>
                 </div>
               </motion.div>
             </div>
@@ -495,13 +492,13 @@ export default function CareersPage() {
                 We're always looking for talented individuals. Send us your resume and
                 tell us how you can contribute.
               </p>
-              <a
+              <FloroActionButton
                 href={`mailto:${globalConfig.email}?subject=Career Inquiry`}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-cyan text-obsidian font-semibold rounded-xl hover:bg-cyan/90 transition-colors"
+                className="px-6 py-3 rounded-xl"
               >
                 Get in Touch
-                <FaArrowRight className="w-4 h-4" />
-              </a>
+                <FaArrowRight className="w-4 h-4 ml-2" />
+              </FloroActionButton>
             </div>
           </div>
         </section>

@@ -50,7 +50,7 @@ export default function Logo({
   const linkHref = href || domainUrls.root;
 
   const LogoContent = () => (
-    <div className={`flex items-center gap-1 ${className}`}>
+    <div className={`flex items-center scale-125 ${className}`}>
       {/* Light mode logo */}
       <Image
         src={logoLight}
@@ -75,7 +75,7 @@ export default function Logo({
 
   if (asLink) {
     return (
-      <Link href={linkHref} className="flex items-center gap-2">
+      <Link href={linkHref} className="flex items-center ">
         <LogoContent />
       </Link>
     );

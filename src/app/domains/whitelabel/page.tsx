@@ -12,7 +12,12 @@ import {
 import { useDarkModeStore } from "@/Atoms/globalAtoms";
 import DarkModeToggleButton from "@/components/inputs/DarkModeToggleButton";
 import { globalConfig, domainUrls } from "@/config/global";
-import { Logo } from "@/components/ui";
+import {
+  Logo,
+  PrimaryActionButton,
+  DarkActionButton,
+  FloroActionButton,
+} from "@/components/ui";
 
 // React Icons imports
 import {
@@ -396,12 +401,12 @@ export default function WhitelabelPage() {
 
             <div className="flex items-center gap-4">
               <DarkModeToggleButton />
-              <a
+              <FloroActionButton
                 href={`mailto:${globalConfig.email}?subject=Whitelabel Product Inquiry`}
-                className="hidden lg:inline-flex bg-gradient-to-r from-cyan to-cyan-600 hover:from-cyan-600 hover:to-cyan text-obsidian px-6 py-2.5 rounded-lg font-semibold transition-all hover:shadow-lg hover:shadow-cyan/20"
+                className="hidden lg:inline-flex px-6 py-2.5"
               >
                 Get Started
-              </a>
+              </FloroActionButton>
             </div>
           </div>
         </div>
@@ -436,18 +441,14 @@ export default function WhitelabelPage() {
               social tools, and enterprise software. Your brand, our technology.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
-              <a
-                href="#products"
-                className="bg-gradient-to-r from-cyan to-cyan-600 hover:from-cyan-600 hover:to-cyan text-obsidian px-8 py-4 rounded-lg font-semibold transition-all hover:shadow-xl hover:shadow-cyan/20"
-              >
+              <FloroActionButton href="#products">
                 Browse Products
-              </a>
-              <a
+              </FloroActionButton>
+              <PrimaryActionButton
                 href={`mailto:${globalConfig.email}?subject=Custom Solution Inquiry`}
-                className="border-2 border-primary/50 text-primary hover:bg-primary/10 px-8 py-4 rounded-lg font-semibold transition-all"
               >
                 Request Custom Build
-              </a>
+              </PrimaryActionButton>
             </div>
           </motion.div>
         </div>
@@ -590,20 +591,16 @@ export default function WhitelabelPage() {
               solutions tailored to your specific requirements.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
-              <a
+              <DarkActionButton
                 href={`mailto:${globalConfig.email}?subject=Custom White-label Solution`}
-                className="bg-gradient-to-r from-primary to-primaryDark hover:from-primaryDark hover:to-primary text-white px-8 py-4 rounded-lg font-semibold transition-all hover:shadow-xl hover:shadow-primary/20 flex items-center gap-2"
               >
                 Discuss Your Project
-                <FaArrowRight className="w-4 h-4" />
-              </a>
-              <Link
-                href={domainUrls.casestudy}
-                className="border-2 border-primary/50 text-primary hover:bg-primary/10 px-8 py-4 rounded-lg font-semibold transition-all flex items-center gap-2"
-              >
+                <FaArrowRight className="w-4 h-4 ml-2" />
+              </DarkActionButton>
+              <PrimaryActionButton href={domainUrls.casestudy} asLink>
                 View Case Studies
-                <HiOutlineExternalLink className="w-4 h-4" />
-              </Link>
+                <HiOutlineExternalLink className="w-4 h-4 ml-2" />
+              </PrimaryActionButton>
             </div>
           </motion.div>
         </div>

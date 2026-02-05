@@ -13,7 +13,11 @@ import {
 import { useDarkModeStore } from "@/Atoms/globalAtoms";
 import DarkModeToggleButton from "@/components/inputs/DarkModeToggleButton";
 import { globalConfig, domainUrls } from "@/config/global";
-import { Logo } from "@/components/ui";
+import {
+  Logo,
+  FloroActionButton,
+  PrimaryActionButton,
+} from "@/components/ui";
 
 // React Icons imports
 import {
@@ -257,12 +261,12 @@ export default function ProductDetailPage() {
 
             <div className="flex items-center gap-4">
               <DarkModeToggleButton />
-              <a
+              <FloroActionButton
                 href={`mailto:${globalConfig.email}?subject=Inquiry: ${product.title}`}
-                className="hidden sm:inline-flex bg-gradient-to-r from-cyan to-cyan-600 hover:from-cyan-600 hover:to-cyan text-obsidian px-6 py-2.5 rounded-lg font-semibold transition-all hover:shadow-lg hover:shadow-cyan/20"
+                className="hidden sm:inline-flex px-6 py-2.5"
               >
                 Get This Product
-              </a>
+              </FloroActionButton>
             </div>
           </div>
         </div>
@@ -359,19 +363,17 @@ export default function ProductDetailPage() {
 
               {/* CTAs */}
               <div className="flex flex-wrap gap-4">
-                <a
+                <FloroActionButton
                   href={`mailto:${globalConfig.email}?subject=Inquiry: ${product.title}&body=Hi, I'm interested in the ${product.title} white-label solution. Please share more details about pricing and implementation.`}
-                  className="bg-gradient-to-r from-cyan to-cyan-600 hover:from-cyan-600 hover:to-cyan text-obsidian px-8 py-4 rounded-lg font-semibold transition-all hover:shadow-xl hover:shadow-cyan/20 flex items-center gap-2"
                 >
                   Request Demo
-                  <FaArrowRight className="w-4 h-4" />
-                </a>
-                <a
+                  <FaArrowRight className="w-4 h-4 ml-2" />
+                </FloroActionButton>
+                <PrimaryActionButton
                   href={`mailto:${globalConfig.email}?subject=Custom Quote: ${product.title}`}
-                  className="border-2 border-primary/50 text-primary hover:bg-primary/10 px-8 py-4 rounded-lg font-semibold transition-all"
                 >
                   Get Custom Quote
-                </a>
+                </PrimaryActionButton>
               </div>
             </motion.div>
 
@@ -594,20 +596,16 @@ export default function ProductDetailPage() {
               potential of this solution.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
-              <a
+              <FloroActionButton
                 href={`mailto:${globalConfig.email}?subject=Demo Request: ${product.title}&body=Hi, I'd like to schedule a demo for the ${product.title} white-label solution.`}
-                className="bg-gradient-to-r from-cyan to-cyan-600 hover:from-cyan-600 hover:to-cyan text-obsidian px-8 py-4 rounded-lg font-semibold transition-all hover:shadow-xl hover:shadow-cyan/20 flex items-center gap-2"
               >
                 Schedule Demo
-                <FaArrowRight className="w-4 h-4" />
-              </a>
-              <Link
-                href="/"
-                className="border-2 border-primary/50 text-primary hover:bg-primary/10 px-8 py-4 rounded-lg font-semibold transition-all flex items-center gap-2"
-              >
+                <FaArrowRight className="w-4 h-4 ml-2" />
+              </FloroActionButton>
+              <PrimaryActionButton href="/" asLink>
                 View All Products
-                <HiOutlineExternalLink className="w-4 h-4" />
-              </Link>
+                <HiOutlineExternalLink className="w-4 h-4 ml-2" />
+              </PrimaryActionButton>
             </div>
           </motion.div>
         </div>
