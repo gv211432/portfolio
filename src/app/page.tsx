@@ -3,6 +3,8 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { domainUrls, globalConfig } from "@/config/global";
+import { useDarkModeStore } from "@/Atoms/globalAtoms";
+import DarkModeToggleButton from "@/components/inputs/DarkModeToggleButton";
 
 // Terminal typewriter lines for hero section
 const terminalLines = [
@@ -27,47 +29,47 @@ const navLinks = [
 const ServiceIcons = {
   smartContract: (
     <svg viewBox="0 0 64 64" className="w-12 h-12" fill="none" stroke="currentColor">
-      <rect x="8" y="8" width="48" height="48" rx="4" strokeWidth="2" className="stroke-gold" />
+      <rect x="8" y="8" width="48" height="48" rx="4" strokeWidth="2" className="stroke-primary" />
       <path d="M20 24h24M20 32h24M20 40h16" strokeWidth="2" strokeLinecap="round" className="stroke-cyan" />
-      <circle cx="48" cy="40" r="4" strokeWidth="2" className="stroke-gold fill-gold/20" />
+      <circle cx="48" cy="40" r="4" strokeWidth="2" className="stroke-primary fill-primary/20" />
     </svg>
   ),
   crossChain: (
     <svg viewBox="0 0 64 64" className="w-12 h-12" fill="none" stroke="currentColor">
       <circle cx="16" cy="32" r="10" strokeWidth="2" className="stroke-cyan" />
-      <circle cx="48" cy="32" r="10" strokeWidth="2" className="stroke-gold" />
-      <path d="M26 32h12" strokeWidth="2" strokeDasharray="4 2" className="stroke-gold" />
+      <circle cx="48" cy="32" r="10" strokeWidth="2" className="stroke-primary" />
+      <path d="M26 32h12" strokeWidth="2" strokeDasharray="4 2" className="stroke-primary" />
       <path d="M30 28l4 4-4 4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="stroke-cyan" />
     </svg>
   ),
   liquidity: (
     <svg viewBox="0 0 64 64" className="w-12 h-12" fill="none" stroke="currentColor">
-      <path d="M32 8v48" strokeWidth="2" className="stroke-gold/50" />
-      <path d="M8 32h48" strokeWidth="2" className="stroke-gold/50" />
+      <path d="M32 8v48" strokeWidth="2" className="stroke-primary/50" />
+      <path d="M8 32h48" strokeWidth="2" className="stroke-primary/50" />
       <path d="M16 48L32 16l16 32" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="stroke-cyan" />
-      <circle cx="32" cy="32" r="6" strokeWidth="2" className="stroke-gold fill-gold/20" />
+      <circle cx="32" cy="32" r="6" strokeWidth="2" className="stroke-primary fill-primary/20" />
     </svg>
   ),
   defi: (
     <svg viewBox="0 0 64 64" className="w-12 h-12" fill="none" stroke="currentColor">
       <polygon points="32,8 56,24 56,48 32,56 8,48 8,24" strokeWidth="2" className="stroke-cyan" />
-      <polygon points="32,16 48,28 48,44 32,48 16,44 16,28" strokeWidth="2" className="stroke-gold fill-gold/10" />
+      <polygon points="32,16 48,28 48,44 32,48 16,44 16,28" strokeWidth="2" className="stroke-primary fill-primary/10" />
       <circle cx="32" cy="36" r="4" className="fill-cyan" />
     </svg>
   ),
   audit: (
     <svg viewBox="0 0 64 64" className="w-12 h-12" fill="none" stroke="currentColor">
-      <rect x="12" y="8" width="40" height="48" rx="2" strokeWidth="2" className="stroke-gold" />
+      <rect x="12" y="8" width="40" height="48" rx="2" strokeWidth="2" className="stroke-primary" />
       <path d="M20 20h24M20 28h24M20 36h16" strokeWidth="2" strokeLinecap="round" className="stroke-cyan/60" />
       <circle cx="44" cy="44" r="8" strokeWidth="2" className="stroke-cyan" />
-      <path d="M50 50l6 6" strokeWidth="2" strokeLinecap="round" className="stroke-gold" />
+      <path d="M50 50l6 6" strokeWidth="2" strokeLinecap="round" className="stroke-primary" />
     </svg>
   ),
   consulting: (
     <svg viewBox="0 0 64 64" className="w-12 h-12" fill="none" stroke="currentColor">
-      <circle cx="32" cy="20" r="12" strokeWidth="2" className="stroke-gold" />
+      <circle cx="32" cy="20" r="12" strokeWidth="2" className="stroke-primary" />
       <path d="M12 56c0-11 9-20 20-20s20 9 20 20" strokeWidth="2" className="stroke-cyan" />
-      <path d="M32 8v4M44 20h4M20 20h-4M32 28v4" strokeWidth="2" strokeLinecap="round" className="stroke-gold/60" />
+      <path d="M32 8v4M44 20h4M20 20h-4M32 28v4" strokeWidth="2" strokeLinecap="round" className="stroke-primary/60" />
     </svg>
   ),
 };
@@ -126,11 +128,11 @@ const CrossChainVisualizer = () => {
         {/* Grid background */}
         <defs>
           <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
-            <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(201, 169, 98, 0.1)" strokeWidth="0.5" />
+            <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(139, 148, 203, 0.1)" strokeWidth="0.5" />
           </pattern>
           <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#00D9FF" />
-            <stop offset="100%" stopColor="#C9A962" />
+            <stop offset="100%" stopColor="#8b94cb" />
           </linearGradient>
           <filter id="glow">
             <feGaussianBlur stdDeviation="3" result="coloredBlur" />
@@ -161,13 +163,13 @@ const CrossChainVisualizer = () => {
         <g transform="translate(340, 100)">
           <motion.circle
             r="35"
-            fill="rgba(201, 169, 98, 0.1)"
-            stroke="#C9A962"
+            fill="rgba(139, 148, 203, 0.1)"
+            stroke="#8b94cb"
             strokeWidth="2"
             animate={{ scale: isHovered ? [1, 1.1, 1] : 1 }}
             transition={{ duration: 1, repeat: isHovered ? Infinity : 0, delay: 0.5 }}
           />
-          <text y="5" textAnchor="middle" fill="#C9A962" fontSize="12" fontWeight="bold">
+          <text y="5" textAnchor="middle" fill="#8b94cb" fontSize="12" fontWeight="bold">
             SUI
           </text>
         </g>
@@ -205,7 +207,7 @@ const CrossChainVisualizer = () => {
               />
               <motion.circle
                 r="8"
-                fill="#C9A962"
+                fill="#8b94cb"
                 filter="url(#glow)"
                 initial={{ cx: 300, cy: 100 }}
                 animate={{
@@ -240,7 +242,7 @@ const CrossChainVisualizer = () => {
 
       {/* Hover instruction */}
       <motion.div
-        className="absolute bottom-4 left-1/2 -translate-x-1/2 text-gold/60 text-sm"
+        className="absolute bottom-4 left-1/2 -translate-x-1/2 text-primary/60 text-sm"
         animate={{ opacity: isHovered ? 0 : [0.5, 1, 0.5] }}
         transition={{ duration: 2, repeat: Infinity }}
       >
@@ -296,13 +298,13 @@ const TerminalHero = () => {
   }, [currentLineIndex, typeText]);
 
   return (
-    <div className="bg-obsidian border border-gold/30 rounded-lg p-6 font-mono text-sm lg:text-base shadow-2xl">
+    <div className="bg-obsidian border border-primary/30 rounded-lg p-6 font-mono text-sm lg:text-base shadow-2xl">
       {/* Terminal Header */}
-      <div className="flex items-center gap-2 mb-4 pb-4 border-b border-gold/20">
+      <div className="flex items-center gap-2 mb-4 pb-4 border-b border-primary/20">
         <div className="w-3 h-3 rounded-full bg-red-500" />
         <div className="w-3 h-3 rounded-full bg-yellow-500" />
         <div className="w-3 h-3 rounded-full bg-green-500" />
-        <span className="ml-4 text-gold/60 text-xs">gaurav@blockchain:~</span>
+        <span className="ml-4 text-primary/60 text-xs">gaurav@blockchain:~</span>
       </div>
 
       {/* Terminal Content */}
@@ -318,7 +320,7 @@ const TerminalHero = () => {
             <span className="text-cyan">$</span>
             <span className="text-gray-300">
               {currentText}
-              <span className="inline-block w-2 h-5 bg-gold ml-1 animate-blink" />
+              <span className="inline-block w-2 h-5 bg-primary ml-1 animate-blink" />
             </span>
           </div>
         )}
@@ -367,10 +369,10 @@ const ProjectCalculator = () => {
   const selectedCount = Object.values(features).filter(Boolean).length;
 
   return (
-    <div className="bg-obsidian-50 border border-gold/30 rounded-2xl p-8">
+    <div className="bg-light dark:bg-obsidian-50 border border-primary/30 rounded-2xl p-8 transition-colors duration-300">
       <div className="mb-8">
-        <h3 className="text-2xl font-bold text-white mb-2">Project Complexity Calculator</h3>
-        <p className="text-gray-400">Toggle features to estimate your project scope</p>
+        <h3 className="text-2xl font-bold text-primaryDark dark:text-white mb-2">Project Complexity Calculator</h3>
+        <p className="text-primaryDark/70 dark:text-gray-400">Toggle features to estimate your project scope</p>
       </div>
 
       <div className="grid md:grid-cols-2 gap-4 mb-8">
@@ -381,11 +383,11 @@ const ProjectCalculator = () => {
             className={`p-4 rounded-xl border-2 text-left transition-all ${
               features[key as keyof typeof features]
                 ? "border-cyan bg-cyan/10"
-                : "border-gold/30 hover:border-gold/60 bg-obsidian"
+                : "border-primary/30 hover:border-primary/60 bg-secondary dark:bg-obsidian"
             }`}
           >
             <div className="flex items-center justify-between mb-2">
-              <span className={`font-semibold ${features[key as keyof typeof features] ? "text-cyan" : "text-white"}`}>
+              <span className={`font-semibold ${features[key as keyof typeof features] ? "text-cyan" : "text-primaryDark dark:text-white"}`}>
                 {detail.label}
               </span>
               <span
@@ -402,7 +404,7 @@ const ProjectCalculator = () => {
                 {detail.complexity}
               </span>
             </div>
-            <div className="text-sm text-gray-400">
+            <div className="text-sm text-primaryDark/60 dark:text-gray-400">
               {detail.weeks > 0 ? `+${detail.weeks} weeks` : "Monthly retainer"}
             </div>
           </button>
@@ -410,15 +412,15 @@ const ProjectCalculator = () => {
       </div>
 
       {/* Estimate Display */}
-      <div className="bg-obsidian rounded-xl p-6 border border-gold/20">
+      <div className="bg-secondary dark:bg-obsidian rounded-xl p-6 border border-primary/20 transition-colors duration-300">
         <div className="grid grid-cols-3 gap-4 text-center">
           <div>
             <div className="text-3xl font-bold text-cyan">{estimate.weeks}</div>
-            <div className="text-sm text-gray-400">Estimated Weeks</div>
+            <div className="text-sm text-primaryDark/70 dark:text-gray-400">Estimated Weeks</div>
           </div>
           <div>
-            <div className="text-3xl font-bold text-gold">{selectedCount}</div>
-            <div className="text-sm text-gray-400">Features Selected</div>
+            <div className="text-3xl font-bold text-primary">{selectedCount}</div>
+            <div className="text-sm text-primaryDark/70 dark:text-gray-400">Features Selected</div>
           </div>
           <div>
             <div
@@ -432,7 +434,7 @@ const ProjectCalculator = () => {
             >
               {estimate.complexity}
             </div>
-            <div className="text-sm text-gray-400">Complexity</div>
+            <div className="text-sm text-primaryDark/70 dark:text-gray-400">Complexity</div>
           </div>
         </div>
       </div>
@@ -443,7 +445,7 @@ const ProjectCalculator = () => {
             .filter(([, v]) => v)
             .map(([k]) => featureDetails[k as keyof typeof featureDetails].label)
             .join(", ")}`}
-          className="inline-flex items-center gap-2 bg-gradient-to-r from-gold to-gold-500 hover:from-gold-500 hover:to-gold text-obsidian px-8 py-4 rounded-xl font-semibold transition-all hover:shadow-lg hover:shadow-gold/20"
+          className="inline-flex items-center gap-2 bg-gradient-to-r from-primary to-primaryDark hover:from-primaryDark hover:to-primary text-white px-8 py-4 rounded-xl font-semibold transition-all hover:shadow-lg hover:shadow-primary/20"
         >
           Get Detailed Quote
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -457,17 +459,27 @@ const ProjectCalculator = () => {
 
 export default function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { darkMode } = useDarkModeStore();
+
+  // Toggle dark mode class on document
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [darkMode]);
 
   return (
-    <div className="min-h-screen bg-obsidian">
+    <div className="min-h-screen bg-secondary dark:bg-obsidian transition-colors duration-300">
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-obsidian/95 backdrop-blur-sm border-b border-gold/10">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-secondary/95 dark:bg-obsidian/95 backdrop-blur-sm border-b border-primary/10 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2">
-              <span className="text-2xl font-bold text-white">
-                Gaurav<span className="text-gold">.one</span>
+              <span className="text-2xl font-bold text-primaryDark dark:text-white">
+                Gaurav<span className="text-primary">.one</span>
               </span>
             </Link>
 
@@ -479,18 +491,19 @@ export default function LandingPage() {
                   href={link.href}
                   target={link.external ? "_blank" : undefined}
                   rel={link.external ? "noopener noreferrer" : undefined}
-                  className="text-gray-400 hover:text-gold transition-colors font-medium"
+                  className="text-primaryDark/70 dark:text-gray-400 hover:text-primary transition-colors font-medium"
                 >
                   {link.name}
                 </a>
               ))}
             </nav>
 
-            {/* CTA Button */}
-            <div className="hidden lg:block">
+            {/* CTA Button and Dark Mode Toggle */}
+            <div className="hidden lg:flex items-center gap-4">
+              <DarkModeToggleButton />
               <a
                 href="#calculator"
-                className="bg-gradient-to-r from-gold to-gold-500 hover:from-gold-500 hover:to-gold text-obsidian px-6 py-3 rounded-lg font-semibold transition-all hover:shadow-lg hover:shadow-gold/20"
+                className="bg-gradient-to-r from-primary to-primaryDark hover:from-primaryDark hover:to-primary text-white px-6 py-3 rounded-lg font-semibold transition-all hover:shadow-lg hover:shadow-primary/20"
               >
                 Get Estimate
               </a>
@@ -498,7 +511,7 @@ export default function LandingPage() {
 
             {/* Mobile Menu Button */}
             <button className="lg:hidden p-2" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-              <svg className="w-6 h-6 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 {mobileMenuOpen ? (
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 ) : (
@@ -515,7 +528,7 @@ export default function LandingPage() {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
-                className="lg:hidden py-4 border-t border-gold/20"
+                className="lg:hidden py-4 border-t border-primary/20"
               >
                 {navLinks.map((link) => (
                   <a
@@ -523,19 +536,22 @@ export default function LandingPage() {
                     href={link.href}
                     target={link.external ? "_blank" : undefined}
                     rel={link.external ? "noopener noreferrer" : undefined}
-                    className="block py-3 text-gray-400 hover:text-gold transition-colors font-medium"
+                    className="block py-3 text-gray-400 hover:text-primary transition-colors font-medium"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     {link.name}
                   </a>
                 ))}
-                <a
-                  href="#calculator"
-                  className="block mt-4 bg-gold text-obsidian px-6 py-3 rounded-lg font-semibold text-center"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Get Estimate
-                </a>
+                <div className="flex items-center justify-between mt-4">
+                  <DarkModeToggleButton />
+                  <a
+                    href="#calculator"
+                    className="bg-primary text-white px-6 py-3 rounded-lg font-semibold text-center"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Get Estimate
+                  </a>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -545,9 +561,9 @@ export default function LandingPage() {
       {/* Hero Section with Terminal */}
       <section className="pt-24 lg:pt-32 pb-20 relative overflow-hidden">
         {/* Background Effects */}
-        <div className="absolute inset-0 bg-gradient-to-br from-obsidian via-obsidian-50 to-obsidian" />
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gold/5 rounded-full blur-[120px]" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-cyan/5 rounded-full blur-[100px]" />
+        <div className="absolute inset-0 bg-gradient-to-br from-secondary via-light to-secondary dark:from-obsidian dark:via-obsidian-50 dark:to-obsidian transition-colors duration-300" />
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/10 dark:bg-primary/5 rounded-full blur-[120px]" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-cyan/10 dark:bg-cyan/5 rounded-full blur-[100px]" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -556,19 +572,19 @@ export default function LandingPage() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8 }}
             >
-              <span className="inline-flex items-center gap-2 px-4 py-2 bg-gold/10 border border-gold/30 rounded-full text-gold text-sm font-medium mb-6">
-                <span className="w-2 h-2 bg-gold rounded-full animate-pulse" />
+              <span className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/30 rounded-full text-primary text-sm font-medium mb-6">
+                <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
                 Web3 Development Studio
               </span>
-              <h1 className="text-4xl lg:text-6xl font-bold text-white leading-tight mb-6">
+              <h1 className="text-4xl lg:text-6xl font-bold text-primaryDark dark:text-white leading-tight mb-6">
                 Building the
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan to-gold">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan to-primary">
                   {" "}
                   Future{" "}
                 </span>
                 of Finance
               </h1>
-              <p className="text-lg text-gray-400 mb-8 max-w-xl">
+              <p className="text-lg text-primaryDark/70 dark:text-gray-400 mb-8 max-w-xl">
                 Expert blockchain development for cross-chain bridges, DEX aggregators, and DeFi protocols.
                 From Solana to Sui, we architect solutions that scale.
               </p>
@@ -581,7 +597,7 @@ export default function LandingPage() {
                 </a>
                 <a
                   href={domainUrls.me}
-                  className="border-2 border-gold/50 text-gold hover:bg-gold/10 px-8 py-4 rounded-lg font-semibold transition-all"
+                  className="border-2 border-primary/50 text-primary hover:bg-primary/10 px-8 py-4 rounded-lg font-semibold transition-all"
                 >
                   View Portfolio
                 </a>
@@ -603,7 +619,7 @@ export default function LandingPage() {
       {/* Stats Section */}
       <section className="py-16 relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-obsidian-50 border border-gold/20 rounded-2xl p-8 grid grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="bg-light dark:bg-obsidian-50 border border-primary/20 rounded-2xl p-8 grid grid-cols-2 lg:grid-cols-4 gap-8 transition-colors duration-300">
             {stats.map((stat, index) => (
               <motion.div
                 key={stat.label}
@@ -613,10 +629,10 @@ export default function LandingPage() {
                 viewport={{ once: true }}
                 className="text-center"
               >
-                <div className="text-4xl lg:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan to-gold mb-2">
+                <div className="text-4xl lg:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan to-primary mb-2">
                   {stat.number}
                 </div>
-                <div className="text-gray-400 font-medium">{stat.label}</div>
+                <div className="text-primaryDark/70 dark:text-gray-400 font-medium">{stat.label}</div>
               </motion.div>
             ))}
           </div>
@@ -633,12 +649,12 @@ export default function LandingPage() {
               transition={{ duration: 0.6 }}
               viewport={{ once: true }}
             >
-              <span className="text-gold font-semibold uppercase tracking-wider text-sm">Cross-Chain Expertise</span>
-              <h2 className="text-3xl lg:text-4xl font-bold text-white mt-4 mb-6">
+              <span className="text-primary font-semibold uppercase tracking-wider text-sm">Cross-Chain Expertise</span>
+              <h2 className="text-3xl lg:text-4xl font-bold text-primaryDark dark:text-white mt-4 mb-6">
                 Bridging Blockchains,{" "}
                 <span className="text-cyan">Unlocking Liquidity</span>
               </h2>
-              <p className="text-gray-400 mb-6 leading-relaxed">
+              <p className="text-primaryDark/70 dark:text-gray-400 mb-6 leading-relaxed">
                 Specializing in Solana-Sui bridges and multi-chain DEX aggregators. We build the infrastructure
                 that connects ecosystems and enables seamless asset transfers across chains.
               </p>
@@ -659,7 +675,7 @@ export default function LandingPage() {
                         />
                       </svg>
                     </span>
-                    <span className="text-gray-300">{item}</span>
+                    <span className="text-primaryDark/80 dark:text-gray-300">{item}</span>
                   </li>
                 ))}
               </ul>
@@ -678,14 +694,14 @@ export default function LandingPage() {
       </section>
 
       {/* Services Section */}
-      <section id="services" className="py-20 bg-obsidian-50/50">
+      <section id="services" className="py-20 bg-light/50 dark:bg-obsidian-50/50 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <span className="text-gold font-semibold uppercase tracking-wider">Our Services</span>
-            <h2 className="text-3xl lg:text-4xl font-bold text-white mt-4">
+            <span className="text-primary font-semibold uppercase tracking-wider">Our Services</span>
+            <h2 className="text-3xl lg:text-4xl font-bold text-primaryDark dark:text-white mt-4">
               Blockchain Development Suite
             </h2>
-            <p className="text-gray-400 mt-4 max-w-2xl mx-auto">
+            <p className="text-primaryDark/70 dark:text-gray-400 mt-4 max-w-2xl mx-auto">
               End-to-end Web3 solutions from smart contracts to full protocol launches
             </p>
           </div>
@@ -698,13 +714,13 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
                 viewport={{ once: true }}
-                className="group p-8 bg-obsidian rounded-2xl border border-gold/20 hover:border-cyan/50 transition-all duration-300 hover:shadow-lg hover:shadow-cyan/5"
+                className="group p-8 bg-light dark:bg-obsidian rounded-2xl border border-primary/20 hover:border-cyan/50 transition-all duration-300 hover:shadow-lg hover:shadow-cyan/5"
               >
                 <div className="mb-6 transition-transform group-hover:scale-110">{service.icon}</div>
-                <h3 className="text-xl font-bold text-white mb-4 group-hover:text-cyan transition-colors">
+                <h3 className="text-xl font-bold text-primaryDark dark:text-white mb-4 group-hover:text-cyan transition-colors">
                   {service.title}
                 </h3>
-                <p className="text-gray-400 leading-relaxed">{service.description}</p>
+                <p className="text-primaryDark/70 dark:text-gray-400 leading-relaxed">{service.description}</p>
               </motion.div>
             ))}
           </div>
@@ -716,10 +732,10 @@ export default function LandingPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <span className="text-cyan font-semibold uppercase tracking-wider">Project Estimator</span>
-            <h2 className="text-3xl lg:text-4xl font-bold text-white mt-4">
+            <h2 className="text-3xl lg:text-4xl font-bold text-primaryDark dark:text-white mt-4">
               Calculate Your Project Scope
             </h2>
-            <p className="text-gray-400 mt-4">
+            <p className="text-primaryDark/70 dark:text-gray-400 mt-4">
               Select features to get an instant complexity and timeline estimate
             </p>
           </div>
@@ -729,7 +745,7 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-gold/10 to-cyan/10">
+      <section className="py-20 bg-gradient-to-r from-primary/10 to-cyan/10">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -737,16 +753,16 @@ export default function LandingPage() {
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-3xl lg:text-4xl font-bold text-white mb-6">
+            <h2 className="text-3xl lg:text-4xl font-bold text-primaryDark dark:text-white mb-6">
               Ready to Build the Next Big Protocol?
             </h2>
-            <p className="text-gray-400 mb-8 max-w-2xl mx-auto">
+            <p className="text-primaryDark/70 dark:text-gray-400 mb-8 max-w-2xl mx-auto">
               Let's discuss your project and create something that pushes the boundaries of DeFi.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <a
                 href={`mailto:${globalConfig.email}`}
-                className="bg-gradient-to-r from-gold to-gold-500 hover:from-gold-500 hover:to-gold text-obsidian px-8 py-4 rounded-lg font-semibold transition-all hover:shadow-xl hover:shadow-gold/20 flex items-center gap-2"
+                className="bg-gradient-to-r from-primary to-primaryDark hover:from-primaryDark hover:to-primary text-white px-8 py-4 rounded-lg font-semibold transition-all hover:shadow-xl hover:shadow-primary/20 flex items-center gap-2"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
@@ -770,16 +786,16 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-obsidian border-t border-gold/10 py-16">
+      <footer className="bg-light dark:bg-obsidian border-t border-primary/10 py-16 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-12">
             <div className="md:col-span-2">
               <Link href="/" className="inline-block mb-6">
-                <span className="text-2xl font-bold text-white">
-                  Gaurav<span className="text-gold">.one</span>
+                <span className="text-2xl font-bold text-primaryDark dark:text-white">
+                  Gaurav<span className="text-primary">.one</span>
                 </span>
               </Link>
-              <p className="text-gray-400 mb-6 max-w-md">
+              <p className="text-primaryDark/70 dark:text-gray-400 mb-6 max-w-md">
                 Web3 development studio specializing in cross-chain infrastructure, DEX protocols, and DeFi solutions.
                 Building the future of decentralized finance.
               </p>
@@ -788,9 +804,9 @@ export default function LandingPage() {
                   href="https://github.com/gv211432"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-10 h-10 bg-obsidian-50 hover:bg-gold/20 border border-gold/30 rounded-lg flex items-center justify-center transition-colors"
+                  className="w-10 h-10 bg-secondary dark:bg-obsidian-50 hover:bg-primary/20 border border-primary/30 rounded-lg flex items-center justify-center transition-colors"
                 >
-                  <svg className="w-5 h-5 text-gold" fill="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-primary" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
                   </svg>
                 </a>
@@ -798,9 +814,9 @@ export default function LandingPage() {
                   href="https://linkedin.com/in/AstroX11"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-10 h-10 bg-obsidian-50 hover:bg-gold/20 border border-gold/30 rounded-lg flex items-center justify-center transition-colors"
+                  className="w-10 h-10 bg-secondary dark:bg-obsidian-50 hover:bg-primary/20 border border-primary/30 rounded-lg flex items-center justify-center transition-colors"
                 >
-                  <svg className="w-5 h-5 text-gold" fill="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-primary" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
                   </svg>
                 </a>
@@ -808,9 +824,9 @@ export default function LandingPage() {
                   href="https://twitter.com/formal_gaurav"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-10 h-10 bg-obsidian-50 hover:bg-gold/20 border border-gold/30 rounded-lg flex items-center justify-center transition-colors"
+                  className="w-10 h-10 bg-secondary dark:bg-obsidian-50 hover:bg-primary/20 border border-primary/30 rounded-lg flex items-center justify-center transition-colors"
                 >
-                  <svg className="w-5 h-5 text-gold" fill="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-primary" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z" />
                   </svg>
                 </a>
@@ -818,7 +834,7 @@ export default function LandingPage() {
             </div>
 
             <div>
-              <h4 className="text-white font-semibold mb-6">Quick Links</h4>
+              <h4 className="text-primaryDark dark:text-white font-semibold mb-6">Quick Links</h4>
               <ul className="space-y-3">
                 {navLinks.slice(0, 5).map((link) => (
                   <li key={link.name}>
@@ -826,7 +842,7 @@ export default function LandingPage() {
                       href={link.href}
                       target={link.external ? "_blank" : undefined}
                       rel={link.external ? "noopener noreferrer" : undefined}
-                      className="text-gray-400 hover:text-gold transition-colors"
+                      className="text-primaryDark/70 dark:text-gray-400 hover:text-primary transition-colors"
                     >
                       {link.name}
                     </a>
@@ -836,19 +852,19 @@ export default function LandingPage() {
             </div>
 
             <div>
-              <h4 className="text-white font-semibold mb-6">Services</h4>
+              <h4 className="text-primaryDark dark:text-white font-semibold mb-6">Services</h4>
               <ul className="space-y-3">
                 {services.slice(0, 4).map((service) => (
                   <li key={service.title}>
-                    <span className="text-gray-400">{service.title}</span>
+                    <span className="text-primaryDark/70 dark:text-gray-400">{service.title}</span>
                   </li>
                 ))}
               </ul>
             </div>
           </div>
 
-          <div className="border-t border-gold/10 mt-12 pt-8 text-center">
-            <p className="text-gray-400">
+          <div className="border-t border-primary/10 mt-12 pt-8 text-center">
+            <p className="text-primaryDark/70 dark:text-gray-400">
               © {new Date().getFullYear()} Gaurav.one. Building the decentralized future.
             </p>
           </div>

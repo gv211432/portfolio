@@ -103,7 +103,7 @@ export default function LeftStickyBar() {
             </div>
 
             <div className="text-center text-[1rem]">
-              © 2025 Gaurav. All Rights Reserved
+              © 2026 Gaurav. All Rights Reserved
             </div>
 
             <motion.div className="flex justify-center">
