@@ -310,21 +310,23 @@ const CrossChainVisualizer = () => {
           </text>
         </g>
 
-        {/* Data Packets - always visible but enhanced on hover */}
+        {/* Data Packets - following exact bezier curve paths */}
         <motion.g animate={{ opacity: isHovered ? 1 : 0.6 }}>
-          {/* Cyan packet - Solana to Sui */}
+          {/* Cyan packet - Solana to Sui (top curve: Q 200 40) */}
+          {/* Bezier points calculated: B(t) = (1-t)²P0 + 2(1-t)tP1 + t²P2 */}
           <motion.circle
             r={isHovered ? "8" : "5"}
             fill="#00D9FF"
             filter="url(#glowCyan)"
             animate={{
-              cx: [100, 150, 200, 250, 300],
-              cy: [100, 70, 40, 70, 100],
+              cx: [100, 125, 150, 175, 200, 225, 250, 275, 300],
+              cy: [100, 87, 78, 72, 70, 72, 78, 87, 100],
             }}
             transition={{
               duration: isHovered ? 2 : 4,
               repeat: Infinity,
-              ease: "easeInOut",
+              ease: "linear",
+              times: [0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1],
             }}
           />
           {/* Trail effect for cyan packet */}
@@ -333,30 +335,32 @@ const CrossChainVisualizer = () => {
             fill="#00D9FF"
             opacity={0.4}
             animate={{
-              cx: [100, 150, 200, 250, 300],
-              cy: [100, 70, 40, 70, 100],
+              cx: [100, 125, 150, 175, 200, 225, 250, 275, 300],
+              cy: [100, 87, 78, 72, 70, 72, 78, 87, 100],
             }}
             transition={{
               duration: isHovered ? 2 : 4,
               repeat: Infinity,
-              ease: "easeInOut",
-              delay: 0.1,
+              ease: "linear",
+              times: [0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1],
+              delay: 0.08,
             }}
           />
 
-          {/* Purple packet - Sui to Solana (bottom path) */}
+          {/* Purple packet - Sui to Solana (bottom curve: Q 200 160) */}
           <motion.circle
             r={isHovered ? "8" : "5"}
             fill="#8b94cb"
             filter="url(#glowPrimary)"
             animate={{
-              cx: [300, 250, 200, 150, 100],
-              cy: [100, 130, 160, 130, 100],
+              cx: [300, 275, 250, 225, 200, 175, 150, 125, 100],
+              cy: [100, 113, 123, 128, 130, 128, 123, 113, 100],
             }}
             transition={{
               duration: isHovered ? 2 : 4,
               repeat: Infinity,
-              ease: "easeInOut",
+              ease: "linear",
+              times: [0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1],
               delay: isHovered ? 1 : 2,
             }}
           />
@@ -366,14 +370,15 @@ const CrossChainVisualizer = () => {
             fill="#8b94cb"
             opacity={0.4}
             animate={{
-              cx: [300, 250, 200, 150, 100],
-              cy: [100, 130, 160, 130, 100],
+              cx: [300, 275, 250, 225, 200, 175, 150, 125, 100],
+              cy: [100, 113, 123, 128, 130, 128, 123, 113, 100],
             }}
             transition={{
               duration: isHovered ? 2 : 4,
               repeat: Infinity,
-              ease: "easeInOut",
-              delay: isHovered ? 1.1 : 2.1,
+              ease: "linear",
+              times: [0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1],
+              delay: isHovered ? 1.08 : 2.08,
             }}
           />
         </motion.g>
@@ -464,33 +469,39 @@ const CrossChainVisualizer = () => {
         </motion.g>
       </svg>
 
-      {/* Hover instruction */}
-      <motion.div
-        className="absolute bottom-2 left-1/2 -translate-x-1/2 text-sm font-medium"
-        animate={{
-          opacity: isHovered ? 0 : [0.5, 0.8, 0.5],
-          y: isHovered ? 10 : 0,
-        }}
-        transition={{ duration: 2, repeat: isHovered ? 0 : Infinity }}
-      >
-        <span className="text-cyan">Hover</span>
-        <span className="text-primaryDark/60 dark:text-gray-400"> to see cross-chain data flow</span>
-      </motion.div>
-
-      {/* Active indicator */}
-      <AnimatePresence>
-        {isHovered && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-2 text-sm"
-          >
-            <span className="w-2 h-2 bg-cyan rounded-full animate-pulse" />
-            <span className="text-cyan font-medium">Live Transfer</span>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Text container - single position to avoid overlap */}
+      <div className="absolute bottom-4 left-0 right-0 flex justify-center">
+        <AnimatePresence mode="wait">
+          {!isHovered ? (
+            <motion.div
+              key="hover-hint"
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: [0.6, 0.9, 0.6], y: 0 }}
+              exit={{ opacity: 0, y: -5 }}
+              transition={{
+                opacity: { duration: 1.5, repeat: Infinity, ease: "easeInOut" },
+                y: { duration: 0.15 },
+              }}
+              className="text-sm font-medium text-center"
+            >
+              <span className="text-cyan">Hover</span>
+              <span className="text-primaryDark/60 dark:text-gray-400"> to see cross-chain data flow</span>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="live-indicator"
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -5 }}
+              transition={{ duration: 0.15 }}
+              className="flex items-center gap-2 text-sm"
+            >
+              <span className="w-2 h-2 bg-cyan rounded-full animate-pulse" />
+              <span className="text-cyan font-medium">Live Transfer</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 };
