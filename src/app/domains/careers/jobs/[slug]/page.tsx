@@ -32,6 +32,7 @@ import {
 import { useDarkModeStore } from "@/Atoms/globalAtoms";
 import DarkModeToggleButton from "@/components/inputs/DarkModeToggleButton";
 import { globalConfig, domainUrls } from "@/config/global";
+import { Logo } from "@/components/ui";
 
 // Icon mapping
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -366,14 +367,7 @@ export default function JobDetailPage() {
                   <span className="hidden sm:inline">Back</span>
                 </button>
                 <div className="h-6 w-px bg-primary/20" />
-                <Link href={domainUrls.root} className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan to-primary flex items-center justify-center">
-                    <span className="text-obsidian font-bold text-sm">G</span>
-                  </div>
-                  <span className="font-bold text-primaryDark dark:text-white">
-                    {globalConfig.displayName}
-                  </span>
-                </Link>
+                <Logo showIcon size="md" href={domainUrls.root} />
               </div>
 
               <nav className="hidden md:flex items-center gap-6">

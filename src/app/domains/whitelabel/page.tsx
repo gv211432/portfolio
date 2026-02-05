@@ -12,6 +12,7 @@ import {
 import { useDarkModeStore } from "@/Atoms/globalAtoms";
 import DarkModeToggleButton from "@/components/inputs/DarkModeToggleButton";
 import { globalConfig, domainUrls } from "@/config/global";
+import { Logo } from "@/components/ui";
 
 // React Icons imports
 import {
@@ -364,11 +365,7 @@ export default function WhitelabelPage() {
       <header className="fixed top-0 left-0 right-0 z-50 bg-secondary/95 dark:bg-obsidian/95 backdrop-blur-sm border-b border-primary/10 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
-            <Link href={domainUrls.root} className="flex items-center gap-2">
-              <span className="text-2xl font-bold text-primaryDark dark:text-white">
-                Gaurav<span className="text-primary">.one</span>
-              </span>
-            </Link>
+            <Logo size="lg" href={domainUrls.root} />
 
             <nav className="hidden lg:flex items-center gap-8">
               <Link
@@ -617,11 +614,9 @@ export default function WhitelabelPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-12">
             <div className="md:col-span-2">
-              <Link href={domainUrls.root} className="inline-block mb-6">
-                <span className="text-2xl font-bold text-primaryDark dark:text-white">
-                  Gaurav<span className="text-primary">.one</span>
-                </span>
-              </Link>
+              <div className="mb-6">
+                <Logo size="lg" href={domainUrls.root} />
+              </div>
               <p className="text-primaryDark/70 dark:text-gray-400 mb-6 max-w-md">
                 White-label solutions for the next generation of digital
                 products. From DeFi protocols to enterprise software, we build

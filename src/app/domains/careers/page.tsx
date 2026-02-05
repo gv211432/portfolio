@@ -13,6 +13,7 @@ import {
 import { useDarkModeStore } from "@/Atoms/globalAtoms";
 import DarkModeToggleButton from "@/components/inputs/DarkModeToggleButton";
 import { globalConfig, domainUrls } from "@/config/global";
+import { Logo } from "@/components/ui";
 
 // React Icons imports
 import {
@@ -258,14 +259,7 @@ export default function CareersPage() {
         <header className="fixed top-0 left-0 right-0 z-50 bg-light/80 dark:bg-obsidian/80 backdrop-blur-md border-b border-primary/10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
-              <Link href={domainUrls.root} className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan to-primary flex items-center justify-center">
-                  <span className="text-obsidian font-bold text-sm">G</span>
-                </div>
-                <span className="font-bold text-primaryDark dark:text-white">
-                  {globalConfig.displayName}
-                </span>
-              </Link>
+              <Logo showIcon size="md" href={domainUrls.root} />
 
               <nav className="hidden md:flex items-center gap-6">
                 <Link href={domainUrls.root} className="text-primaryDark/70 dark:text-gray-400 hover:text-cyan transition-colors text-sm">

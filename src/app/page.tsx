@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { domainUrls, globalConfig } from "@/config/global";
 import { useDarkModeStore } from "@/Atoms/globalAtoms";
 import DarkModeToggleButton from "@/components/inputs/DarkModeToggleButton";
+import { Logo } from "@/components/ui";
 
 // Terminal typewriter lines for hero section
 const terminalLines = [
@@ -751,11 +752,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-2">
-              <span className="text-2xl font-bold text-primaryDark dark:text-white">
-                Gaurav<span className="text-primary">.one</span>
-              </span>
-            </Link>
+            <Logo size="lg" href="/" />
 
             {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center gap-8">
@@ -1086,11 +1083,9 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-12">
             <div className="md:col-span-2">
-              <Link href="/" className="inline-block mb-6">
-                <span className="text-2xl font-bold text-primaryDark dark:text-white">
-                  Gaurav<span className="text-primary">.one</span>
-                </span>
-              </Link>
+              <div className="mb-6">
+                <Logo size="lg" href="/" />
+              </div>
               <p className="text-primaryDark/70 dark:text-gray-400 mb-6 max-w-md">
                 Web3 development studio specializing in cross-chain infrastructure, DEX protocols, and DeFi solutions.
                 Building the future of decentralized finance.
