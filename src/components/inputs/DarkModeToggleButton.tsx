@@ -20,7 +20,7 @@ export default function DarkModeToggleButton() {
   return (
     <button
       onClick={toggleDarkMode}
-      className="relative w-14 h-7 rounded-full bg-gradient-to-r from-primary/30 to-cyan/30 dark:from-obsidian-50 dark:to-obsidian p-1 transition-all duration-300 hover:shadow-lg hover:shadow-primary/20 dark:hover:shadow-cyan/20 focus:outline-none focus:ring-2 focus:ring-primary/50 dark:focus:ring-cyan/50"
+      className="relative w-14 h-7 rounded-full bg-gradient-to-r from-primary/30 to-cyan/30 dark:from-obsidian-50 dark:to-obsidian p-1 transition-all duration-300 hover:shadow-lg hover:shadow-primary/20 dark:hover:shadow-primary/30 outline-none ring-2 ring-primary/50 dark:ring-primary/50 dark:border dark:border-primary/40"
       aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
     >
       {/* Track background with liquid gradient */}
@@ -28,9 +28,9 @@ export default function DarkModeToggleButton() {
         className="absolute inset-0 rounded-full overflow-hidden"
         initial={false}
       >
-        {/* Light mode gradient */}
+        {/* Light mode gradient - yellow (left) to primary (right) */}
         <motion.div
-          className="absolute inset-0 bg-gradient-to-r from-amber-200 via-orange-200 to-yellow-200"
+          className="absolute inset-0 bg-gradient-to-r from-white via-yellow-100 to-primary/70"
           animate={{
             opacity: darkMode ? 0 : 1,
           }}
@@ -61,7 +61,7 @@ export default function DarkModeToggleButton() {
         }}
         style={{
           boxShadow: darkMode
-            ? "0 0 10px rgba(0, 217, 255, 0.5), inset 0 0 5px rgba(0, 217, 255, 0.3)"
+            ? "0 0 10px rgba(139, 148, 203, 0.5), inset 0 0 5px rgba(139, 148, 203, 0.3)"
             : "0 0 10px rgba(251, 191, 36, 0.5), inset 0 0 5px rgba(255, 255, 255, 0.5)",
         }}
       >
@@ -72,9 +72,9 @@ export default function DarkModeToggleButton() {
           transition={{ duration: 0.5, ease: "easeInOut" }}
         >
           {darkMode ? (
-            <FaMoon className="w-3 h-3 text-cyan" />
+            <FaMoon className="w-3 h-3 text-white" />
           ) : (
-            <FaSun className="w-3 h-3 text-amber-600" />
+            <FaSun className="w-3 h-3 text-white" />
           )}
         </motion.div>
       </motion.div>

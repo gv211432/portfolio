@@ -145,7 +145,9 @@ export default function LeftStickyBar() {
               </a>
             </motion.div>
 
-            <DarkModeToggleButton />
+            <center>
+              <DarkModeToggleButton />
+            </center>
           </div>
 
           {/* Skills Section */}
