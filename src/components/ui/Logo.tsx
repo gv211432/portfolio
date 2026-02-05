@@ -2,11 +2,14 @@
 
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { domainUrls } from "@/config/global";
 
+// Logo images for light/dark modes
+import logoLight from "@/assets/brand/light-gaurav.one.webp";
+import logoDark from "@/assets/brand/dark-gaurav.one.webp";
+
 interface LogoProps {
-  /** Show the icon box with "G" before the text */
-  showIcon?: boolean;
   /** Size variant */
   size?: "sm" | "md" | "lg";
   /** Whether the logo is a link */
@@ -20,24 +23,24 @@ interface LogoProps {
 const sizeConfig = {
   sm: {
     text: "text-lg font-bold",
-    icon: "w-7 h-7 text-xs",
+    image: 28,
   },
   md: {
     text: "text-xl font-bold",
-    icon: "w-8 h-8 text-sm",
+    image: 32,
   },
   lg: {
     text: "text-2xl font-bold",
-    icon: "w-10 h-10 text-base",
+    image: 110,
   },
 };
 
 /**
  * Logo - Shared logo component for headers and footers
- * Displays "Gaurav.one" with optional icon box
+ * Displays logo image + "aurav.one" text
+ * Uses different logo images for light/dark modes
  */
 export default function Logo({
-  showIcon = false,
   size = "md",
   asLink = true,
   href,
@@ -47,17 +50,26 @@ export default function Logo({
   const linkHref = href || domainUrls.root;
 
   const LogoContent = () => (
-    <div className={`flex items-center gap-2 ${className}`}>
-      {showIcon && (
-        <div
-          className={`${config.icon} rounded-lg bg-gradient-to-br from-cyan to-primary flex items-center justify-center`}
-        >
-          <span className="text-obsidian font-cinzel font-black">G</span>
-        </div>
-      )}
-      <span className={`${config.text} text-primaryDark dark:text-white`}>
-        <span className="font-cinzel">G</span>aurav<span className="text-primary uppercase italic">.one</span>
-      </span>
+    <div className={`flex items-center gap-1 ${className}`}>
+      {/* Light mode logo */}
+      <Image
+        src={logoLight}
+        alt="Gaurav.one"
+        width={config.image}
+        // height={config.image}
+        className="dark:hidden rounded-lg mr-2"
+      />
+      {/* Dark mode logo */}
+      <Image
+        src={logoDark}
+        alt="Gaurav.one"
+        width={config.image}
+        // height={config.image}
+        className="hidden dark:block"
+      />
+      {/* <span className={`${config.text} text-primaryDark dark:text-white`}>
+        Gaurav<span className="text-primary">.one</span>
+      </span> */}
     </div>
   );
 
