@@ -52,11 +52,11 @@ export default function Logo({
         <div
           className={`${config.icon} rounded-lg bg-gradient-to-br from-cyan to-primary flex items-center justify-center`}
         >
-          <span className="text-obsidian font-bold">G</span>
+          <span className="text-obsidian font-cinzel font-black">G</span>
         </div>
       )}
       <span className={`${config.text} text-primaryDark dark:text-white`}>
-        Gaurav<span className="text-primary">.one</span>
+        <span className="font-cinzel">G</span>aurav<span className="text-primary uppercase italic">.one</span>
       </span>
     </div>
   );

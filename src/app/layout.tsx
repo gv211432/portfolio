@@ -1,7 +1,14 @@
 import "./globals.css";
-import { Inter } from "next/font/google";
+import { Inter, Cinzel_Decorative } from "next/font/google";
 
 const inter = Inter({ subsets: ["latin"] });
+
+const cinzelDecorative = Cinzel_Decorative({
+  weight: ["400", "700", "900"],
+  subsets: ["latin"],
+  variable: "--font-cinzel-decorative",
+  display: "swap",
+});
 
 export const metadata = {
   title: "Gaurav.one | Building Digital Experiences",
@@ -14,7 +21,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" id="root-node">
+    <html lang="en" id="root-node" className={cinzelDecorative.variable}>
       <body className={inter.className}>{children}</body>
     </html>
   );

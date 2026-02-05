@@ -28,6 +28,9 @@ module.exports = {
       '2xl': '1536px',
     },
     extend: {
+      fontFamily: {
+        cinzel: ['var(--font-cinzel-decorative)', 'serif'],
+      },
       colors: {
         // Legacy colors (keep for existing pages)
         primaryDark: '#313854',
