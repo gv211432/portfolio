@@ -117,137 +117,380 @@ const stats = [
 // Cross-Chain Visualizer Component
 const CrossChainVisualizer = () => {
   const [isHovered, setIsHovered] = useState(false);
+  const { darkMode } = useDarkModeStore();
 
   return (
     <div
-      className="relative w-full h-[300px] lg:h-[400px]"
+      className="relative w-full h-[300px] lg:h-[400px] cursor-pointer"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <svg viewBox="0 0 400 200" className="w-full h-full">
-        {/* Grid background */}
+      {/* Background glow effects */}
+      <motion.div
+        className="absolute inset-0 pointer-events-none"
+        animate={{
+          opacity: isHovered ? 1 : 0.3,
+        }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="absolute left-[10%] top-1/2 -translate-y-1/2 w-24 h-24 bg-cyan/20 rounded-full blur-2xl" />
+        <div className="absolute right-[10%] top-1/2 -translate-y-1/2 w-24 h-24 bg-primary/20 rounded-full blur-2xl" />
+      </motion.div>
+
+      <svg viewBox="0 0 400 200" className="w-full h-full relative z-10">
+        {/* Grid background - enhanced visibility */}
         <defs>
-          <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
-            <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(139, 148, 203, 0.1)" strokeWidth="0.5" />
+          <pattern id="crossChainGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <path
+              d="M 20 0 L 0 0 0 20"
+              fill="none"
+              stroke={darkMode ? "rgba(139, 148, 203, 0.15)" : "rgba(107, 114, 155, 0.25)"}
+              strokeWidth="0.5"
+            />
+          </pattern>
+          <pattern id="crossChainGridDots" width="20" height="20" patternUnits="userSpaceOnUse">
+            <circle
+              cx="0"
+              cy="0"
+              r="1"
+              fill={darkMode ? "rgba(0, 217, 255, 0.3)" : "rgba(0, 180, 220, 0.4)"}
+            />
           </pattern>
           <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#00D9FF" />
+            <stop offset="50%" stopColor={darkMode ? "#8b94cb" : "#6b729b"} />
             <stop offset="100%" stopColor="#8b94cb" />
           </linearGradient>
-          <filter id="glow">
+          <linearGradient id="bridgeGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor={darkMode ? "#1a1a2e" : "#e8e8f0"} />
+            <stop offset="100%" stopColor={darkMode ? "#0d0d0d" : "#d0d0e0"} />
+          </linearGradient>
+          <filter id="glowCyan">
+            <feGaussianBlur stdDeviation="4" result="coloredBlur" />
+            <feMerge>
+              <feMergeNode in="coloredBlur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <filter id="glowPrimary">
             <feGaussianBlur stdDeviation="3" result="coloredBlur" />
             <feMerge>
               <feMergeNode in="coloredBlur" />
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
+          <filter id="softShadow">
+            <feDropShadow dx="0" dy="2" stdDeviation="3" floodOpacity="0.3" />
+          </filter>
         </defs>
-        <rect width="400" height="200" fill="url(#grid)" />
+
+        {/* Grid background layers */}
+        <rect width="400" height="200" fill="url(#crossChainGrid)" />
+        <rect width="400" height="200" fill="url(#crossChainGridDots)" />
+
+        {/* Curved connection paths - bottom arc */}
+        <motion.path
+          d="M 100 100 Q 200 160 300 100"
+          stroke={darkMode ? "rgba(139, 148, 203, 0.2)" : "rgba(107, 114, 155, 0.3)"}
+          strokeWidth="1"
+          fill="none"
+          strokeDasharray="4 4"
+          animate={{ strokeDashoffset: isHovered ? [0, 16] : 0 }}
+          transition={{ duration: 2, repeat: isHovered ? Infinity : 0, ease: "linear" }}
+        />
+
+        {/* Main Connection Line - top arc */}
+        <motion.path
+          d="M 100 100 Q 200 40 300 100"
+          stroke="url(#lineGradient)"
+          strokeWidth={isHovered ? "3" : "2"}
+          fill="none"
+          strokeDasharray="8 4"
+          filter="url(#glowCyan)"
+          animate={{
+            strokeDashoffset: isHovered ? [0, -24] : 0,
+            strokeWidth: isHovered ? 3 : 2,
+          }}
+          transition={{ duration: 1, repeat: isHovered ? Infinity : 0, ease: "linear" }}
+        />
 
         {/* Solana Node */}
         <g transform="translate(60, 100)">
+          {/* Outer ring pulse */}
+          <motion.circle
+            r="42"
+            fill="none"
+            stroke="#00D9FF"
+            strokeWidth="1"
+            opacity={0.3}
+            animate={{
+              r: isHovered ? [42, 50, 42] : 42,
+              opacity: isHovered ? [0.3, 0.1, 0.3] : 0.3,
+            }}
+            transition={{ duration: 2, repeat: Infinity }}
+          />
+          {/* Main circle */}
           <motion.circle
             r="35"
-            fill="rgba(0, 217, 255, 0.1)"
+            fill={darkMode ? "rgba(0, 217, 255, 0.1)" : "rgba(0, 200, 240, 0.15)"}
             stroke="#00D9FF"
             strokeWidth="2"
-            animate={{ scale: isHovered ? [1, 1.1, 1] : 1 }}
-            transition={{ duration: 1, repeat: isHovered ? Infinity : 0 }}
+            filter={isHovered ? "url(#glowCyan)" : undefined}
+            animate={{
+              scale: isHovered ? [1, 1.05, 1] : 1,
+            }}
+            transition={{ duration: 1.5, repeat: isHovered ? Infinity : 0 }}
           />
-          <text y="5" textAnchor="middle" fill="#00D9FF" fontSize="12" fontWeight="bold">
+          {/* Inner glow */}
+          <motion.circle
+            r="25"
+            fill="rgba(0, 217, 255, 0.05)"
+            animate={{
+              r: isHovered ? [25, 28, 25] : 25,
+            }}
+            transition={{ duration: 1, repeat: Infinity }}
+          />
+          <text
+            y="5"
+            textAnchor="middle"
+            fill="#00D9FF"
+            fontSize="11"
+            fontWeight="bold"
+            letterSpacing="1"
+          >
             SOLANA
           </text>
         </g>
 
         {/* Sui Node */}
         <g transform="translate(340, 100)">
+          {/* Outer ring pulse */}
+          <motion.circle
+            r="42"
+            fill="none"
+            stroke="#8b94cb"
+            strokeWidth="1"
+            opacity={0.3}
+            animate={{
+              r: isHovered ? [42, 50, 42] : 42,
+              opacity: isHovered ? [0.3, 0.1, 0.3] : 0.3,
+            }}
+            transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
+          />
+          {/* Main circle */}
           <motion.circle
             r="35"
-            fill="rgba(139, 148, 203, 0.1)"
-            stroke="#8b94cb"
+            fill={darkMode ? "rgba(139, 148, 203, 0.1)" : "rgba(107, 114, 155, 0.15)"}
+            stroke={darkMode ? "#8b94cb" : "#6b729b"}
             strokeWidth="2"
-            animate={{ scale: isHovered ? [1, 1.1, 1] : 1 }}
-            transition={{ duration: 1, repeat: isHovered ? Infinity : 0, delay: 0.5 }}
+            filter={isHovered ? "url(#glowPrimary)" : undefined}
+            animate={{
+              scale: isHovered ? [1, 1.05, 1] : 1,
+            }}
+            transition={{ duration: 1.5, repeat: isHovered ? Infinity : 0, delay: 0.3 }}
           />
-          <text y="5" textAnchor="middle" fill="#8b94cb" fontSize="12" fontWeight="bold">
+          {/* Inner glow */}
+          <motion.circle
+            r="25"
+            fill="rgba(139, 148, 203, 0.05)"
+            animate={{
+              r: isHovered ? [25, 28, 25] : 25,
+            }}
+            transition={{ duration: 1, repeat: Infinity, delay: 0.5 }}
+          />
+          <text
+            y="5"
+            textAnchor="middle"
+            fill={darkMode ? "#8b94cb" : "#6b729b"}
+            fontSize="11"
+            fontWeight="bold"
+            letterSpacing="1"
+          >
             SUI
           </text>
         </g>
 
-        {/* Connection Line */}
-        <motion.path
-          d="M 100 100 Q 200 60 300 100"
-          stroke="url(#lineGradient)"
-          strokeWidth="2"
-          fill="none"
-          strokeDasharray="8 4"
-          filter="url(#glow)"
-          animate={{ strokeDashoffset: isHovered ? [0, -24] : 0 }}
-          transition={{ duration: 1, repeat: isHovered ? Infinity : 0, ease: "linear" }}
-        />
+        {/* Data Packets - always visible but enhanced on hover */}
+        <motion.g animate={{ opacity: isHovered ? 1 : 0.6 }}>
+          {/* Cyan packet - Solana to Sui */}
+          <motion.circle
+            r={isHovered ? "8" : "5"}
+            fill="#00D9FF"
+            filter="url(#glowCyan)"
+            animate={{
+              cx: [100, 150, 200, 250, 300],
+              cy: [100, 70, 40, 70, 100],
+            }}
+            transition={{
+              duration: isHovered ? 2 : 4,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+          />
+          {/* Trail effect for cyan packet */}
+          <motion.circle
+            r="4"
+            fill="#00D9FF"
+            opacity={0.4}
+            animate={{
+              cx: [100, 150, 200, 250, 300],
+              cy: [100, 70, 40, 70, 100],
+            }}
+            transition={{
+              duration: isHovered ? 2 : 4,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: 0.1,
+            }}
+          />
 
-        {/* Data Packet */}
-        <AnimatePresence>
-          {isHovered && (
-            <motion.g
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <motion.circle
-                r="8"
-                fill="#00D9FF"
-                filter="url(#glow)"
-                initial={{ cx: 100, cy: 100 }}
-                animate={{
-                  cx: [100, 200, 300],
-                  cy: [100, 60, 100],
-                }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-              />
-              <motion.circle
-                r="8"
-                fill="#8b94cb"
-                filter="url(#glow)"
-                initial={{ cx: 300, cy: 100 }}
-                animate={{
-                  cx: [300, 200, 100],
-                  cy: [100, 140, 100],
-                }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-              />
-            </motion.g>
-          )}
-        </AnimatePresence>
+          {/* Purple packet - Sui to Solana (bottom path) */}
+          <motion.circle
+            r={isHovered ? "8" : "5"}
+            fill="#8b94cb"
+            filter="url(#glowPrimary)"
+            animate={{
+              cx: [300, 250, 200, 150, 100],
+              cy: [100, 130, 160, 130, 100],
+            }}
+            transition={{
+              duration: isHovered ? 2 : 4,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: isHovered ? 1 : 2,
+            }}
+          />
+          {/* Trail effect for purple packet */}
+          <motion.circle
+            r="4"
+            fill="#8b94cb"
+            opacity={0.4}
+            animate={{
+              cx: [300, 250, 200, 150, 100],
+              cy: [100, 130, 160, 130, 100],
+            }}
+            transition={{
+              duration: isHovered ? 2 : 4,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: isHovered ? 1.1 : 2.1,
+            }}
+          />
+        </motion.g>
 
         {/* Center Bridge Icon */}
         <g transform="translate(200, 100)">
-          <motion.rect
-            x="-20"
-            y="-15"
-            width="40"
-            height="30"
-            rx="4"
-            fill="rgba(13, 13, 13, 0.9)"
-            stroke="url(#lineGradient)"
-            strokeWidth="1"
-            animate={{ y: isHovered ? [-15, -18, -15] : -15 }}
+          {/* Bridge glow background */}
+          <motion.ellipse
+            cx="0"
+            cy="0"
+            rx="35"
+            ry="25"
+            fill={darkMode ? "rgba(0, 217, 255, 0.05)" : "rgba(0, 180, 220, 0.08)"}
+            animate={{
+              rx: isHovered ? [35, 40, 35] : 35,
+              ry: isHovered ? [25, 30, 25] : 25,
+            }}
             transition={{ duration: 2, repeat: Infinity }}
           />
-          <text y="5" textAnchor="middle" fill="white" fontSize="8" fontWeight="bold">
+          {/* Bridge box */}
+          <motion.rect
+            x="-28"
+            y="-18"
+            width="56"
+            height="36"
+            rx="6"
+            fill="url(#bridgeGradient)"
+            stroke="url(#lineGradient)"
+            strokeWidth="2"
+            filter="url(#softShadow)"
+            animate={{
+              y: isHovered ? [-18, -22, -18] : -18,
+              scale: isHovered ? [1, 1.05, 1] : 1,
+            }}
+            transition={{ duration: 2, repeat: Infinity }}
+          />
+          {/* Bridge icon - small connector lines */}
+          <motion.g
+            animate={{ opacity: isHovered ? 1 : 0.7 }}
+            transition={{ duration: 0.3 }}
+          >
+            <line x1="-18" y1="-5" x2="-10" y2="-5" stroke="#00D9FF" strokeWidth="2" strokeLinecap="round" />
+            <line x1="10" y1="-5" x2="18" y2="-5" stroke="#8b94cb" strokeWidth="2" strokeLinecap="round" />
+            <motion.circle
+              cx="0"
+              cy="-5"
+              r="3"
+              fill={darkMode ? "#fff" : "#333"}
+              animate={{
+                scale: isHovered ? [1, 1.3, 1] : 1,
+              }}
+              transition={{ duration: 0.5, repeat: Infinity }}
+            />
+          </motion.g>
+          {/* Bridge text */}
+          <text
+            y="10"
+            textAnchor="middle"
+            fill={darkMode ? "#ffffff" : "#1a1a2e"}
+            fontSize="9"
+            fontWeight="bold"
+            letterSpacing="1.5"
+          >
             BRIDGE
           </text>
         </g>
+
+        {/* Decorative elements */}
+        <motion.g opacity={isHovered ? 0.8 : 0.4}>
+          {/* Small floating particles */}
+          {[...Array(6)].map((_, i) => (
+            <motion.circle
+              key={i}
+              r="2"
+              fill={i % 2 === 0 ? "#00D9FF" : "#8b94cb"}
+              animate={{
+                cx: [100 + i * 40, 110 + i * 40, 100 + i * 40],
+                cy: [30 + (i % 3) * 20, 25 + (i % 3) * 20, 30 + (i % 3) * 20],
+                opacity: [0.3, 0.7, 0.3],
+              }}
+              transition={{
+                duration: 3 + i * 0.5,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            />
+          ))}
+        </motion.g>
       </svg>
 
       {/* Hover instruction */}
       <motion.div
-        className="absolute bottom-4 left-1/2 -translate-x-1/2 text-primary/60 text-sm"
-        animate={{ opacity: isHovered ? 0 : [0.5, 1, 0.5] }}
-        transition={{ duration: 2, repeat: Infinity }}
+        className="absolute bottom-2 left-1/2 -translate-x-1/2 text-sm font-medium"
+        animate={{
+          opacity: isHovered ? 0 : [0.5, 0.8, 0.5],
+          y: isHovered ? 10 : 0,
+        }}
+        transition={{ duration: 2, repeat: isHovered ? 0 : Infinity }}
       >
-        Hover to see cross-chain data flow
+        <span className="text-cyan">Hover</span>
+        <span className="text-primaryDark/60 dark:text-gray-400"> to see cross-chain data flow</span>
       </motion.div>
+
+      {/* Active indicator */}
+      <AnimatePresence>
+        {isHovered && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-2 text-sm"
+          >
+            <span className="w-2 h-2 bg-cyan rounded-full animate-pulse" />
+            <span className="text-cyan font-medium">Live Transfer</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
