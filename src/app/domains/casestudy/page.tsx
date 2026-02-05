@@ -8,10 +8,9 @@ import {
   type CaseStudy,
 } from "@/data/caseStudiesData";
 import { useDarkModeStore } from "@/Atoms/globalAtoms";
-import { domainUrls, globalConfig } from "@/config/global";
+import { domainUrls } from "@/config/global";
 import {
   Logo,
-  ContactDetails,
   FloroActionButton,
   PrimaryActionButton,
 } from "@/components/ui";
@@ -246,7 +245,8 @@ export default function CaseStudyPage() {
 
               <div className="flex items-center gap-4">
                 <FloroActionButton
-                  href={`mailto:${globalConfig.email}?subject=Project Inquiry`}
+                  href="/contact"
+                  asLink
                   className="hidden lg:inline-flex px-6 py-2.5"
                 >
                   Get Estimate
@@ -417,7 +417,7 @@ export default function CaseStudyPage() {
                 product.
               </p>
               <div className="flex flex-wrap justify-center gap-4">
-                <FloroActionButton href="mailto:contact@gaurav.one?subject=New Project Inquiry">
+                <FloroActionButton href="/contact" asLink>
                   Start Your Project
                   <FaArrowRight className="w-4 h-4 ml-2" />
                 </FloroActionButton>

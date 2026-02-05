@@ -799,12 +799,12 @@ export default function LandingPage() {
 
             {/* CTA Button */}
             <div className="hidden lg:flex items-center gap-4">
-              <a
-                href="#calculator"
+              <Link
+                href="/contact"
                 className="bg-gradient-to-r from-primary to-primaryDark hover:from-primaryDark hover:to-primary text-white px-6 py-3 rounded-lg font-semibold transition-all hover:shadow-lg hover:shadow-primary/20"
               >
                 Get Estimate
-              </a>
+              </Link>
             </div>
 
             {/* Mobile Menu Button */}
@@ -841,13 +841,13 @@ export default function LandingPage() {
                   </a>
                 ))}
                 <div className="mt-4">
-                  <a
-                    href="#calculator"
+                  <Link
+                    href="/contact"
                     className="block bg-primary text-white px-6 py-3 rounded-lg font-semibold text-center"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Get Estimate
-                  </a>
+                  </Link>
                 </div>
               </motion.div>
             )}

@@ -10,10 +10,9 @@ import {
   type CaseStudy,
 } from "@/data/caseStudiesData";
 import { useDarkModeStore } from "@/Atoms/globalAtoms";
-import { domainUrls, globalConfig } from "@/config/global";
+import { domainUrls } from "@/config/global";
 import {
   Logo,
-  ContactDetails,
   FloroActionButton,
   PrimaryActionButton,
 } from "@/components/ui";
@@ -127,7 +126,8 @@ const SnapshotCard = ({ caseStudy }: { caseStudy: CaseStudy }) => {
       {/* CTA */}
       <div className="mt-6 pt-6 border-t border-primary/10">
         <FloroActionButton
-          href="mailto:contact@gaurav.one?subject=Project Inquiry"
+          href="/contact"
+          asLink
           className="w-full justify-center"
         >
           Start Similar Project
@@ -257,7 +257,8 @@ export default function CaseStudyDetailPage() {
 
               <div className="flex items-center gap-4">
                 <FloroActionButton
-                  href={`mailto:${globalConfig.email}?subject=Project Inquiry`}
+                  href="/contact"
+                  asLink
                   className="hidden sm:inline-flex px-6 py-2.5"
                 >
                   Get Estimate
@@ -555,7 +556,7 @@ export default function CaseStudyDetailPage() {
                 Let's discuss how we can help you achieve similar results.
               </p>
               <div className="flex flex-wrap justify-center gap-4">
-                <FloroActionButton href="mailto:contact@gaurav.one?subject=New Project Inquiry">
+                <FloroActionButton href="/contact" asLink>
                   Get in Touch
                   <FaArrowRight className="w-4 h-4 ml-2" />
                 </FloroActionButton>
