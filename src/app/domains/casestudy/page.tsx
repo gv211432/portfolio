@@ -459,7 +459,7 @@ export default function CaseStudyPage() {
                   <FaTwitter className="w-5 h-5" />
                 </a>
               </div>
-              <ContactDetails />
+              {/* <ContactDetails /> */}
               <p className="text-primaryDark/50 dark:text-gray-500 text-sm">
                 © {new Date().getFullYear()} Gaurav.one. Building success
                 stories.

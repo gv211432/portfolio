@@ -1115,7 +1115,7 @@ export default function LandingPage() {
                 </a>
               </div>
               {/* Contact Details */}
-              <ContactDetails variant="vertical" className="mt-6" />
+              {/* <ContactDetails variant="vertical" className="mt-6" /> */}
             </div>
 
             <div>
