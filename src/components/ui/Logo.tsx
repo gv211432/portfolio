@@ -50,7 +50,7 @@ export default function Logo({
   const linkHref = href || domainUrls.root;
 
   const LogoContent = () => (
-    <div className={`flex items-center scale-125 ${className}`}>
+    <div className={`flex items-center scale-110 ${className}`}>
       {/* Light mode logo */}
       <Image
         src={logoLight}

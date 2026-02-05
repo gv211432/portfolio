@@ -253,11 +253,11 @@ export default function CaseStudyDetailPage() {
                   <span className="hidden sm:inline">Back</span>
                 </Link>
                 <div className="h-6 w-px bg-primary/20" />
-                <Logo size="md" href={domainUrls.root} />
+                <Logo size="lg" href={domainUrls.root} />
               </div>
 
               <div className="flex items-center gap-4">
-                <ContactDetails compact className="hidden lg:flex" />
+                {/* <ContactDetails compact className="hidden lg:flex" /> */}
                 <DarkModeToggleButton />
               </div>
             </div>
