@@ -416,7 +416,7 @@ export default function OpenSourcePage() {
                 </div>
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-primaryDark dark:text-white mb-6">
                   Building in{" "}
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan to-primary">
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan to-primary font-cinzel font-black">
                     Public
                   </span>
                 </h1>

@@ -307,7 +307,7 @@ export default function CareersPage() {
 
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-primaryDark dark:text-white mb-6">
                   Build the{" "}
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan via-primary to-purple-400">
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan via-primary to-purple-400 font-cinzel font-black">
                     Decentralized Future
                   </span>
                 </h1>
