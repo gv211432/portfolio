@@ -400,8 +400,7 @@ export default function WhitelabelPage() {
 
             <div className="flex items-center gap-4">
               <FloroActionButton
-                href="/contact"
-                asLink
+                href={`${domainUrls.root}/contact`}
                 className="hidden lg:inline-flex px-6 py-2.5"
               >
                 Get Started

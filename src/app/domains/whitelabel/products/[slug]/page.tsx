@@ -255,7 +255,7 @@ export default function ProductDetailPage() {
                 <span className="hidden sm:inline">Back</span>
               </Link>
               <div className="h-6 w-px bg-primary/20" />
-              <Logo size="md" href={domainUrls.root} />
+              <Logo size="lg" href={domainUrls.root} />
             </div>
 
             <div className="flex items-center gap-4">
@@ -617,7 +617,7 @@ export default function ProductDetailPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-4">
-              <Logo size="md" href={domainUrls.root} />
+              <Logo size="lg" href={domainUrls.root} />
               <span className="text-primaryDark/40 dark:text-gray-600">|</span>
               <span className="text-primaryDark/60 dark:text-gray-400">
                 White-Label Solutions
