@@ -22,7 +22,6 @@ import {
   FaTimes,
   FaPaperPlane,
 } from "react-icons/fa";
-import { useDarkModeStore } from "@/Atoms/globalAtoms";
 import {
   getJobBySlug,
   departmentInfo,
@@ -319,22 +318,21 @@ const ApplicationForm = ({ job }: { job: JobPosition }) => {
 export default function JobDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const { darkMode } = useDarkModeStore();
   const slug = params.slug as string;
   const job = getJobBySlug(slug);
 
   if (!job) {
     return (
-      <div className={`min-h-screen ${darkMode ? "bg-obsidian text-white" : "bg-gray-50 text-gray-900"}`}>
+      <div className="min-h-screen bg-obsidian text-white">
         <div className="max-w-4xl mx-auto px-4 py-20 text-center">
           <h1 className="text-3xl font-bold mb-4">Job Not Found</h1>
           <p className="text-gray-400 mb-8">The job position you're looking for doesn't exist.</p>
           <button
-            onClick={() => router.push("/domains/careers")}
+            onClick={() => router.back()}
             className="inline-flex items-center gap-2 px-6 py-3 bg-cyan/20 border border-cyan/30 rounded-lg text-cyan hover:bg-cyan/30 transition-colors"
           >
             <FaArrowLeft />
-            Back to Careers
+            Go Back
           </button>
         </div>
       </div>
@@ -346,7 +344,7 @@ export default function JobDetailPage() {
   const typeInfo = jobTypeInfo[job.type];
 
   return (
-    <div className={`min-h-screen ${darkMode ? "bg-obsidian text-white" : "bg-gray-50 text-gray-900"}`}>
+    <div className="min-h-screen bg-obsidian text-white">
       {/* Blockchain Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-cyan/5 via-transparent to-transparent" />
@@ -377,11 +375,11 @@ export default function JobDetailPage() {
         <motion.button
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          onClick={() => router.push("/domains/careers")}
+          onClick={() => router.back()}
           className="inline-flex items-center gap-2 mb-8 text-gray-400 hover:text-cyan transition-colors"
         >
           <FaArrowLeft />
-          Back to Careers
+          Go Back
         </motion.button>
 
         <div className="grid lg:grid-cols-3 gap-8">
