@@ -27,6 +27,7 @@ const dropdownLinks = [
   { name: "Open Source", href: domainUrls.opensource, external: true },
   { name: "Whitelabel Products", href: domainUrls.whitelabel, external: true },
   { name: "Case Study", href: domainUrls.casestudy, external: true },
+  { name: "Careers", href: domainUrls.careers, external: true },
   { name: "NGO", href: domainUrls.ngo, external: false },
   { name: "Estimate", href: "#calculator" },
 ];
@@ -39,6 +40,7 @@ const navLinks = [
   { name: "Open Source", href: domainUrls.opensource, external: true },
   { name: "Whitelabel", href: domainUrls.whitelabel, external: true },
   { name: "Case Study", href: domainUrls.casestudy, external: true },
+  { name: "Careers", href: domainUrls.careers, external: true },
   { name: "NGO", href: domainUrls.ngo, external: false },
   { name: "Estimate", href: "#calculator" },
 ];
