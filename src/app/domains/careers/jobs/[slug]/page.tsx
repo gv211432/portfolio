@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { useParams, useRouter } from "next/navigation";
 import {
@@ -28,6 +29,9 @@ import {
   jobTypeInfo,
   JobPosition,
 } from "@/data/careersData";
+import { useDarkModeStore } from "@/Atoms/globalAtoms";
+import DarkModeToggleButton from "@/components/inputs/DarkModeToggleButton";
+import { globalConfig, domainUrls } from "@/config/global";
 
 // Icon mapping
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -152,7 +156,7 @@ const ApplicationForm = ({ job }: { job: JobPosition }) => {
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Legal Name */}
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">
+        <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
           Legal Name <span className="text-red-400">*</span>
         </label>
         <input
@@ -161,14 +165,14 @@ const ApplicationForm = ({ job }: { job: JobPosition }) => {
           value={formData.legalName}
           onChange={handleInputChange}
           required
-          className="w-full px-4 py-3 bg-obsidian-50/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan/50 focus:ring-1 focus:ring-cyan/30 transition-colors"
+          className="w-full px-4 py-3 bg-white dark:bg-obsidian-50/50 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-cyan/50 focus:ring-1 focus:ring-cyan/30 transition-colors"
           placeholder="Enter your full legal name"
         />
       </div>
 
       {/* Email */}
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">
+        <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
           Email Address <span className="text-red-400">*</span>
         </label>
         <input
@@ -177,14 +181,14 @@ const ApplicationForm = ({ job }: { job: JobPosition }) => {
           value={formData.email}
           onChange={handleInputChange}
           required
-          className="w-full px-4 py-3 bg-obsidian-50/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan/50 focus:ring-1 focus:ring-cyan/30 transition-colors"
+          className="w-full px-4 py-3 bg-white dark:bg-obsidian-50/50 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-cyan/50 focus:ring-1 focus:ring-cyan/30 transition-colors"
           placeholder="your@email.com"
         />
       </div>
 
       {/* Passport Number */}
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">
+        <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
           Passport Number <span className="text-red-400">*</span>
         </label>
         <input
@@ -193,7 +197,7 @@ const ApplicationForm = ({ job }: { job: JobPosition }) => {
           value={formData.passportNo}
           onChange={handleInputChange}
           required
-          className="w-full px-4 py-3 bg-obsidian-50/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan/50 focus:ring-1 focus:ring-cyan/30 transition-colors"
+          className="w-full px-4 py-3 bg-white dark:bg-obsidian-50/50 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-cyan/50 focus:ring-1 focus:ring-cyan/30 transition-colors"
           placeholder="Enter your passport number"
         />
         <p className="text-xs text-gray-500 mt-1">Required for international wire transfers</p>
@@ -201,7 +205,7 @@ const ApplicationForm = ({ job }: { job: JobPosition }) => {
 
       {/* Country of Origin */}
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">
+        <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
           Country of Origin <span className="text-red-400">*</span>
         </label>
         <input
@@ -210,14 +214,14 @@ const ApplicationForm = ({ job }: { job: JobPosition }) => {
           value={formData.countryOfOrigin}
           onChange={handleInputChange}
           required
-          className="w-full px-4 py-3 bg-obsidian-50/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan/50 focus:ring-1 focus:ring-cyan/30 transition-colors"
+          className="w-full px-4 py-3 bg-white dark:bg-obsidian-50/50 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-cyan/50 focus:ring-1 focus:ring-cyan/30 transition-colors"
           placeholder="Enter your country"
         />
       </div>
 
       {/* Experience */}
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">
+        <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
           Years of Experience <span className="text-red-400">*</span>
         </label>
         <select
@@ -225,7 +229,7 @@ const ApplicationForm = ({ job }: { job: JobPosition }) => {
           value={formData.experience}
           onChange={handleInputChange}
           required
-          className="w-full px-4 py-3 bg-obsidian-50/50 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-cyan/50 focus:ring-1 focus:ring-cyan/30 transition-colors"
+          className="w-full px-4 py-3 bg-white dark:bg-obsidian-50/50 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-cyan/50 focus:ring-1 focus:ring-cyan/30 transition-colors"
         >
           <option value="">Select experience level</option>
           <option value="0-1">0-1 years</option>
@@ -239,7 +243,7 @@ const ApplicationForm = ({ job }: { job: JobPosition }) => {
 
       {/* Resume Upload */}
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">
+        <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
           Resume <span className="text-red-400">*</span>
         </label>
         <div className="relative">
@@ -253,12 +257,12 @@ const ApplicationForm = ({ job }: { job: JobPosition }) => {
           />
           <label
             htmlFor="resume-upload"
-            className="flex items-center justify-center w-full px-4 py-6 bg-obsidian-50/50 border-2 border-dashed border-gray-700 rounded-lg cursor-pointer hover:border-cyan/50 transition-colors"
+            className="flex items-center justify-center w-full px-4 py-6 bg-white dark:bg-obsidian-50/50 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg cursor-pointer hover:border-cyan/50 transition-colors"
           >
             {resume ? (
               <div className="flex items-center gap-3">
                 <FaCheckCircle className="text-green-400" />
-                <span className="text-white">{resume.name}</span>
+                <span className="text-gray-900 dark:text-white">{resume.name}</span>
                 <button
                   type="button"
                   onClick={(e) => {
@@ -272,9 +276,9 @@ const ApplicationForm = ({ job }: { job: JobPosition }) => {
               </div>
             ) : (
               <div className="text-center">
-                <FaUpload className="text-gray-500 text-2xl mx-auto mb-2" />
-                <p className="text-gray-400">Click to upload resume</p>
-                <p className="text-xs text-gray-500 mt-1">PDF or Word (max 5MB)</p>
+                <FaUpload className="text-gray-400 dark:text-gray-500 text-2xl mx-auto mb-2" />
+                <p className="text-gray-500 dark:text-gray-400">Click to upload resume</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">PDF or Word (max 5MB)</p>
               </div>
             )}
           </label>
@@ -318,22 +322,25 @@ const ApplicationForm = ({ job }: { job: JobPosition }) => {
 export default function JobDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const { darkMode } = useDarkModeStore();
   const slug = params.slug as string;
   const job = getJobBySlug(slug);
 
   if (!job) {
     return (
-      <div className="min-h-screen bg-obsidian text-white">
-        <div className="max-w-4xl mx-auto px-4 py-20 text-center">
-          <h1 className="text-3xl font-bold mb-4">Job Not Found</h1>
-          <p className="text-gray-400 mb-8">The job position you're looking for doesn't exist.</p>
-          <button
-            onClick={() => router.back()}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-cyan/20 border border-cyan/30 rounded-lg text-cyan hover:bg-cyan/30 transition-colors"
-          >
-            <FaArrowLeft />
-            Go Back
-          </button>
+      <div className={`min-h-screen ${darkMode ? "dark" : ""}`}>
+        <div className="bg-light dark:bg-obsidian text-primaryDark dark:text-white transition-colors duration-300">
+          <div className="max-w-4xl mx-auto px-4 py-20 text-center">
+            <h1 className="text-3xl font-bold mb-4">Job Not Found</h1>
+            <p className="text-gray-600 dark:text-gray-400 mb-8">The job position you're looking for doesn't exist.</p>
+            <button
+              onClick={() => router.back()}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-cyan/20 border border-cyan/30 rounded-lg text-cyan hover:bg-cyan/30 transition-colors"
+            >
+              <FaArrowLeft />
+              Go Back
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -344,39 +351,72 @@ export default function JobDetailPage() {
   const typeInfo = jobTypeInfo[job.type];
 
   return (
-    <div className="min-h-screen bg-obsidian text-white">
-      {/* Blockchain Background */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-cyan/5 via-transparent to-transparent" />
-        {[...Array(20)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-1 h-1 bg-cyan/30 rounded-full"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-            }}
-            animate={{
-              opacity: [0.2, 0.8, 0.2],
-              scale: [1, 1.5, 1],
-            }}
-            transition={{
-              duration: 3 + Math.random() * 2,
-              repeat: Infinity,
-              delay: Math.random() * 2,
-            }}
-          />
-        ))}
-      </div>
+    <div className={`min-h-screen ${darkMode ? "dark" : ""}`}>
+      <div className="bg-light dark:bg-obsidian text-primaryDark dark:text-white transition-colors duration-300">
+        {/* Header */}
+        <header className="fixed top-0 left-0 right-0 z-50 bg-light/80 dark:bg-obsidian/80 backdrop-blur-md border-b border-primary/10">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16">
+              <Link href={domainUrls.root} className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan to-primary flex items-center justify-center">
+                  <span className="text-obsidian font-bold text-sm">G</span>
+                </div>
+                <span className="font-bold text-primaryDark dark:text-white">
+                  {globalConfig.displayName}
+                </span>
+              </Link>
 
-      {/* Content */}
-      <div className="relative z-10 max-w-6xl mx-auto px-4 py-8 lg:py-16">
+              <nav className="hidden md:flex items-center gap-6">
+                <Link href={domainUrls.root} className="text-primaryDark/70 dark:text-gray-400 hover:text-cyan transition-colors text-sm">
+                  Home
+                </Link>
+                <Link href={domainUrls.careers} className="text-cyan font-medium text-sm">
+                  Careers
+                </Link>
+                <Link href={domainUrls.opensource} className="text-primaryDark/70 dark:text-gray-400 hover:text-cyan transition-colors text-sm">
+                  Open Source
+                </Link>
+              </nav>
+
+              <div className="flex items-center gap-4">
+                <DarkModeToggleButton />
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Blockchain Background */}
+        <div className="fixed inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-cyan/5 via-transparent to-transparent" />
+          {[...Array(20)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-1 h-1 bg-cyan/30 rounded-full"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+              }}
+              animate={{
+                opacity: [0.2, 0.8, 0.2],
+                scale: [1, 1.5, 1],
+              }}
+              transition={{
+                duration: 3 + Math.random() * 2,
+                repeat: Infinity,
+                delay: Math.random() * 2,
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Content */}
+        <div className="relative z-10 max-w-6xl mx-auto px-4 pt-24 pb-16">
         {/* Back Button */}
         <motion.button
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           onClick={() => router.back()}
-          className="inline-flex items-center gap-2 mb-8 text-gray-400 hover:text-cyan transition-colors"
+          className="inline-flex items-center gap-2 mb-8 text-gray-500 dark:text-gray-400 hover:text-cyan transition-colors"
         >
           <FaArrowLeft />
           Go Back
@@ -389,7 +429,7 @@ export default function JobDetailPage() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-obsidian-50/50 backdrop-blur-sm border border-gray-800 rounded-2xl p-8"
+              className="bg-white/80 dark:bg-obsidian-50/50 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-2xl p-8"
             >
               <div className="flex items-start gap-6">
                 <div className={`w-16 h-16 rounded-xl bg-gradient-to-br ${job.gradient} flex items-center justify-center flex-shrink-0`}>
@@ -401,11 +441,11 @@ export default function JobDetailPage() {
                     <span className={`px-3 py-1 rounded-full text-sm border ${deptInfo.bgColor} ${deptInfo.color}`}>
                       {deptInfo.label}
                     </span>
-                    <span className={`px-3 py-1 rounded-full text-sm border border-gray-700 ${typeInfo.color}`}>
+                    <span className={`px-3 py-1 rounded-full text-sm border border-gray-300 dark:border-gray-700 ${typeInfo.color}`}>
                       {typeInfo.label}
                     </span>
                   </div>
-                  <div className="flex flex-wrap gap-4 text-sm text-gray-400">
+                  <div className="flex flex-wrap gap-4 text-sm text-gray-500 dark:text-gray-400">
                     <div className="flex items-center gap-2">
                       <FaMapMarkerAlt className="text-cyan" />
                       {job.location}
@@ -428,10 +468,10 @@ export default function JobDetailPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="bg-obsidian-50/50 backdrop-blur-sm border border-gray-800 rounded-2xl p-8"
+              className="bg-white/80 dark:bg-obsidian-50/50 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-2xl p-8"
             >
               <h2 className="text-xl font-bold mb-4">About the Role</h2>
-              <p className="text-gray-300 leading-relaxed">{job.description}</p>
+              <p className="text-gray-600 dark:text-gray-300 leading-relaxed">{job.description}</p>
             </motion.div>
 
             {/* Responsibilities */}
@@ -439,14 +479,14 @@ export default function JobDetailPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="bg-obsidian-50/50 backdrop-blur-sm border border-gray-800 rounded-2xl p-8"
+              className="bg-white/80 dark:bg-obsidian-50/50 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-2xl p-8"
             >
               <h2 className="text-xl font-bold mb-4">Responsibilities</h2>
               <ul className="space-y-3">
                 {job.responsibilities.map((item, index) => (
                   <li key={index} className="flex items-start gap-3">
                     <FaCheckCircle className="text-cyan mt-1 flex-shrink-0" />
-                    <span className="text-gray-300">{item}</span>
+                    <span className="text-gray-600 dark:text-gray-300">{item}</span>
                   </li>
                 ))}
               </ul>
@@ -457,14 +497,14 @@ export default function JobDetailPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="bg-obsidian-50/50 backdrop-blur-sm border border-gray-800 rounded-2xl p-8"
+              className="bg-white/80 dark:bg-obsidian-50/50 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-2xl p-8"
             >
               <h2 className="text-xl font-bold mb-4">Requirements</h2>
               <ul className="space-y-3">
                 {job.requirements.map((item, index) => (
                   <li key={index} className="flex items-start gap-3">
                     <FaCheckCircle className="text-green-400 mt-1 flex-shrink-0" />
-                    <span className="text-gray-300">{item}</span>
+                    <span className="text-gray-600 dark:text-gray-300">{item}</span>
                   </li>
                 ))}
               </ul>
@@ -475,14 +515,14 @@ export default function JobDetailPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="bg-obsidian-50/50 backdrop-blur-sm border border-gray-800 rounded-2xl p-8"
+              className="bg-white/80 dark:bg-obsidian-50/50 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-2xl p-8"
             >
               <h2 className="text-xl font-bold mb-4">Nice to Have</h2>
               <ul className="space-y-3">
                 {job.niceToHave.map((item, index) => (
                   <li key={index} className="flex items-start gap-3">
                     <FaStar className="text-gold mt-1 flex-shrink-0" />
-                    <span className="text-gray-300">{item}</span>
+                    <span className="text-gray-600 dark:text-gray-300">{item}</span>
                   </li>
                 ))}
               </ul>
@@ -493,14 +533,14 @@ export default function JobDetailPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
-              className="bg-obsidian-50/50 backdrop-blur-sm border border-gray-800 rounded-2xl p-8"
+              className="bg-white/80 dark:bg-obsidian-50/50 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-2xl p-8"
             >
               <h2 className="text-xl font-bold mb-4">Tech Stack</h2>
               <div className="flex flex-wrap gap-2">
                 {job.techStack.map((tech, index) => (
                   <span
                     key={index}
-                    className="px-3 py-1.5 bg-obsidian border border-gray-700 rounded-lg text-sm text-gray-300"
+                    className="px-3 py-1.5 bg-gray-100 dark:bg-obsidian border border-gray-300 dark:border-gray-700 rounded-lg text-sm text-gray-600 dark:text-gray-300"
                   >
                     {tech}
                   </span>
@@ -515,12 +555,13 @@ export default function JobDetailPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="sticky top-8 bg-obsidian-50/50 backdrop-blur-sm border border-gray-800 rounded-2xl p-6"
+              className="sticky top-24 bg-white/80 dark:bg-obsidian-50/50 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-2xl p-6"
             >
               <h2 className="text-xl font-bold mb-6">Apply Now</h2>
               <ApplicationForm job={job} />
             </motion.div>
           </div>
+        </div>
         </div>
       </div>
     </div>
