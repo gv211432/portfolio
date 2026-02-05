@@ -30,7 +30,6 @@ import {
   JobPosition,
 } from "@/data/careersData";
 import { useDarkModeStore } from "@/Atoms/globalAtoms";
-import DarkModeToggleButton from "@/components/inputs/DarkModeToggleButton";
 import { globalConfig, domainUrls } from "@/config/global";
 import { Logo } from "@/components/ui";
 
@@ -382,9 +381,6 @@ export default function JobDetailPage() {
                 </Link>
               </nav>
 
-              <div className="flex items-center gap-4">
-                <DarkModeToggleButton />
-              </div>
             </div>
           </div>
         </header>

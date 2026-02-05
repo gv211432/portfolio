@@ -11,7 +11,6 @@ import {
   type JobPosition,
 } from "@/data/careersData";
 import { useDarkModeStore } from "@/Atoms/globalAtoms";
-import DarkModeToggleButton from "@/components/inputs/DarkModeToggleButton";
 import { globalConfig, domainUrls } from "@/config/global";
 import { Logo, FloroActionButton, DarkActionButton } from "@/components/ui";
 
@@ -271,9 +270,6 @@ export default function CareersPage() {
                 <span className="text-cyan font-medium text-sm">Careers</span>
               </nav>
 
-              <div className="flex items-center gap-4">
-                <DarkModeToggleButton />
-              </div>
             </div>
           </div>
         </header>

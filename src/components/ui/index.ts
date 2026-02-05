@@ -15,3 +15,5 @@ export {
   FloroActionButton,
 } from "./ActionButtons";
 export { default as ContactDetails } from "./ContactDetails";
+export { default as ChatBot } from "./ChatBot";
+export { default as FloatingActionBar } from "./FloatingActionBar";

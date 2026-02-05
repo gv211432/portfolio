@@ -1,5 +1,6 @@
 import "./globals.css";
 import { Inter, Cinzel_Decorative } from "next/font/google";
+import ChatBotProvider from "@/components/providers/ChatBotProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -22,7 +23,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" id="root-node" className={cinzelDecorative.variable}>
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        {children}
+        <ChatBotProvider />
+      </body>
     </html>
   );
 }

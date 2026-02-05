@@ -11,7 +11,6 @@ import {
   type OpenSourceProject,
 } from "@/data/opensourceProjects";
 import { useDarkModeStore } from "@/Atoms/globalAtoms";
-import DarkModeToggleButton from "@/components/inputs/DarkModeToggleButton";
 import { globalConfig, domainUrls } from "@/config/global";
 import { Logo, FloroActionButton } from "@/components/ui";
 
@@ -386,7 +385,6 @@ export default function OpenSourcePage() {
               </nav>
 
               <div className="flex items-center gap-4">
-                <DarkModeToggleButton />
                 <a
                   href="https://github.com/gv211432"
                   target="_blank"

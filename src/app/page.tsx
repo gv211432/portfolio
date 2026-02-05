@@ -4,7 +4,6 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { domainUrls, globalConfig } from "@/config/global";
 import { useDarkModeStore } from "@/Atoms/globalAtoms";
-import DarkModeToggleButton from "@/components/inputs/DarkModeToggleButton";
 import {
   Logo,
   PrimaryActionButton,
@@ -798,9 +797,8 @@ export default function LandingPage() {
               </div>
             </nav>
 
-            {/* CTA Button and Dark Mode Toggle */}
+            {/* CTA Button */}
             <div className="hidden lg:flex items-center gap-4">
-              <DarkModeToggleButton />
               <a
                 href="#calculator"
                 className="bg-gradient-to-r from-primary to-primaryDark hover:from-primaryDark hover:to-primary text-white px-6 py-3 rounded-lg font-semibold transition-all hover:shadow-lg hover:shadow-primary/20"
@@ -842,11 +840,10 @@ export default function LandingPage() {
                     {link.name}
                   </a>
                 ))}
-                <div className="flex items-center justify-between mt-4">
-                  <DarkModeToggleButton />
+                <div className="mt-4">
                   <a
                     href="#calculator"
-                    className="bg-primary text-white px-6 py-3 rounded-lg font-semibold text-center"
+                    className="block bg-primary text-white px-6 py-3 rounded-lg font-semibold text-center"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Get Estimate

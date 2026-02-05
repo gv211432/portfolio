@@ -10,7 +10,6 @@ import {
   type WhitelabelProduct,
 } from "@/data/whitelabelProducts";
 import { useDarkModeStore } from "@/Atoms/globalAtoms";
-import DarkModeToggleButton from "@/components/inputs/DarkModeToggleButton";
 import { globalConfig, domainUrls } from "@/config/global";
 import {
   Logo,
@@ -400,7 +399,6 @@ export default function WhitelabelPage() {
             </nav>
 
             <div className="flex items-center gap-4">
-              <DarkModeToggleButton />
               <FloroActionButton
                 href={`mailto:${globalConfig.email}?subject=Whitelabel Product Inquiry`}
                 className="hidden lg:inline-flex px-6 py-2.5"
