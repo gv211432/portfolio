@@ -279,7 +279,7 @@ export default function CareersPage() {
         </header>
 
         {/* Hero Section */}
-        <section className="relative pt-24 pb-16 overflow-hidden">
+        <section className="relative pt-32 pb-16 overflow-hidden">
           <BlockchainBackground />
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">

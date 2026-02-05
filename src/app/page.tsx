@@ -707,7 +707,8 @@ const ProjectCalculator = () => {
                   : "text-green-400"
               }`}
             >
-              {estimate.complexity}
+              <span className="sm:hidden">{estimate.complexity === "Standard" ? "Std" : estimate.complexity}</span>
+              <span className="hidden sm:inline">{estimate.complexity}</span>
             </div>
             <div className="text-sm text-primaryDark/70 dark:text-gray-400">Complexity</div>
           </div>
@@ -852,7 +853,7 @@ export default function LandingPage() {
       </header>
 
       {/* Hero Section with Terminal */}
-      <section className="pt-24 lg:pt-32 pb-20 relative overflow-hidden">
+      <section className="pt-32 lg:pt-32 pb-20 relative overflow-hidden">
         {/* Background Effects */}
         <div className="absolute inset-0 bg-gradient-to-br from-secondary via-light to-secondary dark:from-obsidian dark:via-obsidian-50 dark:to-obsidian transition-colors duration-300" />
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/10 dark:bg-primary/5 rounded-full blur-[120px]" />
