@@ -61,7 +61,7 @@ const BlockchainBackground = () => (
     {[...Array(6)].map((_, i) => (
       <motion.div
         key={i}
-        className="absolute w-3 h-3 rounded-full bg-cyan/30"
+        className="absolute w-3 h-3 rounded-full bg-cyan-600/60 dark:bg-cyan/30"
         style={{
           left: `${15 + i * 15}%`,
           top: `${20 + (i % 3) * 25}%`,
@@ -78,7 +78,7 @@ const BlockchainBackground = () => (
       />
     ))}
     {/* Connection lines */}
-    <svg className="absolute inset-0 w-full h-full opacity-10">
+    <svg className="absolute inset-0 w-full h-full opacity-30 dark:opacity-10">
       <motion.path
         d="M100,100 Q300,50 500,150 T900,100"
         stroke="url(#lineGrad)"
