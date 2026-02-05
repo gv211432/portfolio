@@ -246,7 +246,7 @@ export default function CaseStudyDetailPage() {
             <div className="flex justify-between items-center py-4">
               <div className="flex items-center gap-4">
                 <Link
-                  href="/domains/casestudy"
+                  href="/"
                   className="flex items-center gap-2 text-primaryDark/60 dark:text-gray-400 hover:text-primary transition-colors"
                 >
                   <FaArrowLeft className="w-4 h-4" />
@@ -556,7 +556,7 @@ export default function CaseStudyDetailPage() {
                   Get in Touch
                   <FaArrowRight className="w-4 h-4 ml-2" />
                 </FloroActionButton>
-                <PrimaryActionButton href="/domains/casestudy" asLink>
+                <PrimaryActionButton href="/" asLink>
                   View All Case Studies
                 </PrimaryActionButton>
               </div>

@@ -70,7 +70,7 @@ export type CaseStudyIndustry =
 
 export const industryInfo: Record<
   CaseStudyIndustry,
-  { label: string; color: string; bgColor: string }
+  { label: string; color: string; bgColor: string; }
 > = {
   fintech: {
     label: "FinTech",
@@ -203,7 +203,7 @@ export const caseStudies: CaseStudy[] = [
     industry: "crypto",
     icon: "FaTelegram",
     gradient: "from-blue-500 to-indigo-600",
-    clientName: "Ralph",
+    clientName: "Ralph Mendez",
     snapshot: {
       industry: "Crypto / Trading",
       techStack: [
@@ -278,7 +278,7 @@ export const caseStudies: CaseStudy[] = [
     testimonial: {
       quote:
         "When I found Gaurav, I was ready to give up. Not only did they rebuild everything, but they also uncovered what my previous developer had done. Their work turned my disaster into a thriving business. Never settle down out of setbacks - keep grinding.",
-      author: "Ralph",
+      author: "Ralph Mendez",
       role: "Founder",
       company: "Algora Trading",
     },
