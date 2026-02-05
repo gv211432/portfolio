@@ -34,6 +34,8 @@ import {
   FaCode,
   FaPlug,
   FaQuoteLeft,
+  FaHome,
+  FaUserTie,
 } from "react-icons/fa";
 import { SiKucoin } from "react-icons/si";
 import { RiSwapLine } from "react-icons/ri";
@@ -57,6 +59,8 @@ const iconMap: Record<string, React.ReactNode> = {
   FaCoins: <FaCoins className="w-12 h-12" />,
   FaBuilding: <FaBuilding className="w-12 h-12" />,
   FaBitcoin: <FaBitcoin className="w-12 h-12" />,
+  FaHome: <FaHome className="w-12 h-12" />,
+  FaUserTie: <FaUserTie className="w-12 h-12" />,
 };
 
 // Feature Section Component

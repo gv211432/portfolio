@@ -28,6 +28,8 @@ import {
   FaArrowRight,
   FaCheck,
   FaStar,
+  FaHome,
+  FaUserTie,
 } from "react-icons/fa";
 import { SiKucoin } from "react-icons/si";
 import { RiSwapLine } from "react-icons/ri";
@@ -56,6 +58,8 @@ const iconMap: Record<string, React.ReactNode> = {
   FaCoins: <FaCoins className="w-8 h-8" />,
   FaBuilding: <FaBuilding className="w-8 h-8" />,
   FaBitcoin: <FaBitcoin className="w-8 h-8" />,
+  FaHome: <FaHome className="w-8 h-8" />,
+  FaUserTie: <FaUserTie className="w-8 h-8" />,
 };
 
 const categories: { key: ProductCategory | "all"; label: string }[] = [
@@ -66,6 +70,7 @@ const categories: { key: ProductCategory | "all"; label: string }[] = [
   { key: "social", label: "Social" },
   { key: "automation", label: "Automation" },
   { key: "enterprise", label: "Enterprise" },
+  { key: "iot", label: "IoT" },
 ];
 
 // Product Card Component
