@@ -40,7 +40,7 @@ import {
   TbLayoutGrid,
   TbList,
 } from "react-icons/tb";
-import { GiTwoCoins, GiMedicines } from "react-icons/gi";
+import { GiTwoCoins, GiMedicines, GiCardAceSpades } from "react-icons/gi";
 import { HiSparkles, HiOutlineExternalLink } from "react-icons/hi";
 
 // Icon mapping
@@ -60,6 +60,7 @@ const iconMap: Record<string, React.ReactNode> = {
   FaBitcoin: <FaBitcoin className="w-8 h-8" />,
   FaHome: <FaHome className="w-8 h-8" />,
   FaUserTie: <FaUserTie className="w-8 h-8" />,
+  GiCardAceSpades: <GiCardAceSpades className="w-8 h-8" />,
 };
 
 const categories: { key: ProductCategory | "all"; label: string }[] = [

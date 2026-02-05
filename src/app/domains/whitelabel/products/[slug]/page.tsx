@@ -40,7 +40,7 @@ import {
 import { SiKucoin } from "react-icons/si";
 import { RiSwapLine } from "react-icons/ri";
 import { TbArrowsExchange, TbChartCandle } from "react-icons/tb";
-import { GiTwoCoins, GiMedicines } from "react-icons/gi";
+import { GiTwoCoins, GiMedicines, GiCardAceSpades } from "react-icons/gi";
 import { HiSparkles, HiOutlineExternalLink } from "react-icons/hi";
 import { BsLightningCharge, BsShieldCheck, BsGraphUp } from "react-icons/bs";
 
@@ -61,6 +61,7 @@ const iconMap: Record<string, React.ReactNode> = {
   FaBitcoin: <FaBitcoin className="w-12 h-12" />,
   FaHome: <FaHome className="w-12 h-12" />,
   FaUserTie: <FaUserTie className="w-12 h-12" />,
+  GiCardAceSpades: <GiCardAceSpades className="w-12 h-12" />,
 };
 
 // Feature Section Component
