@@ -46,7 +46,7 @@ const typeIconMap: Record<ProjectType, React.ReactNode> = {
   dapp: <FaCode className="w-5 h-5" />,
 };
 
-const projectTypes: { key: ProjectType | "all"; label: string }[] = [
+const projectTypes: { key: ProjectType | "all"; label: string; }[] = [
   { key: "all", label: "All Projects" },
   { key: "cli", label: "CLI" },
   { key: "library", label: "Library" },
@@ -310,9 +310,8 @@ const FeaturedCarousel = () => {
             <button
               key={idx}
               onClick={() => setCurrentIndex(idx)}
-              className={`w-2 h-2 rounded-full transition-all ${
-                idx === currentIndex ? "w-8 bg-cyan" : "bg-gray-600 hover:bg-gray-500"
-              }`}
+              className={`w-2 h-2 rounded-full transition-all ${idx === currentIndex ? "w-8 bg-cyan" : "bg-gray-600 hover:bg-gray-500"
+                }`}
             />
           ))}
         </div>
@@ -386,13 +385,13 @@ export default function OpenSourcePage() {
 
               <div className="flex items-center gap-4">
                 <a
-                  href="https://github.com/gv211432"
+                  href="https://github.com/Gaurav-Dot-One-Software-Solutions"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="bg-gradient-to-r from-primary to-primaryDark hover:from-primaryDark hover:to-primary text-white px-6 py-3 rounded-lg font-semibold transition-all hover:shadow-lg hover:shadow-primary/20 inline-flex items-center justify-center gap-2"
                 >
                   <FaGithub className="w-5 h-5" />
-                  GitHub
+                  Let's Contribute
                 </a>
               </div>
             </div>
@@ -458,21 +457,19 @@ export default function OpenSourcePage() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setViewMode("grid")}
-                    className={`p-2 rounded-lg transition-colors ${
-                      viewMode === "grid"
-                        ? "bg-cyan text-obsidian"
-                        : "bg-light dark:bg-obsidian-50 text-primaryDark/70 dark:text-gray-400 hover:text-cyan"
-                    }`}
+                    className={`p-2 rounded-lg transition-colors ${viewMode === "grid"
+                      ? "bg-cyan text-obsidian"
+                      : "bg-light dark:bg-obsidian-50 text-primaryDark/70 dark:text-gray-400 hover:text-cyan"
+                      }`}
                   >
                     <TbLayoutGrid className="w-5 h-5" />
                   </button>
                   <button
                     onClick={() => setViewMode("list")}
-                    className={`p-2 rounded-lg transition-colors ${
-                      viewMode === "list"
-                        ? "bg-cyan text-obsidian"
-                        : "bg-light dark:bg-obsidian-50 text-primaryDark/70 dark:text-gray-400 hover:text-cyan"
-                    }`}
+                    className={`p-2 rounded-lg transition-colors ${viewMode === "list"
+                      ? "bg-cyan text-obsidian"
+                      : "bg-light dark:bg-obsidian-50 text-primaryDark/70 dark:text-gray-400 hover:text-cyan"
+                      }`}
                   >
                     <TbList className="w-5 h-5" />
                   </button>
@@ -485,11 +482,10 @@ export default function OpenSourcePage() {
                   <button
                     key={type.key}
                     onClick={() => setSelectedType(type.key)}
-                    className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${
-                      selectedType === type.key
-                        ? "bg-cyan text-obsidian"
-                        : "bg-light dark:bg-obsidian-50 border border-primary/20 text-primaryDark/70 dark:text-gray-400 hover:border-cyan/50"
-                    }`}
+                    className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${selectedType === type.key
+                      ? "bg-cyan text-obsidian"
+                      : "bg-light dark:bg-obsidian-50 border border-primary/20 text-primaryDark/70 dark:text-gray-400 hover:border-cyan/50"
+                      }`}
                   >
                     {type.label}
                   </button>

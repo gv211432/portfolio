@@ -1,7 +1,10 @@
 import path from "path";
 
 // Domain configuration
-const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'gaurav.one';
+const ROOT_DOMAIN = (process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'www.gaurav.one')
+  .replace("http://", "")
+  .replace("https://", "")
+  .split('.').slice(-2).join('.'); // Extract root domain (e.g., gaurav.one)
 const isLocalDev = ROOT_DOMAIN.includes('localhost') || ROOT_DOMAIN.includes('127.0.0.1') || ROOT_DOMAIN.includes('lvh.me');
 const PROTOCOL = isLocalDev ? 'http' : 'https';
 
