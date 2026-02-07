@@ -14,23 +14,26 @@ export default function PrivacyPolicyPage() {
   return (
     <div className={`min-h-screen ${darkMode ? "dark bg-obsidian text-white" : "bg-white text-primaryDark"}`}>
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-obsidian/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800">
-        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href={domainUrls.root}>
-            <Logo className="h-8" />
-          </Link>
-          <Link
-            href={domainUrls.root}
-            className="flex items-center gap-2 text-sm text-primaryDark/60 dark:text-gray-400 hover:text-cyan transition-colors"
-          >
-            <FaArrowLeft className="w-3 h-3" />
-            Back to Home
-          </Link>
+      <header className="fixed top-0 left-0 right-0 z-50 bg-secondary/95 dark:bg-obsidian/95 backdrop-blur-sm border-b border-primary/10 transition-colors duration-300">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            <div className="flex items-center gap-4">
+              <Link
+                href={domainUrls.root}
+                className="flex items-center gap-2 text-primaryDark/60 dark:text-gray-400 hover:text-primary transition-colors"
+              >
+                <FaArrowLeft className="w-4 h-4" />
+                <span className="hidden sm:inline">Back</span>
+              </Link>
+              <div className="h-6 w-px bg-primary/20" />
+              <Logo size="lg" href={domainUrls.root} />
+            </div>
+          </div>
         </div>
       </header>
 
       {/* Content */}
-      <main className="pt-28 pb-20 px-6">
+      <main className="pt-32 pb-20 px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
