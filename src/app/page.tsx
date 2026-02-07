@@ -687,26 +687,24 @@ const ProjectCalculator = () => {
           <button
             key={key}
             onClick={() => setFeatures((prev) => ({ ...prev, [key]: !prev[key as keyof typeof prev] }))}
-            className={`p-4 rounded-xl border-2 text-left transition-all ${
-              features[key as keyof typeof features]
-                ? "border-cyan bg-cyan/10"
-                : "border-primary/30 hover:border-primary/60 bg-secondary dark:bg-obsidian"
-            }`}
+            className={`p-4 rounded-xl border-2 text-left transition-all ${features[key as keyof typeof features]
+              ? "border-cyan bg-cyan/10"
+              : "border-primary/30 hover:border-primary/60 bg-secondary dark:bg-obsidian"
+              }`}
           >
             <div className="flex items-center justify-between mb-2">
               <span className={`font-semibold ${features[key as keyof typeof features] ? "text-cyan" : "text-primaryDark dark:text-white"}`}>
                 {detail.label}
               </span>
               <span
-                className={`text-xs px-2 py-1 rounded-full ${
-                  detail.complexity === "Very High"
-                    ? "bg-red-500/20 text-red-400"
-                    : detail.complexity === "High"
+                className={`text-xs px-2 py-1 rounded-full ${detail.complexity === "Very High"
+                  ? "bg-red-500/20 text-red-400"
+                  : detail.complexity === "High"
                     ? "bg-orange-500/20 text-orange-400"
                     : detail.complexity === "Ongoing"
-                    ? "bg-cyan/20 text-cyan"
-                    : "bg-green-500/20 text-green-400"
-                }`}
+                      ? "bg-cyan/20 text-cyan"
+                      : "bg-green-500/20 text-green-400"
+                  }`}
               >
                 {detail.complexity}
               </span>
@@ -731,13 +729,12 @@ const ProjectCalculator = () => {
           </div>
           <div>
             <div
-              className={`text-3xl font-bold ${
-                estimate.complexity === "Very High"
-                  ? "text-red-400"
-                  : estimate.complexity === "High"
+              className={`text-3xl font-bold ${estimate.complexity === "Very High"
+                ? "text-red-400"
+                : estimate.complexity === "High"
                   ? "text-orange-400"
                   : "text-green-400"
-              }`}
+                }`}
             >
               <span className="sm:hidden">{estimate.complexity === "Standard" ? "Std" : estimate.complexity}</span>
               <span className="hidden sm:inline">{estimate.complexity}</span>
@@ -916,8 +913,8 @@ export default function LandingPage() {
                 <FloroActionButton href="#services">
                   Explore Services
                 </FloroActionButton>
-                <PrimaryActionButton href={domainUrls.me}>
-                  View Portfolio
+                <PrimaryActionButton href={domainUrls.casestudy}>
+                  View Case Studies
                 </PrimaryActionButton>
               </div>
             </motion.div>
@@ -1170,8 +1167,8 @@ export default function LandingPage() {
                 </svg>
                 {globalConfig.email}
               </DarkActionButton>
-              <PrimaryActionButton href={domainUrls.me} className="border-cyan text-cyan hover:bg-cyan/10">
-                View Full Portfolio
+              <PrimaryActionButton href={domainUrls.whitelabel} className="border-cyan text-cyan hover:bg-cyan/10">
+                View Whitelabel Solutions
               </PrimaryActionButton>
             </div>
           </motion.div>
