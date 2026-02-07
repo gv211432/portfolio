@@ -24,6 +24,12 @@ export default function middleware(req: NextRequest) {
   const url = req.nextUrl.clone();
   const hostname = req.headers.get('host') || '';
 
+  // Redirect HTTP to HTTPS in production
+  const proto = req.headers.get('x-forwarded-proto');
+  if (proto === 'http' && !hostname.includes('localhost') && !hostname.includes('127.0.0.1') && !hostname.includes('lvh.me')) {
+    return NextResponse.redirect(`https://${hostname}${url.pathname}${url.search}`, 301);
+  }
+
   // Debug logging - check terminal for output
   console.log(`[Middleware] hostname: ${hostname}, pathname: ${url.pathname}`);
 
