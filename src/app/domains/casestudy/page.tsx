@@ -11,6 +11,7 @@ import { useDarkModeStore } from "@/Atoms/globalAtoms";
 import { domainUrls } from "@/config/global";
 import {
   Logo,
+  DarkActionButton,
   FloroActionButton,
   PrimaryActionButton,
 } from "@/components/ui";
@@ -225,31 +226,28 @@ export default function CaseStudyPage() {
             <div className="flex justify-between items-center py-4">
               <Logo size="lg" href={domainUrls.root} />
 
-              <nav className="hidden md:flex items-center gap-6">
+              <nav className="hidden md:flex items-center gap-8">
                 <Link
                   href={domainUrls.root}
-                  className="text-primaryDark/70 dark:text-gray-400 hover:text-cyan transition-colors text-sm"
+                  className="text-primaryDark/70 dark:text-gray-400 hover:text-primary transition-colors font-medium"
                 >
                   Home
                 </Link>
                 <Link
                   href={domainUrls.whitelabel}
-                  className="text-primaryDark/70 dark:text-gray-400 hover:text-cyan transition-colors text-sm"
+                  className="text-primaryDark/70 dark:text-gray-400 hover:text-primary transition-colors font-medium"
                 >
                   Products
                 </Link>
-                <span className="text-cyan font-medium text-sm">
+                <span className="text-cyan font-medium">
                   Case Studies
                 </span>
               </nav>
 
-              <div className="flex items-center gap-4">
-                <FloroActionButton
-                  href={`${domainUrls.root}/contact`}
-                  className="hidden lg:inline-flex px-6 py-2.5"
-                >
+              <div className="hidden lg:flex items-center gap-4">
+                <DarkActionButton href={`${domainUrls.root}/contact`}>
                   Get Estimate
-                </FloroActionButton>
+                </DarkActionButton>
               </div>
             </div>
           </div>

@@ -16,6 +16,15 @@ interface Message {
   timestamp: Date;
 }
 
+function useIsNgoPage() {
+  const [isNgo, setIsNgo] = useState(false);
+  useEffect(() => {
+    const hostname = window.location.hostname;
+    setIsNgo(hostname.startsWith("ngo.") || hostname.startsWith("ngo-"));
+  }, []);
+  return isNgo;
+}
+
 export default function FloatingActionBar() {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -24,6 +33,9 @@ export default function FloatingActionBar() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const { darkMode, toggleDarkMode, initializeDarkMode } = useDarkModeStore();
+  const isNgo = useIsNgoPage();
+
+  const accent = isNgo ? "#20c997" : undefined; // green for NGO, default cyan otherwise
 
   // Initialize dark mode on mount
   useEffect(() => {
@@ -117,12 +129,13 @@ export default function FloatingActionBar() {
   return (
     <>
       {/* Floating Action Bar */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-        className="fixed bottom-4 sm:bottom-6 right-4 sm:right-6 z-50 flex items-center gap-2 bg-white/90 dark:bg-obsidian/90 backdrop-blur-md rounded-full px-2 py-2 shadow-lg border border-gray-200 dark:border-gray-700"
-      >
+      <div className="fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 lg:left-auto lg:translate-x-0 lg:right-6 z-50">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="flex items-center gap-2 bg-white/90 dark:bg-obsidian/90 backdrop-blur-md rounded-full px-2 py-2 shadow-lg border border-gray-200 dark:border-gray-700"
+        >
         {/* Email Button */}
         <a
           href={`mailto:${globalConfig.email}`}
@@ -162,12 +175,16 @@ export default function FloatingActionBar() {
         {/* Chat Button */}
         <button
           onClick={() => setIsChatOpen(true)}
-          className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-cyan hover:bg-cyan/80 flex items-center justify-center transition-all group"
+          className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition-all group ${
+            isNgo ? "" : "bg-cyan hover:bg-cyan/80"
+          }`}
+          style={isNgo ? { backgroundColor: accent } : undefined}
           aria-label="Open chat"
         >
           <BsChatDotsFill className="w-5 h-5 text-obsidian group-hover:scale-110 transition-transform" />
         </button>
-      </motion.div>
+        </motion.div>
+      </div>
 
       {/* Chat Window */}
       <AnimatePresence>
@@ -180,7 +197,10 @@ export default function FloatingActionBar() {
             className="fixed bottom-20 sm:bottom-24 right-4 sm:right-6 z-50 w-[calc(100vw-2rem)] sm:w-[380px] h-[450px] sm:h-[500px] bg-white dark:bg-obsidian rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-200 dark:border-gray-700"
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 bg-cyan text-obsidian">
+            <div
+              className={`flex items-center justify-between px-4 py-3 text-obsidian ${isNgo ? "" : "bg-cyan"}`}
+              style={isNgo ? { backgroundColor: accent } : undefined}
+            >
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
                   <span className="text-lg font-bold">G</span>
@@ -214,9 +234,10 @@ export default function FloatingActionBar() {
                   <div
                     className={`max-w-[80%] rounded-2xl px-4 py-2.5 ${
                       message.role === "user"
-                        ? "bg-cyan text-obsidian rounded-br-md"
+                        ? `${isNgo ? "" : "bg-cyan"} text-obsidian rounded-br-md`
                         : "bg-white dark:bg-obsidian border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 rounded-bl-md"
                     }`}
+                    style={message.role === "user" && isNgo ? { backgroundColor: accent } : undefined}
                   >
                     <p className="text-sm whitespace-pre-wrap">
                       {message.content}
@@ -279,8 +300,9 @@ export default function FloatingActionBar() {
                   onClick={handleSend}
                   disabled={!input.trim() || isLoading}
                   className={`w-10 h-10 rounded-full flex items-center justify-center transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
-                    input.trim() ? "bg-cyan" : "bg-gray-200 dark:bg-gray-700"
+                    input.trim() ? (isNgo ? "" : "bg-cyan") : "bg-gray-200 dark:bg-gray-700"
                   }`}
+                  style={input.trim() && isNgo ? { backgroundColor: accent } : undefined}
                   aria-label="Send message"
                 >
                   <IoSend

@@ -12,6 +12,12 @@ type ConsentStatus = "accepted" | "rejected" | null;
 export default function CookieConsent() {
   const [showBanner, setShowBanner] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isNgo, setIsNgo] = useState(false);
+
+  useEffect(() => {
+    const hostname = window.location.hostname;
+    setIsNgo(hostname.startsWith("ngo.") || hostname.startsWith("ngo-"));
+  }, []);
 
   useEffect(() => {
     // Check if user has already made a choice
@@ -51,10 +57,10 @@ export default function CookieConsent() {
           <div className="w-full">
             <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
               <div className="flex items-center gap-3 min-w-0">
-                <BsShieldCheck className="w-5 h-5 text-cyan flex-shrink-0" />
+                <BsShieldCheck className={`w-5 h-5 flex-shrink-0 ${isNgo ? "text-[#20c997]" : "text-cyan"}`} />
                 <p className="text-sm text-primaryDark/70 dark:text-gray-400">
                   We use cookies to enhance your experience. By using our website, you agree to our{" "}
-                  <a href="/privacy" className="text-cyan hover:underline">
+                  <a href="/privacy" className={`${isNgo ? "text-[#20c997]" : "text-cyan"} hover:underline`}>
                     Privacy Policy
                   </a>.
                 </p>
@@ -68,7 +74,9 @@ export default function CookieConsent() {
                 </button>
                 <button
                   onClick={handleAccept}
-                  className="px-4 py-1.5 text-sm font-medium text-obsidian bg-cyan hover:bg-cyan/90 rounded-lg transition-colors"
+                  className={`px-4 py-1.5 text-sm font-medium text-obsidian rounded-lg transition-colors ${
+                    isNgo ? "bg-[#20c997] hover:bg-[#20c997]/90" : "bg-cyan hover:bg-cyan/90"
+                  }`}
                 >
                   Accept
                 </button>
