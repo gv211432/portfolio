@@ -4,17 +4,21 @@
  * shared across all subdomains (me.gaurav.one, careers.gaurav.one, etc.).
  */
 
-const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "gaurav.one";
+const RAW_DOMAIN = (process.env.NEXT_PUBLIC_ROOT_DOMAIN || "gaurav.one")
+  .replace("http://", "")
+  .replace("https://", "")
+  .split(":")[0]; // remove port if any
+const ROOT_DOMAIN = RAW_DOMAIN.split(".").slice(-2).join("."); // e.g., "gaurav.one"
 
 function getCookieDomain(): string {
   if (typeof window === "undefined") return "";
   const hostname = window.location.hostname;
   // For local dev, don't set domain (cookies work on localhost by default)
-  if (hostname === "localhost" || hostname === "127.0.0.1") return "";
+  if (hostname === "localhost" || hostname === "127.0.0.1" || hostname.endsWith(".localhost")) return "";
   // For lvh.me local testing
   if (hostname.endsWith("lvh.me")) return ".lvh.me";
-  // Production: set on root domain
-  return `.${ROOT_DOMAIN.replace(/:\d+$/, "")}`;
+  // Production: set on root domain (e.g., .gaurav.one)
+  return `.${ROOT_DOMAIN}`;
 }
 
 export function setCookie(name: string, value: string, days = 365): void {
