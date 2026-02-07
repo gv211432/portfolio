@@ -2,12 +2,13 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { IoClose, IoSend, IoMoon, IoSunny, IoArrowUp } from "react-icons/io5";
+import { IoClose, IoSend, IoMoon, IoSunny, IoArrowUp, IoContract, IoHome } from "react-icons/io5";
+import { IoMdExpand } from "react-icons/io";
 import { BsChatDotsFill } from "react-icons/bs";
 import { FaTelegram } from "react-icons/fa";
 import { HiMail } from "react-icons/hi";
 import { useDarkModeStore } from "@/Atoms/globalAtoms";
-import { globalConfig } from "@/config/global";
+import { globalConfig, domainUrls } from "@/config/global";
 
 interface Message {
   id: string;
@@ -40,6 +41,24 @@ export default function FloatingActionBar() {
   const accent = useSubdomainAccent();
 
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [isVertical, setIsVertical] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("fab-vertical") === "true";
+    }
+    return false;
+  });
+  const [isHomePage, setIsHomePage] = useState(false);
+
+  // Detect if on the main homepage (gaurav.one or www.gaurav.one only)
+  useEffect(() => {
+    const hostname = window.location.hostname;
+    setIsHomePage(hostname === "gaurav.one" || hostname === "www.gaurav.one");
+  }, []);
+
+  // Persist pinch state
+  useEffect(() => {
+    localStorage.setItem("fab-vertical", String(isVertical));
+  }, [isVertical]);
 
   // Show scroll-to-top button when user scrolls down (supports both window and container scroll)
   useEffect(() => {
@@ -156,13 +175,46 @@ export default function FloatingActionBar() {
   return (
     <>
       {/* Floating Action Bar */}
-      <div className="fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 lg:left-auto lg:translate-x-0 lg:right-6 z-50">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="flex items-center gap-2 bg-white/90 dark:bg-obsidian/90 backdrop-blur-md rounded-full px-2 py-2 shadow-lg border border-gray-200 dark:border-gray-700"
-        >
+      <div className={`fixed z-50 ${
+        isVertical
+          ? "bottom-4 right-6"
+          : "bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 lg:left-auto lg:translate-x-0 lg:right-6"
+      }`}>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={isVertical ? "vertical" : "horizontal"}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
+            className={`flex gap-2 bg-white/90 dark:bg-obsidian/90 backdrop-blur-md shadow-lg border border-gray-200 dark:border-gray-700 ${
+              isVertical ? "flex-col items-center rounded-[1.75rem] px-2 py-2" : "items-center rounded-full px-2 py-2"
+            }`}
+          >
+          {/* Pinch/Expand Toggle - Desktop only */}
+          <button
+            onClick={() => setIsVertical(!isVertical)}
+            className="w-8 h-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 hidden lg:flex items-center justify-center transition-all group mx-auto"
+            aria-label={isVertical ? "Expand bar" : "Collapse bar"}
+          >
+            {isVertical ? (
+              <IoMdExpand className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
+            ) : (
+              <IoContract className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
+            )}
+          </button>
+
+          {/* Home Button - hidden on homepage */}
+          {!isHomePage && (
+            <a
+              href={domainUrls.root}
+              className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-gray-100 dark:bg-obsidian-50 hover:bg-gray-200 dark:hover:bg-gray-700 hidden lg:flex items-center justify-center transition-all group"
+              aria-label="Go to home"
+            >
+              <IoHome className="w-5 h-5 text-gray-600 dark:text-gray-300 group-hover:scale-110 transition-transform" />
+            </a>
+          )}
+
         {/* Email Button */}
         <a
           href={`mailto:${globalConfig.email}`}
@@ -184,7 +236,7 @@ export default function FloatingActionBar() {
         </a>
 
         {/* Divider */}
-        <div className="w-px h-6 bg-gray-300 dark:bg-gray-600" />
+        <div className={isVertical ? "h-px w-6 mx-auto bg-gray-300 dark:bg-gray-600" : "w-px h-6 bg-gray-300 dark:bg-gray-600"} />
 
         {/* Dark Mode Toggle */}
         <button
@@ -228,6 +280,7 @@ export default function FloatingActionBar() {
           <BsChatDotsFill className="w-5 h-5 text-obsidian group-hover:scale-110 transition-transform" />
         </button>
         </motion.div>
+        </AnimatePresence>
       </div>
 
       {/* Chat Window */}

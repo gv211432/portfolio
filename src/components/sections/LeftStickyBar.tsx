@@ -144,10 +144,10 @@ export default function LeftStickyBar() {
                 />
               </a>
             </motion.div>
-
+            {/* 
             <center>
               <DarkModeToggleButton />
-            </center>
+            </center> */}
           </div>
 
           {/* Skills Section */}
