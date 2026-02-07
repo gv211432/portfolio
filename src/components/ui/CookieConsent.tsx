@@ -52,11 +52,11 @@ export default function CookieConsent() {
             <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
               <div className="flex items-center gap-3 min-w-0">
                 <BsShieldCheck className="w-5 h-5 text-cyan flex-shrink-0" />
-                <p className="text-sm text-primaryDark/70 dark:text-gray-400 truncate">
-                  We use cookies to enhance your experience.{" "}
-                  <a href="#" className="text-cyan hover:underline" onClick={(e) => e.preventDefault()}>
-                    Learn more
-                  </a>
+                <p className="text-sm text-primaryDark/70 dark:text-gray-400">
+                  We use cookies to enhance your experience. By using our website, you agree to our{" "}
+                  <a href="/privacy" className="text-cyan hover:underline">
+                    Privacy Policy
+                  </a>.
                 </p>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
