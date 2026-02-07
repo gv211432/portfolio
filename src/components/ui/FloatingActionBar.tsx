@@ -41,6 +41,7 @@ export default function FloatingActionBar() {
   const accent = useSubdomainAccent();
 
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const wasVerticalBeforeChat = useRef(false);
   const [isVertical, setIsVertical] = useState(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("fab-vertical") === "true";
@@ -55,9 +56,11 @@ export default function FloatingActionBar() {
     setIsHomePage(hostname === "gaurav.one" || hostname === "www.gaurav.one");
   }, []);
 
-  // Persist pinch state
+  // Persist pinch state (skip when temporarily overridden by chat open)
   useEffect(() => {
-    localStorage.setItem("fab-vertical", String(isVertical));
+    if (!wasVerticalBeforeChat.current) {
+      localStorage.setItem("fab-vertical", String(isVertical));
+    }
   }, [isVertical]);
 
   // Show scroll-to-top button when user scrolls down (supports both window and container scroll)
@@ -270,7 +273,13 @@ export default function FloatingActionBar() {
 
         {/* Chat Button */}
         <button
-          onClick={() => setIsChatOpen(true)}
+          onClick={() => {
+            if (isVertical) {
+              wasVerticalBeforeChat.current = true;
+              setIsVertical(false);
+            }
+            setIsChatOpen(true);
+          }}
           className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition-all group ${
             accent ? "" : "bg-cyan hover:bg-cyan/80"
           }`}
@@ -311,7 +320,13 @@ export default function FloatingActionBar() {
                 </div>
               </div>
               <button
-                onClick={() => setIsChatOpen(false)}
+                onClick={() => {
+                  setIsChatOpen(false);
+                  if (wasVerticalBeforeChat.current) {
+                    wasVerticalBeforeChat.current = false;
+                    setIsVertical(true);
+                  }
+                }}
                 className="w-8 h-8 rounded-full hover:bg-white/20 flex items-center justify-center transition-colors"
                 aria-label="Close chat"
               >
