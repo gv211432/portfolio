@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { IoClose, IoSend, IoMoon, IoSunny } from "react-icons/io5";
+import { IoClose, IoSend, IoMoon, IoSunny, IoArrowUp } from "react-icons/io5";
 import { BsChatDotsFill } from "react-icons/bs";
 import { FaTelegram } from "react-icons/fa";
 import { HiMail } from "react-icons/hi";
@@ -35,7 +35,22 @@ export default function FloatingActionBar() {
   const { darkMode, toggleDarkMode, initializeDarkMode } = useDarkModeStore();
   const isNgo = useIsNgoPage();
 
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
   const accent = isNgo ? "#20c997" : undefined; // green for NGO, default cyan otherwise
+
+  // Show scroll-to-top button when user scrolls down
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 300);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const handleScrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   // Initialize dark mode on mount
   useEffect(() => {
@@ -171,6 +186,23 @@ export default function FloatingActionBar() {
             <IoMoon className="w-5 h-5 text-gray-600 group-hover:scale-110 transition-transform" />
           )}
         </button>
+
+        {/* Scroll to Top Button */}
+        <AnimatePresence>
+          {showScrollTop && (
+            <motion.button
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={handleScrollToTop}
+              className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-gray-100 dark:bg-obsidian-50 hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center group flex-shrink-0"
+              aria-label="Scroll to top"
+            >
+              <IoArrowUp className="w-5 h-5 text-gray-600 dark:text-gray-300 group-hover:scale-110 transition-transform" />
+            </motion.button>
+          )}
+        </AnimatePresence>
 
         {/* Chat Button */}
         <button

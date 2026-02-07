@@ -1,7 +1,5 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowUp } from "@fortawesome/free-solid-svg-icons";
 import SnakeLadderIntro2 from "@/components/sections/SnakeLadderInto2";
 import LeftStickyBar from "@/components/sections/LeftStickyBar";
 import RightScrollSection from "@/components/sections/RightScrollSection";
@@ -10,7 +8,6 @@ import { useDarkModeStore } from "@/Atoms/globalAtoms";
 export default function App() {
   const rightSectionRef = useRef<HTMLDivElement>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
-  const [showScrollToTop, setShowScrollToTop] = useState(false);
   const isDark = useDarkModeStore((state) => state.darkMode);
 
   // Use a ref to avoid re-rendering too often
@@ -37,8 +34,6 @@ export default function App() {
     const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
 
     setScrollProgress(progress);
-    setShowScrollToTop(scrollTop > 100);
-
     scrollAnimFrame.current = requestAnimationFrame(updateScrollProgress);
   };
 
@@ -49,12 +44,6 @@ export default function App() {
       if (scrollAnimFrame.current) cancelAnimationFrame(scrollAnimFrame.current);
     };
   }, []);
-
-  const handleScrollToTop = () => {
-    rightSectionRef?.current?.scrollTo({ top: 0, behavior: "smooth" });
-    window?.scrollTo({ top: 0, behavior: "smooth" });
-    setShowScrollToTop(false); // Hide the button after scrolling to top
-  };
 
   return (
     <>
@@ -93,18 +82,6 @@ export default function App() {
           <LeftStickyBar />
 
           <RightScrollSection rightSectionRef={rightSectionRef} />
-
-          {showScrollToTop && (
-            <button
-              onClick={handleScrollToTop}
-              className="fixed bottom-12 right-12 z-[9999] bg-primaryDark text-white p-3 w-[48px] 
-              rounded-full shadow-lg hover:scale-105 transition"
-              aria-label="Scroll to top"
-            >
-              {/* @ts-ignore */}
-              <FontAwesomeIcon icon={faArrowUp} />
-            </button>
-          )}
 
         </div>
 
