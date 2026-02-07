@@ -1,0 +1,219 @@
+[
+  {
+    "name": "gaurav.one.",
+    "ttl": 21600,
+    "class": "IN",
+    "type": "A",
+    "value": "162.215.226.4"
+  },
+  {
+    "name": "gaurav.one.",
+    "ttl": 14053,
+    "class": "IN",
+    "type": "CNAME",
+    "value": "sqwq3ekq.up.railway.app."
+  },
+  {
+    "name": "gaurav.one.",
+    "ttl": 14054,
+    "class": "IN",
+    "type": "MX",
+    "value": "20 mx2.titan.email."
+  },
+  {
+    "name": "gaurav.one.",
+    "ttl": 14054,
+    "class": "IN",
+    "type": "MX",
+    "value": "10 mx1.titan.email."
+  },
+  {
+    "name": "gaurav.one.",
+    "ttl": 21600,
+    "class": "IN",
+    "type": "TXT",
+    "value": "\"v=spf1 include:spf.titan.email ~all\""
+  },
+  {
+    "name": "titan1._domainkey.gaurav.one.",
+    "ttl": 21600,
+    "class": "IN",
+    "type": "TXT",
+    "value": "v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCZ4HJhhJUrmwLL6jXPHriXKA+uicVRoOng1SIBYsgDADTfzrdnPPkrNc7xoMH6ghzWAtacVfDh0MEDXvuOcA8bCQY3hSSYoL6fLoRMXi9ltxifLrwygBQuLWWm1f9OxEMK1vZcC4j5V2jSxZpTBN+V5AZGTfSDbeeiU6dwyqMDowIDAQAB"
+  },
+  {
+    "name": "gaurav.one.",
+    "ttl": 21600,
+    "class": "IN",
+    "type": "NS",
+    "value": "dns1.bigrock.in."
+  },
+  {
+    "name": "gaurav.one.",
+    "ttl": 21600,
+    "class": "IN",
+    "type": "NS",
+    "value": "dns4.bigrock.in."
+  },
+  {
+    "name": "gaurav.one.",
+    "ttl": 21600,
+    "class": "IN",
+    "type": "NS",
+    "value": "dns2.bigrock.in."
+  },
+  {
+    "name": "gaurav.one.",
+    "ttl": 21600,
+    "class": "IN",
+    "type": "NS",
+    "value": "dns3.bigrock.in."
+  },
+  {
+    "name": "gaurav.one.",
+    "ttl": 7200,
+    "class": "IN",
+    "type": "SOA",
+    "value": "dns1.bigrock.in. gv211432.gmail.com. 2026020731 7200 7200 172800 38400"
+  },
+  {
+    "name": "www.gaurav.one.",
+    "ttl": 14057,
+    "class": "IN",
+    "type": "CNAME",
+    "value": "3tsaygnl.up.railway.app."
+  },
+  {
+    "name": "_3a2b2a446b771925584fd628d5e6bc78.gaurav.one.",
+    "ttl": 14057,
+    "class": "IN",
+    "type": "CNAME",
+    "value": "_e74d26fed93a9ca63ef9887dda8b7029.xlfgrmvvlj.acm-validations.aws"
+  },
+  {
+    "name": "blogs.gaurav.one.",
+    "ttl": 14057,
+    "class": "IN",
+    "type": "CNAME",
+    "value": "hashnode.network"
+  },
+  {
+    "name": "ebhqwsu2t3wp.gaurav.one",
+    "ttl": 14057,
+    "class": "IN",
+    "type": "CNAME",
+    "value": "gv-sl667qfunrbock.dv.googlehosted.com"
+  },
+  {
+    "name": "3tsaygnl.up.railway.app.",
+    "ttl": 60,
+    "class": "IN",
+    "type": "A",
+    "value": "66.33.22.181"
+  },
+  {
+    "name": "me.gaurav.one.",
+    "ttl": 14059,
+    "class": "IN",
+    "type": "CNAME",
+    "value": "qf1am3f4.up.railway.app."
+  },
+  {
+    "name": "qf1am3f4.up.railway.app.",
+    "ttl": 60,
+    "class": "IN",
+    "type": "A",
+    "value": "66.33.22.40"
+  },
+  {
+    "name": "opensource.gaurav.one.",
+    "ttl": 14063,
+    "class": "IN",
+    "type": "CNAME",
+    "value": "3tsaygnl.up.railway.app."
+  },
+  {
+    "name": "vision.gaurav.one.",
+    "ttl": 14068,
+    "class": "IN",
+    "type": "CNAME",
+    "value": "pu4talta.up.railway.app."
+  },
+  {
+    "name": "pu4talta.up.railway.app.",
+    "ttl": 60,
+    "class": "IN",
+    "type": "A",
+    "value": "66.33.22.72"
+  },
+  {
+    "name": "casestudy.gaurav.one.",
+    "ttl": 14070,
+    "class": "IN",
+    "type": "CNAME",
+    "value": "3tsaygnl.up.railway.app."
+  },
+  {
+    "name": "whitelabel.gaurav.one.",
+    "ttl": 14071,
+    "class": "IN",
+    "type": "CNAME",
+    "value": "arvfzeo5.up.railway.app."
+  },
+  {
+    "name": "arvfzeo5.up.railway.app.",
+    "ttl": 60,
+    "class": "IN",
+    "type": "A",
+    "value": "66.33.22.25"
+  },
+  {
+    "name": "blogs.gaurav.one.",
+    "ttl": 21274,
+    "class": "IN",
+    "type": "CNAME",
+    "value": "hashnode.network."
+  },
+  {
+    "name": "hashnode.network.",
+    "ttl": 300,
+    "class": "IN",
+    "type": "A",
+    "value": "76.76.21.21"
+  },
+  {
+    "name": "hashnode.network.",
+    "ttl": 21600,
+    "class": "IN",
+    "type": "NS",
+    "value": "eva.ns.cloudflare.com."
+  },
+  {
+    "name": "hashnode.network.",
+    "ttl": 21600,
+    "class": "IN",
+    "type": "NS",
+    "value": "duke.ns.cloudflare.com."
+  },
+  {
+    "name": "hashnode.network.",
+    "ttl": 1800,
+    "class": "IN",
+    "type": "SOA",
+    "value": "duke.ns.cloudflare.com. dns.cloudflare.com. 2392874650 10000 2400 604800 1800"
+  },
+  {
+    "name": "careers.gaurav.one.",
+    "ttl": 14077,
+    "class": "IN",
+    "type": "CNAME",
+    "value": "qf1am3f4.up.railway.app."
+  },
+  {
+    "name": "ngo.gaurav.one.",
+    "ttl": 14078,
+    "class": "IN",
+    "type": "CNAME",
+    "value": "qf1am3f4.up.railway.app."
+  }
+]

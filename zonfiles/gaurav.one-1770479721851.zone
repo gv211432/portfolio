@@ -1,0 +1,58 @@
+; Zone file for gaurav.one
+; Generated on 2026-02-07T15:55:21.851Z
+; Extracted from multiple DNS servers for migration to Route53
+;
+; WARNING: This is a best-effort extraction. AXFR was likely denied,
+; so records were gathered by querying known subdomains and record types.
+; Review carefully before importing into Route53.
+;
+$ORIGIN gaurav.one.
+
+; --- SOA Records ---
+@                              7200     IN  SOA      dns1.bigrock.in. gv211432.gmail.com. 2026020731 7200 7200 172800 38400
+hashnode.network.              1800     IN  SOA      duke.ns.cloudflare.com. dns.cloudflare.com. 2392874650 10000 2400 604800 1800
+
+; --- NS Records ---
+@                              21600    IN  NS       dns1.bigrock.in.
+@                              21600    IN  NS       dns4.bigrock.in.
+@                              21600    IN  NS       dns2.bigrock.in.
+@                              21600    IN  NS       dns3.bigrock.in.
+hashnode.network.              21600    IN  NS       eva.ns.cloudflare.com.
+hashnode.network.              21600    IN  NS       duke.ns.cloudflare.com.
+
+; --- A Records ---
+@                              21600    IN  A        162.215.226.4
+3tsaygnl.up.railway.app.       60       IN  A        66.33.22.181
+qf1am3f4.up.railway.app.       60       IN  A        66.33.22.40
+pu4talta.up.railway.app.       60       IN  A        66.33.22.72
+arvfzeo5.up.railway.app.       60       IN  A        66.33.22.25
+hashnode.network.              300      IN  A        76.76.21.21
+
+; --- CNAME Records ---
+www                            14057    IN  CNAME    3tsaygnl.up.railway.app.
+me                             14059    IN  CNAME    qf1am3f4.up.railway.app.
+opensource                     14063    IN  CNAME    3tsaygnl.up.railway.app.
+vision                         14068    IN  CNAME    pu4talta.up.railway.app.
+casestudy                      14070    IN  CNAME    3tsaygnl.up.railway.app.
+whitelabel                     14071    IN  CNAME    arvfzeo5.up.railway.app.
+blogs                          21274    IN  CNAME    hashnode.network.
+careers                        14077    IN  CNAME    qf1am3f4.up.railway.app.
+ngo                            14078    IN  CNAME    qf1am3f4.up.railway.app.
+_3a2b2a446b771925584fd628d5e6bc78 14057    IN  CNAME    _e74d26fed93a9ca63ef9887dda8b7029.xlfgrmvvlj.acm-validations.aws.
+ebhqwsu2t3wp                   14057    IN  CNAME    gv-sl667qfunrbock.dv.googlehosted.com.
+
+; --- MX Records ---
+@                              14054    IN  MX       20 mx2.titan.email.
+@                              14054    IN  MX       10 mx1.titan.email.
+
+; --- TXT Records ---
+@                              21600    IN  TXT      "v=spf1 include:spf.titan.email ~all"
+titan1._domainkey              21600    IN  TXT      "v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCZ4HJhhJUrmwLL6jXPHriXKA+uicVRoOng1SIBYsgDADTfzrdnPPkrNc7xoMH6ghzWAtacVfDh0MEDXvuOcA8bCQY3hSSYoL6fLoRMXi9ltxifLrwygBQuLWWm1f9OxEMK1vZcC4j5V2jSxZpTBN+V5AZGTfSDbeeiU6dwyqMDowIDAQAB"
+_railway-verify               300      IN  TXT      "railway-verify=e84d9885a4ec889ac1d163153ecd478a3d59319cc67dcd2da80ad617f7974bc8"
+_railway-verify.me            300      IN  TXT      "railway-verify=1135c74d2a09de5d0cccd40f5af4d51c43dc9bd4efa84d4a07dd2a7c25c73412"
+_railway-verify.www           300      IN  TXT      "railway-verify=dc6741be616d96140806041e0c9234fdc666d637115dfdc97fae2d092b326197"
+_railway-verify.opensource    300      IN  TXT      "railway-verify=1a37853ba1d53ee6762d94327521683f298d23eab29dd67e5f7c239748feaa6a"
+_railway-verify.careers       300      IN  TXT      "railway-verify=8b3da3c632c0dbf0237b694f0a42d9747b7486ba7e1e3c03244204cf088dd469"
+_railway-verify.ngo           300      IN  TXT      "railway-verify=e5416dea26d33beacb038c75d01000761665c5fa701afe96026c3baea1213c4d"
+_railway-verify.whitelabel    300      IN  TXT      "railway-verify=a0d3d4e74f8f403f63a06597e8606e03e4c433d02f2a47fd231683c645335535"
+_railway-verify.vision        300      IN  TXT      "railway-verify=0d39dcce7e907b9c92ca8e051ebd81d12dfee2a19cd453c0268008a7cb224bc7"
