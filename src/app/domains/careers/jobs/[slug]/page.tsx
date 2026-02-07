@@ -32,6 +32,7 @@ import {
 import { useDarkModeStore } from "@/Atoms/globalAtoms";
 import { globalConfig, domainUrls } from "@/config/global";
 import { Logo } from "@/components/ui";
+import { getRecaptchaToken } from "@/utils/recaptcha";
 
 // Icon mapping
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -90,6 +91,8 @@ const ApplicationForm = ({ job }: { job: JobPosition }) => {
     setErrorMessage("");
 
     try {
+      const recaptchaToken = await getRecaptchaToken("careers_apply");
+
       const formDataToSend = new FormData();
       formDataToSend.append("jobSlug", job.slug);
       formDataToSend.append("jobTitle", job.title);
@@ -98,6 +101,7 @@ const ApplicationForm = ({ job }: { job: JobPosition }) => {
       formDataToSend.append("countryOfOrigin", formData.countryOfOrigin);
       formDataToSend.append("experience", formData.experience);
       formDataToSend.append("email", formData.email);
+      formDataToSend.append("recaptchaToken", recaptchaToken);
       if (resume) {
         formDataToSend.append("resume", resume);
       }

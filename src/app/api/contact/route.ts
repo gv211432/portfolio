@@ -1,13 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-
-interface ContactFormData {
-  name: string;
-  email: string;
-  phone?: string;
-  budget: string;
-  message: string;
-}
+import { verifyRecaptchaToken } from "@/utils/recaptcha";
 
 // Constants
 const MAX_MESSAGE_LENGTH = 10000;
@@ -31,8 +24,24 @@ const VALID_BUDGETS = [
 
 export async function POST(request: NextRequest) {
   try {
-    const body: ContactFormData = await request.json();
-    const { name, email, phone, budget, message } = body;
+    const body = await request.json();
+    const { name, email, phone, budget, message, recaptchaToken } = body;
+
+    // reCAPTCHA verification
+    if (!recaptchaToken) {
+      return NextResponse.json(
+        { success: false, message: "reCAPTCHA verification required" },
+        { status: 400 }
+      );
+    }
+
+    const recaptcha = await verifyRecaptchaToken(recaptchaToken, "contact_submit");
+    if (!recaptcha.success || recaptcha.score < 0.5) {
+      return NextResponse.json(
+        { success: false, message: "reCAPTCHA verification failed. Please try again." },
+        { status: 403 }
+      );
+    }
 
     // Validation
     if (!name || !name.trim()) {

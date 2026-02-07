@@ -9,6 +9,7 @@ import { Logo, FloroActionButton } from "@/components/ui";
 import { FaArrowLeft, FaCheck, FaSpinner } from "react-icons/fa";
 import { HiMail, HiPhone, HiUser, HiCurrencyDollar } from "react-icons/hi";
 import { BsChatDots } from "react-icons/bs";
+import { getRecaptchaToken } from "@/utils/recaptcha";
 
 const budgetOptions = [
   { value: "", label: "Select your budget range" },
@@ -109,10 +110,12 @@ export default function ContactPage() {
     setIsSubmitting(true);
 
     try {
+      const recaptchaToken = await getRecaptchaToken("contact_submit");
+
       const response = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ ...formData, recaptchaToken }),
       });
 
       const data = await response.json();
@@ -154,7 +157,7 @@ export default function ContactPage() {
         </header>
 
         {/* Main Content */}
-        <main className="pt-24 pb-16">
+        <main className="pt-32 pb-16">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             {/* Hero */}
             <motion.div
@@ -165,7 +168,7 @@ export default function ContactPage() {
             >
               <h1 className="text-3xl lg:text-5xl font-bold text-primaryDark dark:text-white mb-4">
                 Let's Build Something{" "}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan to-primary">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan to-primary font-cinzel font-black">
                   Amazing
                 </span>
               </h1>

@@ -1,5 +1,6 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { persist, createJSONStorage } from "zustand/middleware";
+import { cookieStorage } from "@/utils/cookies";
 
 interface DarkModeState {
   darkMode: boolean;
@@ -48,6 +49,7 @@ export const useDarkModeStore = create<DarkModeState>()(
     }),
     {
       name: "dark-mode-storage",
+      storage: createJSONStorage(() => cookieStorage),
     }
   )
 );

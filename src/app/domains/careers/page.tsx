@@ -257,10 +257,10 @@ export default function CareersPage() {
         {/* Header */}
         <header className="fixed top-0 left-0 right-0 z-50 bg-secondary/95 dark:bg-obsidian/95 backdrop-blur-sm border-b border-primary/10 transition-colors duration-300">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center py-4">
+            <div className="flex items-center justify-between py-4">
               <Logo size="lg" href={domainUrls.root} />
 
-              <nav className="hidden md:flex items-center gap-6">
+              <nav className="hidden md:flex items-center gap-6 absolute left-1/2 -translate-x-1/2">
                 <Link href={domainUrls.root} className="text-primaryDark/70 dark:text-gray-400 hover:text-cyan transition-colors text-sm">
                   Home
                 </Link>
@@ -268,18 +268,18 @@ export default function CareersPage() {
                   Open Source
                 </Link>
                 <span className="text-cyan font-medium text-sm">Careers</span>
-                <a
-                  href="#positions"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    document.getElementById("positions")?.scrollIntoView({ behavior: "smooth" });
-                  }}
-                  className="ml-2 px-4 py-2 bg-cyan text-obsidian font-semibold text-sm rounded-lg hover:bg-cyan/90 transition-colors"
-                >
-                  Be A Part
-                </a>
               </nav>
 
+              <a
+                href="#positions"
+                onClick={(e) => {
+                  e.preventDefault();
+                  document.getElementById("positions")?.scrollIntoView({ behavior: "smooth" });
+                }}
+                className="hidden md:inline-flex items-center justify-center bg-gradient-to-r from-primary to-primaryDark hover:from-primaryDark hover:to-primary text-white px-4 py-2 rounded-lg font-semibold text-sm transition-all hover:shadow-lg hover:shadow-primary/20"
+              >
+                Be A Part
+              </a>
             </div>
           </div>
         </header>

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import { existsSync } from "fs";
+import { verifyRecaptchaToken } from "@/utils/recaptcha";
 
 // Ensure uploads directory exists
 const UPLOADS_DIR = path.join(process.cwd(), "uploads", "resumes");
@@ -16,6 +17,23 @@ async function ensureUploadsDir() {
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
+
+    // reCAPTCHA verification
+    const recaptchaToken = formData.get("recaptchaToken") as string;
+    if (!recaptchaToken) {
+      return NextResponse.json(
+        { error: "reCAPTCHA verification required" },
+        { status: 400 }
+      );
+    }
+
+    const recaptcha = await verifyRecaptchaToken(recaptchaToken, "careers_apply");
+    if (!recaptcha.success || recaptcha.score < 0.5) {
+      return NextResponse.json(
+        { error: "reCAPTCHA verification failed. Please try again." },
+        { status: 403 }
+      );
+    }
 
     // Extract form fields
     const jobSlug = formData.get("jobSlug") as string;
