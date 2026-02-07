@@ -372,21 +372,8 @@ export default function JobDetailPage() {
                   <span className="hidden sm:inline">Back</span>
                 </button>
                 <div className="h-6 w-px bg-primary/20" />
-                <Logo size="md" href={domainUrls.root} />
+                <Logo size="lg" href={domainUrls.root} />
               </div>
-
-              <nav className="hidden md:flex items-center gap-6">
-                <Link href={domainUrls.root} className="text-primaryDark/70 dark:text-gray-400 hover:text-cyan transition-colors text-sm">
-                  Home
-                </Link>
-                <Link href={domainUrls.careers} className="text-cyan font-medium text-sm">
-                  Careers
-                </Link>
-                <Link href={domainUrls.opensource} className="text-primaryDark/70 dark:text-gray-400 hover:text-cyan transition-colors text-sm">
-                  Open Source
-                </Link>
-              </nav>
-
             </div>
           </div>
         </header>
