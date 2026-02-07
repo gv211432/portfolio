@@ -11,12 +11,7 @@ const SUBDOMAIN_CONFIG = {
   valid: ['me', 'opensource', 'vision', 'casestudy', 'whitelabel', 'blogs', 'careers', 'ngo'],
 } as const;
 
-// Get the root domain from environment or default, then extract base domain (e.g., gaurav.one)
-const RAW_DOMAIN = (process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'www.gaurav.one')
-  .replace('http://', '')
-  .replace('https://', '')
-  .split(':')[0]; // remove port if any
-const ROOT_DOMAIN = RAW_DOMAIN.split('.').slice(-2).join('.'); // e.g., "gaurav.one"
+import { ROOT_DOMAIN } from '@/utils/domain';
 
 export const config = {
   matcher: [

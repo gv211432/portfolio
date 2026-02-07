@@ -4,11 +4,7 @@
  * shared across all subdomains (me.gaurav.one, careers.gaurav.one, etc.).
  */
 
-const RAW_DOMAIN = (process.env.NEXT_PUBLIC_ROOT_DOMAIN || "gaurav.one")
-  .replace("http://", "")
-  .replace("https://", "")
-  .split(":")[0]; // remove port if any
-const ROOT_DOMAIN = RAW_DOMAIN.split(".").slice(-2).join("."); // e.g., "gaurav.one"
+import { ROOT_DOMAIN } from "./domain";
 
 function getCookieDomain(): string {
   if (typeof window === "undefined") return "";
