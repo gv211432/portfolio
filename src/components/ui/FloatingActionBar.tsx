@@ -16,13 +16,17 @@ interface Message {
   timestamp: Date;
 }
 
-function useIsNgoPage() {
-  const [isNgo, setIsNgo] = useState(false);
+function useSubdomainAccent() {
+  const [accent, setAccent] = useState<string | undefined>(undefined);
   useEffect(() => {
     const hostname = window.location.hostname;
-    setIsNgo(hostname.startsWith("ngo.") || hostname.startsWith("ngo-"));
+    if (hostname.startsWith("ngo.") || hostname.startsWith("ngo-")) {
+      setAccent("#20c997");
+    } else if (hostname.startsWith("me.") || hostname.startsWith("me-")) {
+      setAccent("#8b94cb");
+    }
   }, []);
-  return isNgo;
+  return accent;
 }
 
 export default function FloatingActionBar() {
@@ -33,22 +37,30 @@ export default function FloatingActionBar() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const { darkMode, toggleDarkMode, initializeDarkMode } = useDarkModeStore();
-  const isNgo = useIsNgoPage();
+  const accent = useSubdomainAccent();
 
   const [showScrollTop, setShowScrollTop] = useState(false);
 
-  const accent = isNgo ? "#20c997" : undefined; // green for NGO, default cyan otherwise
-
-  // Show scroll-to-top button when user scrolls down
+  // Show scroll-to-top button when user scrolls down (supports both window and container scroll)
   useEffect(() => {
+    const container = document.querySelector("[data-scroll-container]");
     const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 300);
+      const scrollY = container ? (container as HTMLElement).scrollTop : window.scrollY;
+      setShowScrollTop(scrollY > 300);
     };
+    if (container) {
+      container.addEventListener("scroll", handleScroll, { passive: true });
+    }
     window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    return () => {
+      if (container) container.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("scroll", handleScroll);
+    };
   }, []);
 
   const handleScrollToTop = () => {
+    const container = document.querySelector("[data-scroll-container]");
+    if (container) (container as HTMLElement).scrollTo({ top: 0, behavior: "smooth" });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -208,9 +220,9 @@ export default function FloatingActionBar() {
         <button
           onClick={() => setIsChatOpen(true)}
           className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition-all group ${
-            isNgo ? "" : "bg-cyan hover:bg-cyan/80"
+            accent ? "" : "bg-cyan hover:bg-cyan/80"
           }`}
-          style={isNgo ? { backgroundColor: accent } : undefined}
+          style={accent ? { backgroundColor: accent } : undefined}
           aria-label="Open chat"
         >
           <BsChatDotsFill className="w-5 h-5 text-obsidian group-hover:scale-110 transition-transform" />
@@ -230,8 +242,8 @@ export default function FloatingActionBar() {
           >
             {/* Header */}
             <div
-              className={`flex items-center justify-between px-4 py-3 text-obsidian ${isNgo ? "" : "bg-cyan"}`}
-              style={isNgo ? { backgroundColor: accent } : undefined}
+              className={`flex items-center justify-between px-4 py-3 text-obsidian ${accent ? "" : "bg-cyan"}`}
+              style={accent ? { backgroundColor: accent } : undefined}
             >
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
@@ -266,10 +278,10 @@ export default function FloatingActionBar() {
                   <div
                     className={`max-w-[80%] rounded-2xl px-4 py-2.5 ${
                       message.role === "user"
-                        ? `${isNgo ? "" : "bg-cyan"} text-obsidian rounded-br-md`
+                        ? `${accent ? "" : "bg-cyan"} text-obsidian rounded-br-md`
                         : "bg-white dark:bg-obsidian border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 rounded-bl-md"
                     }`}
-                    style={message.role === "user" && isNgo ? { backgroundColor: accent } : undefined}
+                    style={message.role === "user" && accent ? { backgroundColor: accent } : undefined}
                   >
                     <p className="text-sm whitespace-pre-wrap">
                       {message.content}
@@ -332,9 +344,9 @@ export default function FloatingActionBar() {
                   onClick={handleSend}
                   disabled={!input.trim() || isLoading}
                   className={`w-10 h-10 rounded-full flex items-center justify-center transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
-                    input.trim() ? (isNgo ? "" : "bg-cyan") : "bg-gray-200 dark:bg-gray-700"
+                    input.trim() ? (accent ? "" : "bg-cyan") : "bg-gray-200 dark:bg-gray-700"
                   }`}
-                  style={input.trim() && isNgo ? { backgroundColor: accent } : undefined}
+                  style={input.trim() && accent ? { backgroundColor: accent } : undefined}
                   aria-label="Send message"
                 >
                   <IoSend

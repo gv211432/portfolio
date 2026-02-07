@@ -12,6 +12,7 @@ export default function RightScrollSection({
   return (
     <div
       ref={rightSectionRef}
+      data-scroll-container
       className=" bg-transparent bg-white dark:bg-transparent overflow-y-auto w-full md:px-20 lg:px-0">
 
       {/* Demographics */}
