@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { domainUrls, globalConfig } from "@/config/global";
 import { useDarkModeStore } from "@/Atoms/globalAtoms";
@@ -138,6 +139,32 @@ const stats = [
   { number: "5+", label: "Years in Web3" },
   { number: "30+", label: "Protocols Built" },
   { number: "99.9%", label: "Uptime SLA" },
+];
+
+const partners = [
+  { name: "Microsoft Cloud Solution Provider", logo: "/img/partners/Microsoft_logo.avif" },
+  { name: "Hyperledger Fabric", logo: "/img/partners/hyperledger-logo.avif" },
+  { name: "Johnson Controls", logo: "/img/partners/johnson-controls.avif" },
+  { name: "Ethereum", logo: "/img/partners/ethereum-logo.avif" },
+  { name: "AWS Partner Network", logo: "/img/partners/awspartner.avif" },
+];
+
+const clients = [
+  { name: "Suzuki", logo: "/img/brands/suzuki.avif" },
+  { name: "AIG", logo: "/img/brands/aig.avif" },
+  { name: "Disney", logo: "/img/brands/disney.avif" },
+  { name: "Philips", logo: "/img/brands/philips.avif" },
+  { name: "NFL", logo: "/img/brands/nfl.avif" },
+  { name: "KFC", logo: "/img/brands/kfclogo.avif" },
+  { name: "DocuSign", logo: "/img/brands/docusign_logo.avif" },
+  { name: "HDFC Bank", logo: "/img/brands/hdfc-logo-new.avif" },
+  { name: "BlueScope", logo: "/img/brands/Bluescope-logo.avif" },
+  { name: "Ifinca", logo: "/img/brands/ifinca-logo.avif" },
+  { name: "Econnex", logo: "/img/brands/econnex-logo.81ff3a96.webp" },
+  { name: "EverLedger", logo: "/img/brands/leaftyme.avif" },
+  { name: "Saavi", logo: "/img/brands/saavi.6c7a52c6.webp" },
+  { name: "Get Licensed", logo: "/img/brands/license.avif" },
+  { name: "Unique Publishing", logo: "/img/brands/unique-school-logo.avif" },
 ];
 
 // Cross-Chain Visualizer Component
@@ -1018,6 +1045,87 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Partnerships & Alliances */}
+      <section className="py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            viewport={{ once: true }}
+            className="text-center mb-14"
+          >
+            <h2 className="text-3xl lg:text-4xl font-bold text-primaryDark dark:text-white">
+              Partnerships & Alliances
+            </h2>
+          </motion.div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
+            {partners.map((partner, index) => (
+              <motion.div
+                key={partner.name}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: index * 0.08 }}
+                viewport={{ once: true }}
+                className="group bg-light dark:bg-obsidian-50 border border-primary/10 rounded-2xl p-6 flex flex-col items-center justify-center gap-4 hover:border-cyan/40 hover:shadow-lg hover:shadow-cyan/5 transition-all duration-300"
+              >
+                <div className="h-16 flex items-center justify-center">
+                  <Image
+                    src={partner.logo}
+                    alt={partner.name}
+                    width={72}
+                    height={72}
+                    className="object-contain max-h-16 group-hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+                <span className="text-sm font-medium text-primaryDark/70 dark:text-gray-400 text-center leading-tight">
+                  {partner.name}
+                </span>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Clients We've Served */}
+      <section className="py-20 bg-light/50 dark:bg-obsidian-50/50 transition-colors duration-300">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            viewport={{ once: true }}
+            className="text-center mb-14"
+          >
+            <h2 className="text-3xl lg:text-4xl font-bold text-primaryDark dark:text-white">
+              Clients we've served
+            </h2>
+          </motion.div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-5">
+            {clients.map((client, index) => (
+              <motion.div
+                key={client.name}
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3, delay: index * 0.04 }}
+                viewport={{ once: true }}
+                className="group bg-light dark:bg-obsidian-50 border border-primary/10 rounded-xl p-5 flex items-center justify-center h-24 hover:border-cyan/40 hover:shadow-md hover:shadow-cyan/5 transition-all duration-300"
+              >
+                <Image
+                  src={client.logo}
+                  alt={client.name}
+                  width={120}
+                  height={48}
+                  className="object-contain max-h-12 opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-300"
+                />
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Project Calculator Section */}
       <section id="calculator" className="py-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1067,6 +1175,118 @@ export default function LandingPage() {
               </PrimaryActionButton>
             </div>
           </motion.div>
+        </div>
+      </section>
+
+      {/* Global Offices */}
+      <section className="py-20 bg-light/50 dark:bg-obsidian-50/50 transition-colors duration-300">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            viewport={{ once: true }}
+            className="text-center mb-14"
+          >
+            <span className="text-primary font-semibold uppercase tracking-wider text-sm">Global Presence</span>
+            <h2 className="text-3xl lg:text-4xl font-bold text-primaryDark dark:text-white mt-4">
+              Our Offices
+            </h2>
+          </motion.div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {/* USA */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              viewport={{ once: true }}
+              className="bg-light dark:bg-obsidian-50 border border-primary/10 rounded-2xl p-8 relative overflow-hidden hover:border-cyan/40 hover:shadow-lg hover:shadow-cyan/5 transition-all duration-300"
+            >
+              <div className="flex items-center gap-3 mb-6">
+                <svg className="w-8 h-6 rounded-sm flex-shrink-0" viewBox="0 0 60 30">
+                  <rect width="60" height="30" fill="#B22234" />
+                  <rect y="2.3" width="60" height="2.3" fill="#fff" />
+                  <rect y="6.9" width="60" height="2.3" fill="#fff" />
+                  <rect y="11.5" width="60" height="2.3" fill="#fff" />
+                  <rect y="16.1" width="60" height="2.3" fill="#fff" />
+                  <rect y="20.7" width="60" height="2.3" fill="#fff" />
+                  <rect y="25.3" width="60" height="2.3" fill="#fff" />
+                  <rect width="24" height="16.15" fill="#3C3B6E" />
+                </svg>
+                <h3 className="text-xl font-bold text-primaryDark dark:text-white">USA</h3>
+              </div>
+              <div className="flex items-center justify-center h-32">
+                <span className="inline-block px-4 py-2 bg-cyan/10 border border-cyan/30 rounded-full text-cyan text-sm font-medium">
+                  Coming Soon
+                </span>
+              </div>
+            </motion.div>
+
+            {/* UAE */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.1 }}
+              viewport={{ once: true }}
+              className="bg-light dark:bg-obsidian-50 border border-primary/10 rounded-2xl p-8 relative overflow-hidden hover:border-cyan/40 hover:shadow-lg hover:shadow-cyan/5 transition-all duration-300"
+            >
+              <div className="flex items-center gap-3 mb-6">
+                <svg className="w-8 h-6 rounded-sm flex-shrink-0" viewBox="0 0 60 30">
+                  <rect width="60" height="10" fill="#00732F" />
+                  <rect y="10" width="60" height="10" fill="#fff" />
+                  <rect y="20" width="60" height="10" fill="#000" />
+                  <rect width="15" height="30" fill="#FF0000" />
+                </svg>
+                <h3 className="text-xl font-bold text-primaryDark dark:text-white">UAE</h3>
+              </div>
+              <div className="flex items-center justify-center h-32">
+                <span className="inline-block px-4 py-2 bg-cyan/10 border border-cyan/30 rounded-full text-cyan text-sm font-medium">
+                  Coming Soon
+                </span>
+              </div>
+            </motion.div>
+
+            {/* India */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.2 }}
+              viewport={{ once: true }}
+              className="bg-light dark:bg-obsidian-50 border border-primary/10 rounded-2xl p-8 hover:border-cyan/40 hover:shadow-lg hover:shadow-cyan/5 transition-all duration-300"
+            >
+              <div className="flex items-center gap-3 mb-6">
+                <svg className="w-8 h-6 rounded-sm flex-shrink-0" viewBox="0 0 60 30">
+                  <rect width="60" height="10" fill="#FF9933" />
+                  <rect y="10" width="60" height="10" fill="#fff" />
+                  <rect y="20" width="60" height="10" fill="#138808" />
+                  <circle cx="30" cy="15" r="3.5" fill="none" stroke="#000080" strokeWidth="0.7" />
+                </svg>
+                <h3 className="text-xl font-bold text-primaryDark dark:text-white">INDIA</h3>
+              </div>
+              <p className="font-semibold text-primaryDark dark:text-white mb-3">
+                Gaurav Dot One Software Solutions
+              </p>
+              <p className="text-sm text-primaryDark/70 dark:text-gray-400 leading-relaxed mb-4">
+                Unit No 1171, 1172, 7th Floor,<br />
+                Solitaire Corporate Park,<br />
+                Andheri Ghatkopar Link Road, Chakala,<br />
+                Andheri East, Mumbai 400093,<br />
+                Maharashtra, India
+              </p>
+              <p className="text-sm text-primaryDark/70 dark:text-gray-400 leading-relaxed mb-1">
+                Near Technopolis Knowledge Park
+              </p>
+              <div className="mt-4 pt-4 border-t border-primary/10 space-y-1.5">
+                <p className="text-xs text-primaryDark/50 dark:text-gray-500">
+                  <span className="font-medium">GSTIN:</span> 27BSZPV1508E1Z8
+                </p>
+                <p className="text-xs text-primaryDark/50 dark:text-gray-500">
+                  <span className="font-medium">UDYAM:</span> UDYAM-MH-18-0478259
+                </p>
+              </div>
+            </motion.div>
+          </div>
         </div>
       </section>
 
