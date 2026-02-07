@@ -260,26 +260,23 @@ export default function CareersPage() {
             <div className="flex items-center justify-between py-4">
               <Logo size="lg" href={domainUrls.root} />
 
-              <nav className="hidden md:flex items-center gap-6 absolute left-1/2 -translate-x-1/2">
-                <Link href={domainUrls.root} className="text-primaryDark/70 dark:text-gray-400 hover:text-cyan transition-colors text-sm">
+              <nav className="hidden md:flex items-center gap-8 absolute left-1/2 -translate-x-1/2">
+                <Link href={domainUrls.root} className="text-primaryDark/70 dark:text-gray-400 hover:text-primary transition-colors font-medium">
                   Home
                 </Link>
-                <Link href={domainUrls.opensource} className="text-primaryDark/70 dark:text-gray-400 hover:text-cyan transition-colors text-sm">
+                <Link href={domainUrls.opensource} className="text-primaryDark/70 dark:text-gray-400 hover:text-primary transition-colors font-medium">
                   Open Source
                 </Link>
-                <span className="text-cyan font-medium text-sm">Careers</span>
+                <span className="text-cyan font-medium">Careers</span>
               </nav>
 
-              <a
-                href="#positions"
-                onClick={(e) => {
-                  e.preventDefault();
-                  document.getElementById("positions")?.scrollIntoView({ behavior: "smooth" });
-                }}
-                className="hidden md:inline-flex items-center justify-center bg-gradient-to-r from-primary to-primaryDark hover:from-primaryDark hover:to-primary text-white px-4 py-2 rounded-lg font-semibold text-sm transition-all hover:shadow-lg hover:shadow-primary/20"
-              >
-                Be A Part
-              </a>
+              <div className="hidden md:flex items-center gap-4">
+                <DarkActionButton
+                  href="#positions"
+                >
+                  Be A Part
+                </DarkActionButton>
+              </div>
             </div>
           </div>
         </header>

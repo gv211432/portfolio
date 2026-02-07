@@ -40,6 +40,25 @@ const sizeConfig = {
  * Displays logo image + "aurav.one" text
  * Uses different logo images for light/dark modes
  */
+function LogoImage({ imageSize, className }: { imageSize: number; className: string }) {
+  return (
+    <div className={`flex items-center scale-110 ${className}`}>
+      <Image
+        src={logoLight}
+        alt="Gaurav.one"
+        width={imageSize}
+        className="dark:hidden rounded-lg mr-2"
+      />
+      <Image
+        src={logoDark}
+        alt="Gaurav.one"
+        width={imageSize}
+        className="hidden dark:block"
+      />
+    </div>
+  );
+}
+
 export default function Logo({
   size = "md",
   asLink = true,
@@ -49,37 +68,13 @@ export default function Logo({
   const config = sizeConfig[size];
   const linkHref = href || domainUrls.root;
 
-  const LogoContent = () => (
-    <div className={`flex items-center scale-110 ${className}`}>
-      {/* Light mode logo */}
-      <Image
-        src={logoLight}
-        alt="Gaurav.one"
-        width={config.image}
-        // height={config.image}
-        className="dark:hidden rounded-lg mr-2"
-      />
-      {/* Dark mode logo */}
-      <Image
-        src={logoDark}
-        alt="Gaurav.one"
-        width={config.image}
-        // height={config.image}
-        className="hidden dark:block"
-      />
-      {/* <span className={`${config.text} text-primaryDark dark:text-white`}>
-        Gaurav<span className="text-primary">.one</span>
-      </span> */}
-    </div>
-  );
-
   if (asLink) {
     return (
-      <Link href={linkHref} className="flex items-center ">
-        <LogoContent />
+      <Link href={linkHref} className="flex items-center">
+        <LogoImage imageSize={config.image} className={className} />
       </Link>
     );
   }
 
-  return <LogoContent />;
+  return <LogoImage imageSize={config.image} className={className} />;
 }

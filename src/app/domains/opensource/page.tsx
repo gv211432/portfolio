@@ -374,14 +374,14 @@ export default function OpenSourcePage() {
             <div className="flex justify-between items-center py-4">
               <Logo size="lg" href={domainUrls.root} />
 
-              <nav className="hidden md:flex items-center gap-6">
-                <Link href={domainUrls.root} className="text-primaryDark/70 dark:text-gray-400 hover:text-cyan transition-colors text-sm">
+              <nav className="hidden md:flex items-center gap-8">
+                <Link href={domainUrls.root} className="text-primaryDark/70 dark:text-gray-400 hover:text-primary transition-colors font-medium">
                   Home
                 </Link>
-                <Link href={domainUrls.whitelabel} className="text-primaryDark/70 dark:text-gray-400 hover:text-cyan transition-colors text-sm">
+                <Link href={domainUrls.whitelabel} className="text-primaryDark/70 dark:text-gray-400 hover:text-primary transition-colors font-medium">
                   Products
                 </Link>
-                <span className="text-cyan font-medium text-sm">Open Source</span>
+                <span className="text-cyan font-medium">Open Source</span>
               </nav>
 
               <div className="flex items-center gap-4">
@@ -389,9 +389,10 @@ export default function OpenSourcePage() {
                   href="https://github.com/gv211432"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-2 text-primaryDark/70 dark:text-gray-400 hover:text-cyan transition-colors"
+                  className="bg-gradient-to-r from-primary to-primaryDark hover:from-primaryDark hover:to-primary text-white px-6 py-3 rounded-lg font-semibold transition-all hover:shadow-lg hover:shadow-primary/20 inline-flex items-center justify-center gap-2"
                 >
                   <FaGithub className="w-5 h-5" />
+                  GitHub
                 </a>
               </div>
             </div>

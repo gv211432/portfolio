@@ -398,7 +398,7 @@ export default function ContactPage() {
                   {/* Privacy Note */}
                   <p className="mt-4 text-xs text-center text-primaryDark/50 dark:text-gray-500">
                     By submitting this form, you agree to our{" "}
-                    <Link href="#" className="text-cyan hover:underline">
+                    <Link href="/privacy" className="text-cyan hover:underline">
                       Privacy Policy
                     </Link>
                     . We'll never share your information with third parties.

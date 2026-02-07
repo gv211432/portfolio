@@ -398,13 +398,10 @@ export default function WhitelabelPage() {
               </Link>
             </nav>
 
-            <div className="flex items-center gap-4">
-              <FloroActionButton
-                href={`${domainUrls.root}/contact`}
-                className="hidden lg:inline-flex px-6 py-2.5"
-              >
+            <div className="hidden lg:flex items-center gap-4">
+              <DarkActionButton href={`${domainUrls.root}/contact`}>
                 Get Started
-              </FloroActionButton>
+              </DarkActionButton>
             </div>
           </div>
         </div>
