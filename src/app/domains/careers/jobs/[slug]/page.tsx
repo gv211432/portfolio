@@ -33,6 +33,7 @@ import { useDarkModeStore } from "@/Atoms/globalAtoms";
 import { globalConfig, domainUrls } from "@/config/global";
 import { Logo } from "@/components/ui";
 import { getRecaptchaToken } from "@/utils/recaptcha";
+import RecaptchaBadge from "@/components/ui/RecaptchaBadge";
 
 // Icon mapping
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -319,6 +320,7 @@ const ApplicationForm = ({ job }: { job: JobPosition }) => {
       <p className="text-xs text-gray-500 text-center">
         By submitting, you agree that payments will be made via international wire transfer or cryptocurrency (USDC/USDT).
       </p>
+      <RecaptchaBadge />
     </form>
   );
 };

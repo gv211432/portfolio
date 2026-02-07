@@ -10,6 +10,7 @@ import { FaArrowLeft, FaCheck, FaSpinner } from "react-icons/fa";
 import { HiMail, HiPhone, HiUser, HiCurrencyDollar } from "react-icons/hi";
 import { BsChatDots } from "react-icons/bs";
 import { getRecaptchaToken } from "@/utils/recaptcha";
+import RecaptchaBadge from "@/components/ui/RecaptchaBadge";
 
 const budgetOptions = [
   { value: "", label: "Select your budget range" },
@@ -402,6 +403,7 @@ export default function ContactPage() {
                     </Link>
                     . We'll never share your information with third parties.
                   </p>
+                  <RecaptchaBadge />
                 </form>
               )}
             </motion.div>
