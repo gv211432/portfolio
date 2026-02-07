@@ -4,8 +4,8 @@ import { NextRequest, NextResponse } from 'next/server';
 const SUBDOMAIN_CONFIG = {
   // Redirect subdomains - these redirect to external URLs
   redirects: {
-    github: 'https://github.com/AstroX11',
-    linkedin: 'https://linkedin.com/in/AstroX11',
+    github: 'https://github.com/gv211432',
+    linkedin: 'https://linkedin.com/in/gv211432',
   },
   // Valid subdomains that have their own pages
   valid: ['me', 'opensource', 'vision', 'casestudy', 'whitelabel', 'blogs', 'careers', 'ngo'],
