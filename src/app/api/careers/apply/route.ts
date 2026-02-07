@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import { existsSync } from "fs";
 import { verifyRecaptchaToken } from "@/utils/recaptcha";
+import { collectClientInfo, getIpInfo } from "@/utils/clientInfo";
 
 // Ensure uploads directory exists
 const UPLOADS_DIR = path.join(process.cwd(), "uploads", "resumes");
@@ -105,6 +107,9 @@ export async function POST(request: NextRequest) {
       resumeFileName = resume.name;
     }
 
+    // Collect client info
+    const { ip, userAgent, deviceInfo } = collectClientInfo(request);
+
     // Create application in database
     const application = await prisma.jobApplication.create({
       data: {
@@ -117,7 +122,20 @@ export async function POST(request: NextRequest) {
         email,
         resumeUrl,
         resumeFileName,
+        ipAddress: ip,
+        userAgent,
+        deviceInfo: deviceInfo as unknown as Prisma.InputJsonValue,
       },
+    });
+
+    // Fetch IP info in background and update the record
+    getIpInfo(ip).then((ipInfo) => {
+      if (ipInfo) {
+        prisma.jobApplication.update({
+          where: { id: application.id },
+          data: { ipInfo: ipInfo as unknown as Prisma.InputJsonValue },
+        }).catch(console.error);
+      }
     });
 
     return NextResponse.json(

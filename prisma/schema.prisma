@@ -30,6 +30,12 @@ model JobApplication {
   resumeUrl       String?
   resumeFileName  String?
 
+  // Client info
+  ipAddress       String?
+  userAgent       String?
+  deviceInfo      Json?     // { deviceType, os, browser }
+  ipInfo          Json?     // { city, region, country, countryName, org, timezone, currency, loc }
+
   // Application status
   status          ApplicationStatus @default(PENDING)
   notes           String?
@@ -57,6 +63,12 @@ model ContactSubmission {
   // Project details
   budget    String
   message   String   @db.VarChar(10000)
+
+  // Client info
+  ipAddress String?
+  userAgent String?
+  deviceInfo Json?     // { deviceType, os, browser }
+  ipInfo     Json?     // { city, region, country, countryName, org, timezone, currency, loc }
 
   // Status tracking
   status    ContactStatus @default(NEW)

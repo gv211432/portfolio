@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { verifyRecaptchaToken } from "@/utils/recaptcha";
+import { collectClientInfo, getIpInfo } from "@/utils/clientInfo";
 
 // Constants
 const MAX_MESSAGE_LENGTH = 10000;
@@ -100,6 +102,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Collect client info
+    const { ip, userAgent, deviceInfo } = collectClientInfo(request);
+
     // Save to database
     const submission = await prisma.contactSubmission.create({
       data: {
@@ -108,7 +113,20 @@ export async function POST(request: NextRequest) {
         phone: phone?.trim() || null,
         budget,
         message: message.trim(),
+        ipAddress: ip,
+        userAgent,
+        deviceInfo: deviceInfo as unknown as Prisma.InputJsonValue,
       },
+    });
+
+    // Fetch IP info in background and update the record
+    getIpInfo(ip).then((ipInfo) => {
+      if (ipInfo) {
+        prisma.contactSubmission.update({
+          where: { id: submission.id },
+          data: { ipInfo: ipInfo as unknown as Prisma.InputJsonValue },
+        }).catch(console.error);
+      }
     });
 
     console.log("=== New Contact Form Submission Saved ===");
@@ -116,6 +134,7 @@ export async function POST(request: NextRequest) {
     console.log("Name:", submission.name);
     console.log("Email:", submission.email);
     console.log("Budget:", submission.budget);
+    console.log("IP:", ip);
     console.log("Timestamp:", submission.createdAt);
     console.log("=========================================");
 
