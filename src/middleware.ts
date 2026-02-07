@@ -12,7 +12,7 @@ const SUBDOMAIN_CONFIG = {
 } as const;
 
 // Get the root domain from environment or default
-const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'gaurav.one';
+const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'www.gaurav.one';
 
 export const config = {
   matcher: [

@@ -29,7 +29,7 @@ export const domainUrls = {
 };
 
 // Email uses the domain without protocol
-export const domainEmail = `hi@${ROOT_DOMAIN.replace(/:\d+$/, '')}`;
+export const domainEmail = `hi@gaurav.one`;
 
 export const globalConfig = {
   displayName: "Gaurav.one",

@@ -268,6 +268,16 @@ export default function CareersPage() {
                   Open Source
                 </Link>
                 <span className="text-cyan font-medium text-sm">Careers</span>
+                <a
+                  href="#positions"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    document.getElementById("positions")?.scrollIntoView({ behavior: "smooth" });
+                  }}
+                  className="ml-2 px-4 py-2 bg-cyan text-obsidian font-semibold text-sm rounded-lg hover:bg-cyan/90 transition-colors"
+                >
+                  Be A Part
+                </a>
               </nav>
 
             </div>
