@@ -1,9 +1,9 @@
 "use client";
-import React, { useEffect } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useParams, notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   getProductBySlug,
   categoryInfo,
@@ -120,48 +120,166 @@ const FeatureSection = ({
   );
 };
 
-// Screenshot Gallery Component
+// Screenshot Gallery Component with Lightbox
 const ScreenshotGallery = ({ screenshots }: { screenshots: string[] }) => {
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+
+  const realImages = screenshots.filter(
+    (s) => s.endsWith(".webp") || s.endsWith(".png") || s.endsWith(".jpg") || s.endsWith(".jpeg")
+  );
+
+  const openLightbox = useCallback((index: number) => {
+    setLightboxIndex(index);
+    document.body.style.overflow = "hidden";
+  }, []);
+
+  const closeLightbox = useCallback(() => {
+    setLightboxIndex(null);
+    document.body.style.overflow = "";
+  }, []);
+
+  const goPrev = useCallback(() => {
+    setLightboxIndex((i) => (i === null ? 0 : (i - 1 + realImages.length) % realImages.length));
+  }, [realImages.length]);
+
+  const goNext = useCallback(() => {
+    setLightboxIndex((i) => (i === null ? 0 : (i + 1) % realImages.length));
+  }, [realImages.length]);
+
+  useEffect(() => {
+    if (lightboxIndex === null) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeLightbox();
+      if (e.key === "ArrowLeft") goPrev();
+      if (e.key === "ArrowRight") goNext();
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [lightboxIndex, closeLightbox, goPrev, goNext]);
+
   return (
-    <div className="grid md:grid-cols-3 gap-6">
-      {screenshots.map((screenshot, index) => {
-        const isRealImage = screenshot.endsWith(".webp") || screenshot.endsWith(".png") || screenshot.endsWith(".jpg") || screenshot.endsWith(".jpeg");
-        return (
-          <motion.div
-            key={index}
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, delay: index * 0.1 }}
-            viewport={{ once: true }}
-            className="group relative aspect-video rounded-xl overflow-hidden bg-primary/10 border border-primary/20"
-          >
-            {isRealImage ? (
-              <img
-                src={screenshot}
-                alt={`Screenshot ${index + 1}`}
-                className="absolute inset-0 w-full h-full object-cover object-top"
-              />
-            ) : (
-              <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/20 to-cyan/20">
-                <div className="text-center">
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/20 flex items-center justify-center">
-                    <BsGraphUp className="w-8 h-8 text-primary/60" />
+    <>
+      <div className="grid md:grid-cols-3 gap-6">
+        {screenshots.map((screenshot, index) => {
+          const isRealImage =
+            screenshot.endsWith(".webp") ||
+            screenshot.endsWith(".png") ||
+            screenshot.endsWith(".jpg") ||
+            screenshot.endsWith(".jpeg");
+          const realIndex = realImages.indexOf(screenshot);
+          return (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+              viewport={{ once: true }}
+              onClick={isRealImage ? () => openLightbox(realIndex) : undefined}
+              className={`group relative aspect-video rounded-xl overflow-hidden bg-primary/10 border border-primary/20 ${isRealImage ? "cursor-zoom-in" : ""}`}
+            >
+              {isRealImage ? (
+                <img
+                  src={screenshot}
+                  alt={`Screenshot ${index + 1}`}
+                  className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/20 to-cyan/20">
+                  <div className="text-center">
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/20 flex items-center justify-center">
+                      <BsGraphUp className="w-8 h-8 text-primary/60" />
+                    </div>
+                    <p className="text-primary/60 text-sm font-medium">
+                      Screenshot {index + 1}
+                    </p>
+                    <p className="text-primary/40 text-xs mt-1">Coming Soon</p>
                   </div>
-                  <p className="text-primary/60 text-sm font-medium">
-                    Screenshot {index + 1}
-                  </p>
-                  <p className="text-primary/40 text-xs mt-1">Coming Soon</p>
+                </div>
+              )}
+              {/* Hover overlay */}
+              <div className="absolute inset-0 bg-obsidian/0 group-hover:bg-obsidian/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                <div className="flex items-center gap-2 px-4 py-2 bg-obsidian/70 backdrop-blur-sm rounded-full text-white text-sm font-medium">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                  </svg>
+                  View Full Size
                 </div>
               </div>
+            </motion.div>
+          );
+        })}
+      </div>
+
+      {/* Lightbox Modal */}
+      <AnimatePresence>
+        {lightboxIndex !== null && realImages[lightboxIndex] && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4"
+            onClick={closeLightbox}
+          >
+            {/* Image container */}
+            <motion.div
+              initial={{ scale: 0.92, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.92, opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              className="relative max-w-6xl w-full max-h-[90vh] flex items-center justify-center"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <img
+                src={realImages[lightboxIndex]}
+                alt={`Screenshot ${lightboxIndex + 1}`}
+                className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl"
+              />
+
+              {/* Counter */}
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-3 py-1 bg-black/60 backdrop-blur-sm rounded-full text-white/80 text-sm">
+                {lightboxIndex + 1} / {realImages.length}
+              </div>
+            </motion.div>
+
+            {/* Close button */}
+            <button
+              onClick={closeLightbox}
+              className="absolute top-4 right-4 w-10 h-10 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white transition-colors z-10"
+              aria-label="Close"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* Prev / Next buttons */}
+            {realImages.length > 1 && (
+              <>
+                <button
+                  onClick={(e) => { e.stopPropagation(); goPrev(); }}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white transition-colors z-10"
+                  aria-label="Previous"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); goNext(); }}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white transition-colors z-10"
+                  aria-label="Next"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </>
             )}
-            {/* Hover overlay */}
-            <div className="absolute inset-0 bg-obsidian/0 group-hover:bg-obsidian/50 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-              <span className="text-white font-medium">View Full Size</span>
-            </div>
           </motion.div>
-        );
-      })}
-    </div>
+        )}
+      </AnimatePresence>
+    </>
   );
 };
 

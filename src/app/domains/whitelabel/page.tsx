@@ -175,34 +175,37 @@ const ProductCard = ({
     >
       <Link href={`/products/${product.slug}`}>
         <div className="group h-full bg-light dark:bg-obsidian-50 border border-primary/20 hover:border-cyan/50 rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-cyan/10 hover:-translate-y-1">
-          {/* Hero Image */}
+          {/* Card Header */}
           <div className="relative h-48 overflow-hidden">
-            <div
-              className={`absolute inset-0 bg-gradient-to-br ${product.gradient} opacity-90`}
-            />
-            {product.heroImage.endsWith(".webp") ? (
-              <img
-                src={product.heroImage}
-                alt={product.shortTitle}
-                className="absolute inset-0 w-full h-full object-cover object-top"
-              />
-            ) : (
-              <>
-                <div className="absolute inset-0 bg-[url('/img/grid-pattern.svg')] opacity-20" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-white/90 transform group-hover:scale-110 transition-transform duration-300 [&>svg]:w-16 [&>svg]:h-16">
-                    {iconMap[product.icon]}
-                  </div>
+            {/* Base layer — gradient + icon, always visible */}
+            <div className={`absolute inset-0 bg-gradient-to-br ${product.gradient}`}>
+              <div className="absolute inset-0 bg-[url('/img/grid-pattern.svg')] opacity-20" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-white/90 [&>svg]:w-16 [&>svg]:h-16">
+                  {iconMap[product.icon]}
                 </div>
-              </>
+              </div>
+            </div>
+
+            {/* Screenshot — slides up from below on hover */}
+            {product.heroImage.endsWith(".webp") && (
+              <div className="absolute inset-0 translate-y-full group-hover:translate-y-0 transition-transform duration-[600ms] ease-[cubic-bezier(0.37,0,0.63,1)]">
+                <img
+                  src={product.heroImage}
+                  alt={product.shortTitle}
+                  className="w-full h-full object-cover object-top"
+                />
+              </div>
             )}
+
+            {/* Badges — always on top */}
             {product.highlighted && (
-              <div className="absolute top-4 right-4 flex items-center gap-1 px-3 py-1.5 bg-obsidian/80 backdrop-blur-sm rounded-full text-cyan text-xs font-semibold">
+              <div className="absolute top-4 right-4 z-10 flex items-center gap-1 px-3 py-1.5 bg-obsidian/80 backdrop-blur-sm rounded-full text-cyan text-xs font-semibold">
                 <HiSparkles className="w-3.5 h-3.5" />
                 Featured
               </div>
             )}
-            <div className="absolute bottom-4 left-4">
+            <div className="absolute bottom-4 left-4 z-10">
               <span
                 className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border backdrop-blur-sm bg-obsidian/50 ${catInfo.color} border-white/20`}
               >
