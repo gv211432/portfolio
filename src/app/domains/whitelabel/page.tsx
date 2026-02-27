@@ -35,6 +35,9 @@ import {
   FaStar,
   FaHome,
   FaUserTie,
+  FaCut,
+  FaGift,
+  FaUsers,
 } from "react-icons/fa";
 import { SiKucoin } from "react-icons/si";
 import { RiSwapLine } from "react-icons/ri";
@@ -44,6 +47,7 @@ import {
   TbFilter,
   TbLayoutGrid,
   TbList,
+  TbChartBar,
 } from "react-icons/tb";
 import { GiTwoCoins, GiMedicines, GiCardAceSpades } from "react-icons/gi";
 import { HiSparkles, HiOutlineExternalLink } from "react-icons/hi";
@@ -66,6 +70,10 @@ const iconMap: Record<string, React.ReactNode> = {
   FaHome: <FaHome className="w-8 h-8" />,
   FaUserTie: <FaUserTie className="w-8 h-8" />,
   GiCardAceSpades: <GiCardAceSpades className="w-8 h-8" />,
+  FaCut: <FaCut className="w-8 h-8" />,
+  FaGift: <FaGift className="w-8 h-8" />,
+  FaUsers: <FaUsers className="w-8 h-8" />,
+  TbChartBar: <TbChartBar className="w-8 h-8" />,
 };
 
 const categories: { key: ProductCategory | "all"; label: string }[] = [
@@ -167,17 +175,27 @@ const ProductCard = ({
     >
       <Link href={`/products/${product.slug}`}>
         <div className="group h-full bg-light dark:bg-obsidian-50 border border-primary/20 hover:border-cyan/50 rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-cyan/10 hover:-translate-y-1">
-          {/* Hero Image Placeholder */}
+          {/* Hero Image */}
           <div className="relative h-48 overflow-hidden">
             <div
               className={`absolute inset-0 bg-gradient-to-br ${product.gradient} opacity-90`}
             />
-            <div className="absolute inset-0 bg-[url('/img/grid-pattern.svg')] opacity-20" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-white/90 transform group-hover:scale-110 transition-transform duration-300 [&>svg]:w-16 [&>svg]:h-16">
-                {iconMap[product.icon]}
-              </div>
-            </div>
+            {product.heroImage.endsWith(".webp") ? (
+              <img
+                src={product.heroImage}
+                alt={product.shortTitle}
+                className="absolute inset-0 w-full h-full object-cover object-top"
+              />
+            ) : (
+              <>
+                <div className="absolute inset-0 bg-[url('/img/grid-pattern.svg')] opacity-20" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-white/90 transform group-hover:scale-110 transition-transform duration-300 [&>svg]:w-16 [&>svg]:h-16">
+                    {iconMap[product.icon]}
+                  </div>
+                </div>
+              </>
+            )}
             {product.highlighted && (
               <div className="absolute top-4 right-4 flex items-center gap-1 px-3 py-1.5 bg-obsidian/80 backdrop-blur-sm rounded-full text-cyan text-xs font-semibold">
                 <HiSparkles className="w-3.5 h-3.5" />

@@ -40,10 +40,12 @@ import {
   FaQuoteLeft,
   FaHome,
   FaUserTie,
+  FaCut,
+  FaGift,
 } from "react-icons/fa";
 import { SiKucoin } from "react-icons/si";
 import { RiSwapLine } from "react-icons/ri";
-import { TbArrowsExchange, TbChartCandle } from "react-icons/tb";
+import { TbArrowsExchange, TbChartCandle, TbChartBar } from "react-icons/tb";
 import { GiTwoCoins, GiMedicines, GiCardAceSpades } from "react-icons/gi";
 import { HiSparkles, HiOutlineExternalLink } from "react-icons/hi";
 import { BsLightningCharge, BsShieldCheck, BsGraphUp } from "react-icons/bs";
@@ -66,6 +68,10 @@ const iconMap: Record<string, React.ReactNode> = {
   FaHome: <FaHome className="w-12 h-12" />,
   FaUserTie: <FaUserTie className="w-12 h-12" />,
   GiCardAceSpades: <GiCardAceSpades className="w-12 h-12" />,
+  FaCut: <FaCut className="w-12 h-12" />,
+  FaGift: <FaGift className="w-12 h-12" />,
+  FaUsers: <FaUsers className="w-12 h-12" />,
+  TbChartBar: <TbChartBar className="w-12 h-12" />,
 };
 
 // Feature Section Component
@@ -118,33 +124,43 @@ const FeatureSection = ({
 const ScreenshotGallery = ({ screenshots }: { screenshots: string[] }) => {
   return (
     <div className="grid md:grid-cols-3 gap-6">
-      {screenshots.map((screenshot, index) => (
-        <motion.div
-          key={index}
-          initial={{ opacity: 0, scale: 0.95 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5, delay: index * 0.1 }}
-          viewport={{ once: true }}
-          className="group relative aspect-video rounded-xl overflow-hidden bg-primary/10 border border-primary/20"
-        >
-          {/* Placeholder for actual images */}
-          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/20 to-cyan/20">
-            <div className="text-center">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/20 flex items-center justify-center">
-                <BsGraphUp className="w-8 h-8 text-primary/60" />
+      {screenshots.map((screenshot, index) => {
+        const isRealImage = screenshot.endsWith(".webp") || screenshot.endsWith(".png") || screenshot.endsWith(".jpg") || screenshot.endsWith(".jpeg");
+        return (
+          <motion.div
+            key={index}
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: index * 0.1 }}
+            viewport={{ once: true }}
+            className="group relative aspect-video rounded-xl overflow-hidden bg-primary/10 border border-primary/20"
+          >
+            {isRealImage ? (
+              <img
+                src={screenshot}
+                alt={`Screenshot ${index + 1}`}
+                className="absolute inset-0 w-full h-full object-cover object-top"
+              />
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/20 to-cyan/20">
+                <div className="text-center">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/20 flex items-center justify-center">
+                    <BsGraphUp className="w-8 h-8 text-primary/60" />
+                  </div>
+                  <p className="text-primary/60 text-sm font-medium">
+                    Screenshot {index + 1}
+                  </p>
+                  <p className="text-primary/40 text-xs mt-1">Coming Soon</p>
+                </div>
               </div>
-              <p className="text-primary/60 text-sm font-medium">
-                Screenshot {index + 1}
-              </p>
-              <p className="text-primary/40 text-xs mt-1">Coming Soon</p>
+            )}
+            {/* Hover overlay */}
+            <div className="absolute inset-0 bg-obsidian/0 group-hover:bg-obsidian/50 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+              <span className="text-white font-medium">View Full Size</span>
             </div>
-          </div>
-          {/* Hover overlay */}
-          <div className="absolute inset-0 bg-obsidian/0 group-hover:bg-obsidian/50 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-            <span className="text-white font-medium">View Full Size</span>
-          </div>
-        </motion.div>
-      ))}
+          </motion.div>
+        );
+      })}
     </div>
   );
 };
