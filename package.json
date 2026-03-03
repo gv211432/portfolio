@@ -50,11 +50,11 @@
   "private": true,
   "scripts": {
     "dev": "bun x next dev",
-    "build": "next build",
+    "build": "bun tools/sitemap.ts && next build",
     "start": "next start",
     "serve": "bunx serve@latest out",
-    "build:bun": "bun x next build",
-    "build:bun:webscreenshot": "bun tools/screenshot && bun x next build",
+    "build:bun": "bun tools/sitemap.ts && bun x next build",
+    "build:bun:webscreenshot": "bun tools/sitemap.ts && bun tools/screenshot && bun x next build",
     "start:bun": "bun x next start",
     "db:studio": "bunx prisma studio",
     "lint": "bun x next lint"
