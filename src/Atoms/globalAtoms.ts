@@ -2,6 +2,16 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { cookieStorage } from "@/utils/cookies";
 
+interface ChatOpenState {
+  isChatOpen: boolean;
+  setIsChatOpen: (value: boolean) => void;
+}
+
+export const useChatOpenStore = create<ChatOpenState>()((set) => ({
+  isChatOpen: false,
+  setIsChatOpen: (value) => set((state) => (state.isChatOpen === value ? state : { isChatOpen: value })),
+}));
+
 interface DarkModeState {
   darkMode: boolean;
   setDarkMode: (value: boolean) => void;

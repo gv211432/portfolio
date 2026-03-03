@@ -6,8 +6,9 @@ import { IoMoon, IoSunny, IoArrowUp, IoContract, IoHome } from "react-icons/io5"
 import { IoMdExpand } from "react-icons/io";
 import { FaTelegram } from "react-icons/fa";
 import { HiMail } from "react-icons/hi";
-import { useDarkModeStore } from "@/Atoms/globalAtoms";
+import { useDarkModeStore, useChatOpenStore } from "@/Atoms/globalAtoms";
 import { globalConfig, domainUrls } from "@/config/global";
+import { IoChatbubbleEllipses } from "react-icons/io5";
 
 function useSubdomainAccent() {
   const [accent, setAccent] = useState<string | undefined>(undefined);
@@ -24,6 +25,7 @@ function useSubdomainAccent() {
 
 export default function FloatingActionBar() {
   const { darkMode, toggleDarkMode, initializeDarkMode } = useDarkModeStore();
+  const { isChatOpen, setIsChatOpen } = useChatOpenStore();
   const accent = useSubdomainAccent();
 
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -135,6 +137,23 @@ export default function FloatingActionBar() {
           >
             <FaTelegram className="w-5 h-5 text-[#0088cc] group-hover:scale-110 transition-transform" />
           </a>
+
+          {/* AI Chat Button */}
+          <button
+            onClick={() => setIsChatOpen(!isChatOpen)}
+            className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition-all group ${
+              isChatOpen
+                ? "bg-primary text-obsidian shadow-[0_0_12px_rgba(0,212,255,0.5)]"
+                : "bg-primary/10 hover:bg-primary/20"
+            }`}
+            aria-label="Open AI assistant"
+          >
+            <IoChatbubbleEllipses
+              className={`w-5 h-5 group-hover:scale-110 transition-transform ${
+                isChatOpen ? "text-obsidian" : "text-primary"
+              }`}
+            />
+          </button>
 
           {/* Divider */}
           <div

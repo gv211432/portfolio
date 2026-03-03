@@ -1,35 +1,75 @@
 "use client";
 
-import React from "react";
-import { CopilotPopup } from "@copilotkit/react-ui";
+import React, { useEffect } from "react";
+import { CopilotPopup, useChatContext } from "@copilotkit/react-ui";
 import { FloatingActionBar, CookieConsent } from "@/components/ui";
+import { useChatOpenStore } from "@/Atoms/globalAtoms";
 
 /**
- * ChatBotProvider renders the floating utility bar and the AI chat popup.
- * The CopilotPopup is styled to match the portfolio's cyan/obsidian theme
- * via CSS custom properties.
+ * Invisible bridge component rendered inside CopilotPopup's context tree.
+ * It syncs the external Zustand store → CopilotKit's internal open state,
+ * so the FAB chat button can open/close the popup without needing the
+ * CopilotKit floating button to exist at all.
+ */
+function ChatOpenBridge() {
+  const { setOpen } = useChatContext();
+  const { isChatOpen } = useChatOpenStore();
+
+  useEffect(() => {
+    setOpen(isChatOpen);
+  }, [isChatOpen, setOpen]);
+
+  return null;
+}
+
+/**
+ * ChatBotProvider renders the floating utility bar, cookie consent,
+ * and the AI chat popup (controlled via FAB chat button).
+ * CopilotKit's own floating button is replaced by our FAB button.
  */
 export default function ChatBotProvider() {
+  const { setIsChatOpen } = useChatOpenStore();
+
+  // CopilotKit's web inspector lives inside a Shadow DOM — CSS can't pierce it,
+  // so we hide the host element (<cpk-web-inspector>) directly via JS.
+  // The interval retries until the element appears (it may inject late).
+  useEffect(() => {
+    const hide = () => {
+      const el = document.querySelector("cpk-web-inspector");
+      if (el) (el as HTMLElement).style.display = "none";
+    };
+    hide();
+    const id = setInterval(hide, 500);
+    // Stop polling after 10 s — it won't appear after that
+    const timeout = setTimeout(() => clearInterval(id), 10_000);
+    return () => {
+      clearInterval(id);
+      clearTimeout(timeout);
+    };
+  }, []);
+
   return (
     <>
       <FloatingActionBar />
       <CookieConsent />
 
-      {/* Themed CopilotPopup — overrides CopilotKit's default CSS vars */}
+      {/* Hide CopilotKit's dev console and sidebar toggle buttons */}
       <style>{`
-        /* Chat button */
-        .copilotKitButton {
-          background-color: #00D4FF !important;
-          bottom: 1.5rem !important;
-          right: 1.5rem !important;
-          width: 3.5rem !important;
-          height: 3.5rem !important;
-          box-shadow: 0 4px 24px rgba(0, 212, 255, 0.35) !important;
+        /* Hide CopilotKit dev console / web inspector button.
+           The button lives in a Shadow DOM so we target the custom-element host. */
+        cpk-web-inspector,
+        .copilotKitDevConsole,
+        [class*="copilotKitDevConsole"],
+        [data-testid="dev-console"],
+        .console-button {
+          display: none !important;
         }
-        .copilotKitButton svg {
-          color: #0a0a0a !important;
+        /* Hide CopilotKit sidebar toggle if present */
+        .copilotKitSidebarButton,
+        [class*="copilotKitSidebar"] > button:first-child {
+          display: none !important;
         }
-        /* Window */
+        /* Window positioning — opens just above where the FAB bar sits */
         .copilotKitWindow {
           bottom: 5.5rem !important;
           right: 1.5rem !important;
@@ -135,11 +175,13 @@ export default function ChatBotProvider() {
       <CopilotPopup
         instructions="You are Gaurav's intelligent AI assistant. Help visitors learn about his blockchain development services, past projects, and expertise. Be professional, concise, and use markdown for well-structured answers."
         defaultOpen={false}
+        onSetOpen={setIsChatOpen}
         labels={{
           title: "Gaurav's Assistant",
-          initial: "Hi! I'm Gaurav's AI assistant. I can help you learn about his blockchain services, past projects, or get you in touch. Ask me anything! 👋",
+          initial: "Hi! I'm Gaurav's AI assistant. I can help you learn about his blockchain services, past projects, or get you in touch. Ask me anything!",
           placeholder: "Ask me anything...",
         }}
+        Button={() => <ChatOpenBridge />}
       />
     </>
   );
