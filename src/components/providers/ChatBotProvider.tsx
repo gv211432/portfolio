@@ -1,13 +1,146 @@
 "use client";
 
 import React from "react";
+import { CopilotPopup } from "@copilotkit/react-ui";
 import { FloatingActionBar, CookieConsent } from "@/components/ui";
 
+/**
+ * ChatBotProvider renders the floating utility bar and the AI chat popup.
+ * The CopilotPopup is styled to match the portfolio's cyan/obsidian theme
+ * via CSS custom properties.
+ */
 export default function ChatBotProvider() {
   return (
     <>
       <FloatingActionBar />
       <CookieConsent />
+
+      {/* Themed CopilotPopup — overrides CopilotKit's default CSS vars */}
+      <style>{`
+        /* Chat button */
+        .copilotKitButton {
+          background-color: #00D4FF !important;
+          bottom: 1.5rem !important;
+          right: 1.5rem !important;
+          width: 3.5rem !important;
+          height: 3.5rem !important;
+          box-shadow: 0 4px 24px rgba(0, 212, 255, 0.35) !important;
+        }
+        .copilotKitButton svg {
+          color: #0a0a0a !important;
+        }
+        /* Window */
+        .copilotKitWindow {
+          bottom: 5.5rem !important;
+          right: 1.5rem !important;
+          border-radius: 1rem !important;
+          box-shadow: 0 8px 40px rgba(0,0,0,0.35) !important;
+          border: 1px solid rgba(255,255,255,0.08) !important;
+          font-family: inherit !important;
+        }
+        /* Header */
+        .copilotKitHeader {
+          background-color: #00D4FF !important;
+          color: #0a0a0a !important;
+          border-radius: 1rem 1rem 0 0 !important;
+        }
+        .copilotKitHeader * {
+          color: #0a0a0a !important;
+        }
+        /* Messages area */
+        .copilotKitMessagesContainer {
+          background-color: #f9fafb !important;
+        }
+        /* Assistant message bubble */
+        .copilotKitAssistantMessage {
+          background-color: #ffffff !important;
+          border: 1px solid #e5e7eb !important;
+          color: #1f2937 !important;
+          border-radius: 1rem 1rem 1rem 0.25rem !important;
+        }
+        /* User message bubble */
+        .copilotKitUserMessage {
+          background-color: #00D4FF !important;
+          color: #0a0a0a !important;
+          border-radius: 1rem 1rem 0.25rem 1rem !important;
+        }
+        /* Input area */
+        .copilotKitInputContainer {
+          border-top: 1px solid #e5e7eb !important;
+          background-color: #ffffff !important;
+        }
+        .copilotKitInput {
+          border-radius: 9999px !important;
+          background-color: #f3f4f6 !important;
+          color: #1f2937 !important;
+        }
+        /* Send button */
+        .copilotKitSendButton {
+          background-color: #00D4FF !important;
+          color: #0a0a0a !important;
+          border-radius: 9999px !important;
+        }
+        /* Markdown in responses */
+        .copilotKitAssistantMessage h1,
+        .copilotKitAssistantMessage h2,
+        .copilotKitAssistantMessage h3 {
+          font-weight: 700;
+          margin-bottom: 0.5rem;
+          margin-top: 0.75rem;
+        }
+        .copilotKitAssistantMessage h1 { font-size: 1.1rem; }
+        .copilotKitAssistantMessage h2 { font-size: 1rem; }
+        .copilotKitAssistantMessage h3 { font-size: 0.9rem; }
+        .copilotKitAssistantMessage ul,
+        .copilotKitAssistantMessage ol {
+          padding-left: 1.25rem;
+          margin: 0.5rem 0;
+        }
+        .copilotKitAssistantMessage li { margin-bottom: 0.25rem; }
+        .copilotKitAssistantMessage code {
+          background: rgba(0, 212, 255, 0.12);
+          border-radius: 0.25rem;
+          padding: 0.1rem 0.35rem;
+          font-size: 0.8rem;
+          font-family: monospace;
+        }
+        .copilotKitAssistantMessage pre {
+          background: #0a0a0a;
+          color: #00D4FF;
+          border-radius: 0.5rem;
+          padding: 0.75rem;
+          overflow-x: auto;
+          margin: 0.5rem 0;
+          font-size: 0.78rem;
+        }
+        .copilotKitAssistantMessage pre code {
+          background: transparent;
+          padding: 0;
+          color: inherit;
+        }
+        .copilotKitAssistantMessage a {
+          color: #00D4FF;
+          text-decoration: underline;
+        }
+        .copilotKitAssistantMessage strong { font-weight: 700; }
+        .copilotKitAssistantMessage em { font-style: italic; }
+        .copilotKitAssistantMessage blockquote {
+          border-left: 3px solid #00D4FF;
+          padding-left: 0.75rem;
+          margin: 0.5rem 0;
+          opacity: 0.8;
+        }
+      `}</style>
+
+      <CopilotPopup
+        instructions="You are Gaurav's intelligent AI assistant. Help visitors learn about his blockchain development services, past projects, and expertise. Be professional, concise, and use markdown for well-structured answers."
+        defaultOpen={false}
+        labels={{
+          title: "Gaurav's Assistant",
+          initial: "Hi! I'm Gaurav's AI assistant. I can help you learn about his blockchain services, past projects, or get you in touch. Ask me anything! 👋",
+          placeholder: "Ask me anything...",
+        }}
+      />
     </>
   );
 }
