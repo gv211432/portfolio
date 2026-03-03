@@ -11,7 +11,7 @@ import gaurav_img from "../../assets/img/gaurav_sq_img.webp";
 import gaurav_logo_5 from "../../assets/img/gaurav_5.png";
 import { faBook } from "@fortawesome/free-solid-svg-icons";
 import DarkModeToggleButton from "../inputs/DarkModeToggleButton";
-import { domainUrls, globalConfig } from "@/config/global";
+import { domainUrls, meConfig } from "@/config/global";
 
 
 export default function LeftStickyBar() {
@@ -107,14 +107,14 @@ export default function LeftStickyBar() {
             </div>
 
             <motion.div className="flex justify-center">
-              <a href="https://www.linkedin.com/in/vishwakarmagaurav/">
+              <a href={meConfig.linkedin}>
                 <FontAwesomeIcon
                   height={30}
                   className="m-2 h-8 text-gray-700 dark:text-white hover:scale-110 cursor-pointer"
                   icon={faLinkedin}
                 />
               </a>
-              <a href="https://github.com/gv211432">
+              <a href={meConfig.github}>
                 <FontAwesomeIcon
                   height={30}
                   className="m-2 h-8 text-gray-700 dark:text-white hover:scale-110 cursor-pointer"
@@ -128,7 +128,7 @@ export default function LeftStickyBar() {
                   icon={faBook}
                 />
               </a>
-              <a href="https://twitter.com/formal_gaurav">
+              <a href={meConfig.twitter}>
                 <FontAwesomeIcon
                   height={30}
                   className="m-2 h-8 text-gray-700 dark:text-white hover:scale-110 cursor-pointer"
@@ -180,7 +180,7 @@ export default function LeftStickyBar() {
           {/* Bottom/Hire Button Section */}
           <center className=" w-full pb-10 text-[1.5rem]">
 
-            <a href={`mailto:${globalConfig.email};${globalConfig.email2}`}>
+            <a href={`mailto:${meConfig.email};${meConfig.email2}`}>
               <div
                 className="border-[1px]  border-gray-500 mx-8 rounded-lg hover:bg-primaryGray
               hover:border-0 dark:hover:text-white cursor-pointer hover:text-slate-100

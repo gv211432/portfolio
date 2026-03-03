@@ -1301,7 +1301,7 @@ export default function LandingPage() {
               </p>
               <div className="flex gap-4">
                 <a
-                  href="https://github.com/gv211432"
+                  href={globalConfig.github}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-10 h-10 bg-secondary dark:bg-obsidian-50 hover:bg-primary/20 border border-primary/30 rounded-lg flex items-center justify-center transition-colors"
@@ -1311,7 +1311,7 @@ export default function LandingPage() {
                   </svg>
                 </a>
                 <a
-                  href="https://linkedin.com/in/AstroX11"
+                  href={globalConfig.linkedin}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-10 h-10 bg-secondary dark:bg-obsidian-50 hover:bg-primary/20 border border-primary/30 rounded-lg flex items-center justify-center transition-colors"
@@ -1321,7 +1321,7 @@ export default function LandingPage() {
                   </svg>
                 </a>
                 <a
-                  href="https://twitter.com/formal_gaurav"
+                  href={globalConfig.twitter}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-10 h-10 bg-secondary dark:bg-obsidian-50 hover:bg-primary/20 border border-primary/30 rounded-lg flex items-center justify-center transition-colors"

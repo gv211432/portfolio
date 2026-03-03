@@ -31,6 +31,17 @@ export const domainEmail = `hi@gaurav.one`;
 export const globalConfig = {
   displayName: "Gaurav.one",
   email: domainEmail,
+  email2: "contact@gaurav.one",
+  github: "https://github.com/organizations/Gaurav-Dot-One",
+  linkedin: "https://www.linkedin.com/company/gaurav-dot-one",
+  twitter: "https://twitter.com/formal_gaurav",
+  telegram: "https://t.me/gaaaalileo",
+  leetcode: ""
+};
+
+export const meConfig = {
+  displayName: "Gaurav.one",
+  email: domainEmail,
   email2: "gaurav.ram@hotmail.com",
   github: "https://github.com/gv211432",
   linkedin: "https://linkedin.com/in/vishwakarmagaurav",

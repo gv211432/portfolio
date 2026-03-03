@@ -593,7 +593,7 @@ export default function OpenSourcePage() {
                 </p>
                 <div className="flex items-center justify-center gap-4 flex-wrap">
                   <a
-                    href="https://github.com/gv211432"
+                    href={globalConfig.github}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 px-6 py-3 bg-obsidian dark:bg-white text-white dark:text-obsidian font-semibold rounded-xl hover:opacity-90 transition-opacity"
@@ -617,7 +617,7 @@ export default function OpenSourcePage() {
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-4">
                 <a
-                  href="https://github.com/gv211432"
+                  href={globalConfig.github}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-primaryDark/50 dark:text-gray-500 hover:text-cyan transition-colors"
@@ -625,7 +625,7 @@ export default function OpenSourcePage() {
                   <FaGithub className="w-5 h-5" />
                 </a>
                 <a
-                  href="https://linkedin.com/in/AstroX11"
+                  href={globalConfig.linkedin}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-primaryDark/50 dark:text-gray-500 hover:text-cyan transition-colors"

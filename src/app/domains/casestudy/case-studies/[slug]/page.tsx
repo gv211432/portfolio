@@ -10,7 +10,7 @@ import {
   type CaseStudy,
 } from "@/data/caseStudiesData";
 import { useDarkModeStore } from "@/Atoms/globalAtoms";
-import { domainUrls } from "@/config/global";
+import { domainUrls, globalConfig } from "@/config/global";
 import {
   Logo,
   FloroActionButton,
@@ -572,7 +572,7 @@ export default function CaseStudyDetailPage() {
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-4">
                 <a
-                  href="https://github.com/gv211432"
+                  href={globalConfig.github}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-primaryDark/50 dark:text-gray-500 hover:text-cyan transition-colors"
@@ -580,7 +580,7 @@ export default function CaseStudyDetailPage() {
                   <FaGithub className="w-5 h-5" />
                 </a>
                 <a
-                  href="https://linkedin.com/in/AstroX11"
+                  href={globalConfig.linkedin}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-primaryDark/50 dark:text-gray-500 hover:text-cyan transition-colors"
@@ -588,7 +588,7 @@ export default function CaseStudyDetailPage() {
                   <FaLinkedin className="w-5 h-5" />
                 </a>
                 <a
-                  href="https://twitter.com/formal_gaurav"
+                  href={globalConfig.twitter}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-primaryDark/50 dark:text-gray-500 hover:text-cyan transition-colors"
