@@ -52,7 +52,7 @@ export const getDatetimeTool = tool(
 
 const ALLOWED_READ_DIRS = [
   path.resolve(process.cwd(), "src/data"),
-  path.resolve(process.cwd(), "public/img"),
+  path.resolve(process.cwd(), "public"),   // includes sitemap.xml, robots.txt, public/img/**
 ];
 
 function isAllowedPath(filePath: string): boolean {
@@ -64,7 +64,7 @@ export const readPortfolioFileTool = tool(
   async ({ file_path }) => {
     const fullPath = path.resolve(process.cwd(), file_path);
     if (!isAllowedPath(fullPath)) {
-      return `Error: Access denied. Only files under src/data/ and public/img/ can be read.`;
+      return `Error: Access denied. Only files under src/data/ and public/ can be read.`;
     }
     try {
       if (!fs.existsSync(fullPath)) return `Error: File not found: ${file_path}`;
@@ -82,7 +82,7 @@ export const readPortfolioFileTool = tool(
   },
   {
     name: "read_portfolio_file",
-    description: "Read a file from the portfolio's data or image directories. Allowed paths: src/data/** and public/img/**. Use this to access project data, case studies, or available images.",
+    description: "Read a file from the portfolio's data or public directories. Allowed paths: src/data/** and public/**. Use 'public/sitemap.xml' to discover all available pages on the site, then fetch_url to read their live content. Use src/data/ files for raw project/service/job data.",
     schema: z.object({
       file_path: z.string().describe("Relative path from project root, e.g. 'src/data/caseStudiesData.ts' or 'public/img/'"),
     }),
@@ -252,7 +252,7 @@ export const fetchUrlTool = tool(
     name: "fetch_url",
     description: "Fetch and read the text content of a web page. Returns plain text with HTML stripped. Use for looking up documentation, competitor sites, or any URL the visitor shares.",
     schema: z.object({
-      url: z.string().url().describe("Full URL to fetch, e.g. 'https://example.com/docs'"),
+      url: z.url().describe("Full URL to fetch, e.g. 'https://example.com/docs'"),
     }),
   }
 );
