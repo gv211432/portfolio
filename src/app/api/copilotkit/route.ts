@@ -21,10 +21,11 @@ import { ACTIVE_MODEL } from "@/lib/agent/models";
  */
 async function handleRequest(req: NextRequest) {
   const visitorCtx = collectClientInfo(req);
+  const chatToken = req.headers.get("x-chat-token") ?? undefined;
 
   const runtime = new CopilotRuntime({
     agents: {
-      default: new PortfolioAgent(visitorCtx),
+      default: new PortfolioAgent(visitorCtx, chatToken),
     },
   });
 

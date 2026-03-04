@@ -8,7 +8,7 @@ const SUBDOMAIN_CONFIG = {
     linkedin: 'https://linkedin.com/in/gv211432',
   },
   // Valid subdomains that have their own pages
-  valid: ['me', 'opensource', 'vision', 'casestudy', 'whitelabel', 'blogs', 'careers', 'ngo'],
+  valid: ['me', 'opensource', 'vision', 'casestudy', 'whitelabel', 'blogs', 'careers', 'ngo', 'chat'],
 } as const;
 
 import { ROOT_DOMAIN } from '@/utils/domain';

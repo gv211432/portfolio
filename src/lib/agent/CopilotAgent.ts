@@ -10,6 +10,7 @@ import {
   type BaseMessage,
 } from "@langchain/core/messages";
 import { createAgentGraph, type VisitorContext } from "./graph";
+import { prisma } from "@/lib/prisma";
 
 /**
  * Convert AG-UI protocol messages to LangChain BaseMessage format.
@@ -79,13 +80,16 @@ function toLC(messages: Message[]): BaseMessage[] {
  * Custom CopilotKit AbstractAgent that wraps the LangGraph ReAct agent.
  * Created per-request so visitor context (IP, device) can be injected
  * fresh into the system prompt on every call.
+ * Also persists user + assistant messages to the ChatThread in the DB.
  */
 export class PortfolioAgent extends AbstractAgent {
   private visitorCtx?: VisitorContext;
+  private chatToken?: string;
 
-  constructor(visitorCtx?: VisitorContext) {
+  constructor(visitorCtx?: VisitorContext, chatToken?: string) {
     super();
     this.visitorCtx = visitorCtx;
+    this.chatToken = chatToken;
   }
 
   run(input: RunAgentInput): Observable<BaseEvent> {
@@ -131,6 +135,13 @@ export class PortfolioAgent extends AbstractAgent {
             runId,
           } as BaseEvent);
           subscriber.complete();
+
+          // Fire-and-forget: persist messages to DB if token is present
+          if (this.chatToken && content) {
+            this.saveMessages(input.messages, content).catch((e) =>
+              console.error("[PortfolioAgent] saveMessages:", e)
+            );
+          }
         } catch (err: unknown) {
           const message =
             err instanceof Error ? err.message : "Agent execution error";
@@ -141,6 +152,43 @@ export class PortfolioAgent extends AbstractAgent {
           subscriber.complete();
         }
       })();
+    });
+  }
+
+  private async saveMessages(inputMessages: Message[], assistantContent: string) {
+    if (!this.chatToken) return;
+
+    // Get the last user message from the AG-UI messages
+    const lastUserMsg = [...inputMessages]
+      .reverse()
+      .find((m) => m.role === "user");
+    const userContent = lastUserMsg
+      ? typeof lastUserMsg.content === "string"
+        ? lastUserMsg.content
+        : (lastUserMsg.content as Array<{ text?: string }>)
+            .map((p) => p.text ?? "")
+            .join("\n")
+      : null;
+
+    if (!userContent) return;
+
+    // Upsert thread, then append both messages
+    const thread = await prisma.chatThread.upsert({
+      where: { token: this.chatToken },
+      create: {
+        token: this.chatToken,
+        ipAddress: this.visitorCtx?.ip,
+        deviceInfo: this.visitorCtx?.deviceInfo as object | undefined,
+      },
+      update: {},
+      select: { id: true },
+    });
+
+    await prisma.chatMessage.createMany({
+      data: [
+        { threadId: thread.id, role: "user", content: userContent },
+        { threadId: thread.id, role: "assistant", content: assistantContent },
+      ],
     });
   }
 }

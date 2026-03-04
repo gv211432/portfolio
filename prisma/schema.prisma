@@ -93,6 +93,29 @@ model ChatKVStore {
   updatedAt DateTime @updatedAt
 }
 
+// Chat threads — one per browser token (non-guessable UUID generated client-side)
+model ChatThread {
+  id         String        @id @default(cuid())
+  token      String        @unique  // crypto.randomUUID() from IndexedDB
+  ipAddress  String?
+  deviceInfo Json?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  messages   ChatMessage[]
+}
+
+// Individual chat messages linked to a thread
+model ChatMessage {
+  id        String     @id @default(cuid())
+  threadId  String
+  thread    ChatThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  role      String     // "user" | "assistant"
+  content   String     @db.Text
+  createdAt DateTime   @default(now())
+
+  @@index([threadId, createdAt])
+}
+
 // Chat leads — visitors who expressed interest via the chatbot
 model ChatLead {
   id             String   @id @default(cuid())

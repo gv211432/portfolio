@@ -2,7 +2,7 @@ import "./globals.css";
 import "@copilotkit/react-ui/styles.css";
 import Script from "next/script";
 import { Inter, Cinzel_Decorative } from "next/font/google";
-import { CopilotKit } from "@copilotkit/react-core";
+import ChatKitWrapper from "@/components/providers/ChatKitWrapper";
 import ChatBotProvider from "@/components/providers/ChatBotProvider";
 
 const GTM_ID = "GTM-T3ZKK9HQ";
@@ -55,10 +55,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             style={{ display: "none", visibility: "hidden" }}
           />
         </noscript>
-        <CopilotKit runtimeUrl="/api/copilotkit">
+        <ChatKitWrapper>
           {children}
           <ChatBotProvider />
-        </CopilotKit>
+        </ChatKitWrapper>
       </body>
     </html>
   );

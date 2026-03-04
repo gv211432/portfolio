@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { CopilotPopup, useChatContext } from "@copilotkit/react-ui";
 import { FloatingActionBar, CookieConsent } from "@/components/ui";
 import { useChatOpenStore } from "@/Atoms/globalAtoms";
+import { getOrCreateChatToken } from "@/utils/chatToken";
 
 /**
  * Invisible bridge component rendered inside CopilotPopup's context tree.
@@ -29,10 +30,15 @@ function ChatOpenBridge() {
  */
 export default function ChatBotProvider() {
   const { setIsChatOpen } = useChatOpenStore();
+  const [chatToken, setChatToken] = useState<string>("");
+
+  // Load/create the browser's persistent chat token
+  useEffect(() => {
+    getOrCreateChatToken().then(setChatToken);
+  }, []);
 
   // CopilotKit's web inspector lives inside a Shadow DOM — CSS can't pierce it,
   // so we hide the host element (<cpk-web-inspector>) directly via JS.
-  // The interval retries until the element appears (it may inject late).
   useEffect(() => {
     const hide = () => {
       const el = document.querySelector("cpk-web-inspector");
@@ -40,13 +46,57 @@ export default function ChatBotProvider() {
     };
     hide();
     const id = setInterval(hide, 500);
-    // Stop polling after 10 s — it won't appear after that
     const timeout = setTimeout(() => clearInterval(id), 10_000);
     return () => {
       clearInterval(id);
       clearTimeout(timeout);
     };
   }, []);
+
+  // Inject "Enlarge" button into CopilotKit's header (next to the close button).
+  // Uses MutationObserver since the popup renders asynchronously.
+  useEffect(() => {
+    if (!chatToken) return;
+
+    const injectButton = (header: Element) => {
+      if (header.querySelector(".chat-enlarge-btn")) return;
+
+      const btn = document.createElement("button");
+      btn.className = "chat-enlarge-btn";
+      btn.title = "Open full chat";
+      btn.setAttribute("aria-label", "Open full chat");
+      btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/>
+        <line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>
+      </svg>`;
+
+      btn.onclick = () => {
+        const host = window.location.hostname;
+        const isLocal = host === "localhost" || host.endsWith(".localhost");
+        const port = window.location.port ? `:${window.location.port}` : "";
+        const base = isLocal
+          ? `http://chat.localhost${port}`
+          : `https://chat.${host.replace(/^[^.]+\./, "")}`;
+        window.open(`${base}?token=${chatToken}`, "_blank");
+      };
+
+      // Append to header; CSS positions it absolutely to the left of the close button.
+      header.appendChild(btn);
+    };
+
+    const observer = new MutationObserver(() => {
+      const header = document.querySelector(".copilotKitHeader");
+      if (header) injectButton(header);
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // Also try immediately in case popup is already open
+    const header = document.querySelector(".copilotKitHeader");
+    if (header) injectButton(header);
+
+    return () => observer.disconnect();
+  }, [chatToken]);
 
   return (
     <>
@@ -86,9 +136,32 @@ export default function ChatBotProvider() {
           background-color: #00D4FF !important;
           color: #0a0a0a !important;
           border-radius: 1rem 1rem 0 0 !important;
+          display: flex !important;
+          align-items: center !important;
         }
         .copilotKitHeader * {
           color: #0a0a0a !important;
+        }
+        /* Enlarge button — absolutely positioned to the left of the close button */
+        .copilotKitHeader { position: relative !important; }
+        .chat-enlarge-btn {
+          position: absolute !important;
+          right: 2.4rem !important;
+          top: 50% !important;
+          transform: translateY(-50%) !important;
+          background: transparent !important;
+          border: none !important;
+          cursor: pointer !important;
+          color: #0a0a0a !important;
+          padding: 0.3rem !important;
+          border-radius: 0.35rem !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          z-index: 10 !important;
+        }
+        .chat-enlarge-btn:hover {
+          background: rgba(0,0,0,0.12) !important;
         }
         /* Messages area */
         .copilotKitMessagesContainer {
@@ -148,6 +221,9 @@ export default function ChatBotProvider() {
         }
         html.dark .copilotKitInput::placeholder {
           color: #8b949e !important;
+        }
+        html.dark .chat-enlarge-btn {
+          color: #0a0a0a !important;
         }
         /* Send button */
         .copilotKitSendButton {
