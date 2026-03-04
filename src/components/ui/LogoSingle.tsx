@@ -6,8 +6,8 @@ import Image from "next/image";
 import { domainUrls } from "@/config/global";
 
 // Logo images for light/dark modes (from /public/img/logo/)
-const logoLight = "/img/logo/gaurav-dot-one-dark.webp";   // dark logo on light backgrounds
-const logoDark = "/img/logo/gaurav-dot-one-white.webp";  // white logo on dark backgrounds
+const logoLight = "/img/logo/gaurav-dot-one-transparent-gray.webp";   // dark logo on light backgrounds
+const logoDark = "/img/logo/gaurav-dot-one-transparent-gray.webp";  // white logo on dark backgrounds
 
 interface LogoProps {
   /** Size variant */

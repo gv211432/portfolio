@@ -4,6 +4,8 @@ import { useEffect, useRef, useState, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { getOrCreateChatToken } from "@/utils/chatToken";
 import LogoSingle from "@/components/ui/LogoSingle";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface ChatMessage {
   id: string;
@@ -303,12 +305,18 @@ function ChatPage() {
               className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
             >
               <div
-                className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap break-words ${msg.role === "user"
-                    ? "bg-[#00D4FF] text-[#0a0a0a] rounded-br-md"
-                    : "bg-white dark:bg-[#1c2333] border border-gray-100 dark:border-white/8 text-gray-800 dark:text-[#e6edf3] rounded-bl-md"
+                className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed break-words ${msg.role === "user"
+                    ? "bg-[#00D4FF] text-[#0a0a0a] rounded-br-md whitespace-pre-wrap"
+                    : "bg-white dark:bg-[#1c2333] border border-gray-100 dark:border-white/8 text-gray-800 dark:text-[#e6edf3] rounded-bl-md prose prose-sm dark:prose-invert max-w-none"
                   }`}
               >
-                {msg.content || (
+                {msg.content ? (
+                  msg.role === "assistant" ? (
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+                  ) : (
+                    msg.content
+                  )
+                ) : (
                   <span className="opacity-50 animate-pulse">●●●</span>
                 )}
               </div>
