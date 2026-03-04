@@ -90,6 +90,7 @@ export default function ChatBotProvider() {
         /* Messages area */
         .copilotKitMessagesContainer {
           background-color: #f9fafb !important;
+          padding: 0.75rem !important;
         }
         /* Assistant message bubble */
         .copilotKitAssistantMessage {
@@ -97,22 +98,53 @@ export default function ChatBotProvider() {
           border: 1px solid #e5e7eb !important;
           color: #1f2937 !important;
           border-radius: 1rem 1rem 1rem 0.25rem !important;
+          padding: 0.65rem 0.9rem !important;
         }
         /* User message bubble */
         .copilotKitUserMessage {
           background-color: #00D4FF !important;
           color: #0a0a0a !important;
           border-radius: 1rem 1rem 0.25rem 1rem !important;
+          padding: 0.65rem 0.9rem !important;
         }
         /* Input area */
         .copilotKitInputContainer {
           border-top: 1px solid #e5e7eb !important;
           background-color: #ffffff !important;
+          padding: 0.6rem 0.75rem !important;
         }
         .copilotKitInput {
           border-radius: 9999px !important;
           background-color: #f3f4f6 !important;
           color: #1f2937 !important;
+        }
+
+        /* ── Dark mode overrides ── */
+        html.dark .copilotKitWindow {
+          border: 1px solid rgba(255,255,255,0.10) !important;
+        }
+        html.dark .copilotKitMessagesContainer {
+          background-color: #0d1117 !important;
+        }
+        html.dark .copilotKitAssistantMessage {
+          background-color: #1c2333 !important;
+          border: 1px solid rgba(255,255,255,0.08) !important;
+          color: #e6edf3 !important;
+        }
+        html.dark .copilotKitUserMessage {
+          background-color: #00D4FF !important;
+          color: #0a0a0a !important;
+        }
+        html.dark .copilotKitInputContainer {
+          border-top: 1px solid rgba(255,255,255,0.08) !important;
+          background-color: #161b22 !important;
+        }
+        html.dark .copilotKitInput {
+          background-color: #21262d !important;
+          color: #e6edf3 !important;
+        }
+        html.dark .copilotKitInput::placeholder {
+          color: #8b949e !important;
         }
         /* Send button */
         .copilotKitSendButton {
@@ -145,13 +177,21 @@ export default function ChatBotProvider() {
           font-family: monospace;
         }
         .copilotKitAssistantMessage pre {
-          background: #0a0a0a;
+          background: #1c2333;
           color: #00D4FF;
           border-radius: 0.5rem;
           padding: 0.75rem;
           overflow-x: auto;
           margin: 0.5rem 0;
           font-size: 0.78rem;
+        }
+        html.dark .copilotKitAssistantMessage code {
+          background: rgba(0, 212, 255, 0.15);
+          color: #79c0ff;
+        }
+        html.dark .copilotKitAssistantMessage pre {
+          background: #0d1117;
+          color: #00D4FF;
         }
         .copilotKitAssistantMessage pre code {
           background: transparent;

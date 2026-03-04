@@ -1,10 +1,12 @@
 import { NextRequest } from "next/server";
 import {
   CopilotRuntime,
+  EmptyAdapter,
   copilotRuntimeNextJSAppRouterEndpoint,
 } from "@copilotkit/runtime";
 import { PortfolioAgent } from "@/lib/agent/CopilotAgent";
 import { collectClientInfo } from "@/utils/clientInfo";
+import { ACTIVE_MODEL } from "@/lib/agent/models";
 
 /**
  * Per-request CopilotKit handler.
@@ -29,6 +31,7 @@ async function handleRequest(req: NextRequest) {
   const { handleRequest: copilotHandler } =
     copilotRuntimeNextJSAppRouterEndpoint({
       runtime,
+      serviceAdapter: new EmptyAdapter(),
       endpoint: "/api/copilotkit",
     });
 
@@ -41,7 +44,7 @@ export const POST = handleRequest;
 export async function GET() {
   return Response.json({
     status: "ok",
-    agent: "LangGraph ReAct (Gemini 1.5 Flash)",
+    agent: `LangGraph ReAct (${ACTIVE_MODEL.replaceAll("-", " ")})`,
     tools: 14,
     aiEnabled: !!process.env.GEMINI_API_KEY,
   });
@@ -57,6 +60,7 @@ export async function OPTIONS(req: NextRequest) {
   const { handleRequest: copilotHandler } =
     copilotRuntimeNextJSAppRouterEndpoint({
       runtime,
+      serviceAdapter: new EmptyAdapter(),
       endpoint: "/api/copilotkit",
     });
 

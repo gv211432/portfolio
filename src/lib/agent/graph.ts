@@ -3,6 +3,7 @@ import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { SystemMessage } from "@langchain/core/messages";
 import { ALL_TOOLS } from "./tools";
 import { SYSTEM_PROMPT } from "./prompts";
+import { ACTIVE_MODEL } from "./models";
 
 export interface VisitorContext {
   ip: string;
@@ -26,7 +27,7 @@ export function createAgentGraph(visitorCtx?: VisitorContext) {
   }
 
   const llm = new ChatGoogleGenerativeAI({
-    model: "gemini-1.5-flash",
+    model: ACTIVE_MODEL,
     apiKey,
     temperature: 0.7,
     maxOutputTokens: 1024,
