@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { getOrCreateChatToken } from "@/utils/chatToken";
+import LogoSingle from "@/components/ui/LogoSingle";
 
 interface ChatMessage {
   id: string;
@@ -221,12 +222,10 @@ function ChatPage() {
   };
 
   return (
-    <div className="flex flex-col h-dvh">
+    <div className="flex flex-col bg-gray-50 dark:bg-[#0d1117] text-gray-900 dark:text-gray-100" style={{ position: "fixed", inset: 0 }}>
       {/* Header */}
       <header className="flex items-center gap-3 px-4 py-3 bg-[#00D4FF] text-[#0a0a0a] flex-shrink-0">
-        <div className="flex items-center justify-center w-8 h-8 bg-[#0a0a0a]/15 rounded-full text-sm font-bold">
-          G
-        </div>
+        <LogoSingle size="sm" asLink={false} />
         <div>
           <h1 className="font-semibold text-sm leading-none">Gaurav&apos;s AI Assistant</h1>
           <p className="text-xs opacity-70 mt-0.5">Blockchain & Web3 specialist</p>
@@ -246,82 +245,83 @@ function ChatPage() {
         </div>
       </header>
 
-      {/* Messages */}
+      {/* Messages — full-width scroll area, content capped at max-w-3xl */}
       <div
         ref={scrollAreaRef}
-        className="flex-1 min-h-0 overflow-y-auto px-4 py-4 space-y-3"
+        className="flex-1 min-h-0 overflow-y-auto py-4"
       >
-        {/* Sentinel: triggers history load when scrolled to top */}
-        <div ref={sentinelRef} className="h-1" />
+        <div className="max-w-3xl mx-auto w-full px-4 space-y-3">
+          {/* Sentinel: triggers history load when scrolled to top */}
+          <div ref={sentinelRef} className="h-1" />
 
-        {isLoadingHistory && (
-          <div className="flex justify-center py-2">
-            <div className="w-5 h-5 border-2 border-[#00D4FF] border-t-transparent rounded-full animate-spin" />
-          </div>
-        )}
-
-        {!initialized && messages.length === 0 && (
-          <div className="flex justify-center items-center h-full text-gray-400 text-sm">
-            Loading conversation…
-          </div>
-        )}
-
-        {initialized && messages.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-full gap-4 text-center">
-            <div className="w-16 h-16 bg-[#00D4FF]/10 rounded-full flex items-center justify-center">
-              <span className="text-2xl">💬</span>
+          {isLoadingHistory && (
+            <div className="flex justify-center py-2">
+              <div className="w-5 h-5 border-2 border-[#00D4FF] border-t-transparent rounded-full animate-spin" />
             </div>
-            <div>
-              <p className="font-medium text-gray-700 dark:text-gray-300">
-                Hi! I&apos;m Gaurav&apos;s AI Assistant
-              </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                Ask me about his blockchain services, past projects, or how to get in touch.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2 justify-center mt-2">
-              {[
-                "What services does Gaurav offer?",
-                "Tell me about Algora Call Bot",
-                "What are your rates?",
-              ].map((suggestion) => (
-                <button
-                  key={suggestion}
-                  onClick={() => { setInput(suggestion); textareaRef.current?.focus(); }}
-                  className="text-xs px-3 py-1.5 rounded-full border border-[#00D4FF]/40 text-[#00D4FF] hover:bg-[#00D4FF]/10 transition-colors"
-                >
-                  {suggestion}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+          )}
 
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-          >
+          {!initialized && messages.length === 0 && (
+            <div className="flex justify-center items-center py-20 text-gray-400 text-sm">
+              Loading conversation…
+            </div>
+          )}
+
+          {initialized && messages.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
+              <div className="w-16 h-16 bg-[#00D4FF]/10 rounded-full flex items-center justify-center">
+                <span className="text-2xl">💬</span>
+              </div>
+              <div>
+                <p className="font-medium text-gray-700 dark:text-gray-300">
+                  Hi! I&apos;m Gaurav&apos;s AI Assistant
+                </p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  Ask me about his blockchain services, past projects, or how to get in touch.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2 justify-center mt-2">
+                {[
+                  "What services does Gaurav offer?",
+                  "Tell me about Algora Call Bot",
+                  "What are your rates?",
+                ].map((suggestion) => (
+                  <button
+                    key={suggestion}
+                    onClick={() => { setInput(suggestion); textareaRef.current?.focus(); }}
+                    className="text-xs px-3 py-1.5 rounded-full border border-[#00D4FF]/40 text-[#00D4FF] hover:bg-[#00D4FF]/10 transition-colors"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {messages.map((msg) => (
             <div
-              className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap break-words ${
-                msg.role === "user"
-                  ? "bg-[#00D4FF] text-[#0a0a0a] rounded-br-md"
-                  : "bg-white dark:bg-[#1c2333] border border-gray-100 dark:border-white/8 text-gray-800 dark:text-[#e6edf3] rounded-bl-md"
-              }`}
+              key={msg.id}
+              className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
             >
-              {msg.content || (
-                <span className="opacity-50 animate-pulse">●●●</span>
-              )}
+              <div
+                className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap break-words ${msg.role === "user"
+                    ? "bg-[#00D4FF] text-[#0a0a0a] rounded-br-md"
+                    : "bg-white dark:bg-[#1c2333] border border-gray-100 dark:border-white/8 text-gray-800 dark:text-[#e6edf3] rounded-bl-md"
+                  }`}
+              >
+                {msg.content || (
+                  <span className="opacity-50 animate-pulse">●●●</span>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
 
-        <div ref={messagesEndRef} />
+          <div ref={messagesEndRef} />
+        </div>
       </div>
 
-      {/* Input */}
+      {/* Input — full-width background, content capped at max-w-3xl */}
       <div className="flex-shrink-0 border-t border-gray-200 dark:border-white/8 bg-white dark:bg-[#161b22] px-4 py-3">
-        <div className="flex gap-2 items-end max-w-4xl mx-auto">
+        <div className="flex gap-2 items-end max-w-3xl mx-auto">
           <textarea
             ref={textareaRef}
             value={input}

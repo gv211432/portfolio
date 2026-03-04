@@ -67,6 +67,7 @@ const entries: SitemapEntry[] = [
   { loc: url("ngo"),        changefreq: "monthly", priority: 0.6, lastmod: today },
   { loc: url("blogs"),      changefreq: "daily",   priority: 0.8, lastmod: today },
   { loc: url("vision"),     changefreq: "yearly",  priority: 0.5, lastmod: today },
+  { loc: url("chat"),     changefreq: "yearly",  priority: 0.5, lastmod: today },
 
   // ── Case study detail pages ────────────────────────────────────────────────
   ...caseStudies.map((cs) => ({

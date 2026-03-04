@@ -31,6 +31,13 @@ function ChatOpenBridge() {
 export default function ChatBotProvider() {
   const { setIsChatOpen } = useChatOpenStore();
   const [chatToken, setChatToken] = useState<string>("");
+  const [isChat, setIsChat] = useState(false);
+
+  // Detect chat subdomain — suppress FAB/popup on full-page chat UI
+  useEffect(() => {
+    const host = window.location.hostname;
+    setIsChat(host === "chat.localhost" || host.startsWith("chat."));
+  }, []);
 
   // Load/create the browser's persistent chat token
   useEffect(() => {
@@ -97,6 +104,8 @@ export default function ChatBotProvider() {
 
     return () => observer.disconnect();
   }, [chatToken]);
+
+  if (isChat) return null;
 
   return (
     <>
