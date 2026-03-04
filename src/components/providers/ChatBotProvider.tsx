@@ -55,6 +55,9 @@ export default function ChatBotProvider() {
 
       {/* Hide CopilotKit's dev console and sidebar toggle buttons */}
       <style>{`
+        /* Hide "Powered by CopilotKit" footer */
+        .poweredBy { display: none !important; }
+
         /* Hide CopilotKit dev console / web inspector button.
            The button lives in a Shadow DOM so we target the custom-element host. */
         cpk-web-inspector,
