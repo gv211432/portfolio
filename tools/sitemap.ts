@@ -54,20 +54,20 @@ const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
 
 const entries: SitemapEntry[] = [
   // ── Root domain ────────────────────────────────────────────────────────────
-  { loc: url(null, "/"),        changefreq: "weekly",  priority: 1.0, lastmod: today },
+  { loc: url(null, "/"), changefreq: "weekly", priority: 1.0, lastmod: today },
   { loc: url(null, "/contact"), changefreq: "monthly", priority: 0.7, lastmod: today },
-  { loc: url(null, "/privacy"), changefreq: "yearly",  priority: 0.3, lastmod: today },
+  { loc: url(null, "/privacy"), changefreq: "yearly", priority: 0.3, lastmod: today },
 
   // ── Subdomain roots ────────────────────────────────────────────────────────
-  { loc: url("me"),         changefreq: "monthly", priority: 0.8, lastmod: today },
-  { loc: url("casestudy"),  changefreq: "monthly", priority: 0.9, lastmod: today },
+  { loc: url("me"), changefreq: "monthly", priority: 0.8, lastmod: today },
+  { loc: url("casestudy"), changefreq: "monthly", priority: 0.9, lastmod: today },
   { loc: url("whitelabel"), changefreq: "monthly", priority: 0.9, lastmod: today },
-  { loc: url("careers"),    changefreq: "weekly",  priority: 0.8, lastmod: today },
+  { loc: url("careers"), changefreq: "weekly", priority: 0.8, lastmod: today },
   { loc: url("opensource"), changefreq: "monthly", priority: 0.7, lastmod: today },
-  { loc: url("ngo"),        changefreq: "monthly", priority: 0.6, lastmod: today },
-  { loc: url("blogs"),      changefreq: "daily",   priority: 0.8, lastmod: today },
-  { loc: url("vision"),     changefreq: "yearly",  priority: 0.5, lastmod: today },
-  { loc: url("chat"),     changefreq: "yearly",  priority: 0.5, lastmod: today },
+  { loc: url("ngo"), changefreq: "monthly", priority: 0.6, lastmod: today },
+  { loc: url("blogs"), changefreq: "daily", priority: 0.8, lastmod: today },
+  { loc: url("vision"), changefreq: "yearly", priority: 0.5, lastmod: today },
+  { loc: url("chat"), changefreq: "yearly", priority: 0.5, lastmod: today },
 
   // ── Case study detail pages ────────────────────────────────────────────────
   ...caseStudies.map((cs) => ({
@@ -107,7 +107,7 @@ function escapeXml(str: string): string {
 
 function renderEntry(entry: SitemapEntry): string {
   const lines = [`  <url>`, `    <loc>${escapeXml(entry.loc)}</loc>`];
-  if (entry.lastmod)   lines.push(`    <lastmod>${entry.lastmod}</lastmod>`);
+  if (entry.lastmod) lines.push(`    <lastmod>${entry.lastmod}</lastmod>`);
   if (entry.changefreq) lines.push(`    <changefreq>${entry.changefreq}</changefreq>`);
   if (entry.priority !== undefined) lines.push(`    <priority>${entry.priority.toFixed(1)}</priority>`);
   lines.push(`  </url>`);
@@ -130,3 +130,6 @@ fs.writeFileSync(outPath, xml, "utf-8");
 console.log(`✅ sitemap.xml generated → ${outPath}`);
 console.log(`   ${entries.length} URLs across ${ROOT_DOMAIN} and its subdomains`);
 entries.forEach((e) => console.log(`   ${e.loc}`));
+console.log();
+console.log("=".repeat(60));
+console.log();

@@ -18,3 +18,4 @@ export { default as ContactDetails } from "./ContactDetails";
 export { default as ChatBot } from "./ChatBot";
 export { default as FloatingActionBar } from "./FloatingActionBar";
 export { default as CookieConsent } from "./CookieConsent";
+export { default as LazyVideo } from "./LazyVideo";

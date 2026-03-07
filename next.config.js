@@ -1,5 +1,24 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  async headers() {
+    return [
+      {
+        // Videos — long cache, revalidate via ETag/Last-Modified
+        source: "/videos/:path*",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=31536000, stale-while-revalidate=86400" },
+          { key: "Accept-Ranges", value: "bytes" }, // enables video seeking
+        ],
+      },
+      {
+        // Images in /img/ — 30 days, revalidate in background
+        source: "/img/:path*",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=2592000, stale-while-revalidate=86400" },
+        ],
+      },
+    ];
+  },
   // Removed 'output: "export"' to enable middleware support
   // Pages will still be statically generated where possible (SSG/ISR)
   images: {
