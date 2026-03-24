@@ -6,8 +6,9 @@ import Dashboard from "./Dashboard";
 import ContactsSection from "./ContactsSection";
 import CareersSection from "./CareersSection";
 import ChatsSection from "./ChatsSection";
+import DatabaseSection from "./DatabaseSection";
 
-type Section = "dashboard" | "contacts" | "careers" | "chats";
+type Section = "dashboard" | "contacts" | "careers" | "chats" | "database";
 
 const NAV: { id: Section; label: string; icon: React.ReactNode }[] = [
   {
@@ -43,6 +44,15 @@ const NAV: { id: Section; label: string; icon: React.ReactNode }[] = [
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+      </svg>
+    ),
+  },
+  {
+    id: "database",
+    label: "Database",
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
       </svg>
     ),
   },
@@ -131,7 +141,7 @@ export default function AdminShell() {
   useEffect(() => {
     const sp = new URLSearchParams(window.location.search);
     const tab = sp.get("tab") as Section | null;
-    if (tab && ["dashboard", "contacts", "careers", "chats"].includes(tab)) {
+    if (tab && ["dashboard", "contacts", "careers", "chats", "database"].includes(tab)) {
       setActiveState(tab);
     }
   }, []);
@@ -241,6 +251,7 @@ export default function AdminShell() {
           {active === "contacts" && <ContactsSection />}
           {active === "careers" && <CareersSection />}
           {active === "chats" && <ChatsSection />}
+          {active === "database" && <DatabaseSection />}
         </main>
       </div>
     </div>
