@@ -47,10 +47,18 @@ export default function FloatingActionBar() {
   });
 
   const [isHomePage, setIsHomePage] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     const hostname = window.location.hostname;
     setIsHomePage(hostname === "gaurav.one" || hostname === "www.gaurav.one");
+  }, []);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640);
+    check();
+    window.addEventListener("resize", check, { passive: true });
+    return () => window.removeEventListener("resize", check);
   }, []);
 
   useEffect(() => {
@@ -84,6 +92,9 @@ export default function FloatingActionBar() {
   useEffect(() => {
     initializeDarkMode();
   }, [initializeDarkMode]);
+
+  // Hide entire FAB on mobile while chat is open
+  if (isMobile && isChatOpen) return null;
 
   return (
     <>
@@ -175,7 +186,12 @@ export default function FloatingActionBar() {
 
               {/* ── AI Chat ── */}
               <button
-                onClick={() => setIsChatOpen(!isChatOpen)}
+                onClick={() => {
+                  const opening = !isChatOpen;
+                  // On desktop, switch to horizontal layout when opening chat
+                  if (opening && isVertical && !isMobile) setIsVertical(false);
+                  setIsChatOpen(opening);
+                }}
                 className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition-all group ${
                   isChatOpen
                     ? "bg-primary text-obsidian shadow-[0_0_12px_rgba(0,212,255,0.5)]"

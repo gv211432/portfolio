@@ -140,6 +140,19 @@ export default function ChatBotProvider() {
           border: 1px solid rgba(255,255,255,0.08) !important;
           font-family: inherit !important;
         }
+        /* Mobile: full-screen chat window */
+        @media (max-width: 639px) {
+          .copilotKitWindow {
+            position: fixed !important;
+            inset: 0 !important;
+            width: 100dvw !important;
+            height: 100dvh !important;
+            max-height: none !important;
+            bottom: 0 !important;
+            right: 0 !important;
+            border-radius: 0 !important;
+          }
+        }
         /* Header */
         .copilotKitHeader {
           background-color: #00D4FF !important;
@@ -184,6 +197,28 @@ export default function ChatBotProvider() {
           color: #1f2937 !important;
           border-radius: 1rem 1rem 1rem 0.25rem !important;
           padding: 0.65rem 0.9rem !important;
+        }
+        /* Action buttons (regenerate, copy, thumbs) — spacing above them */
+        .copilotKitAssistantMessage + * {
+          margin-top: 0.5rem !important;
+          padding-top: 0.25rem !important;
+        }
+        /* If buttons live inside the bubble as last child */
+        .copilotKitAssistantMessage > *:last-child:not(p):not(ul):not(ol):not(h1):not(h2):not(h3):not(pre):not(blockquote) {
+          margin-top: 0.5rem !important;
+          padding-top: 0.25rem !important;
+        }
+        /* If parent is flex/grid, add gap */
+        [class*="copilotKit"]:has(> .copilotKitAssistantMessage) {
+          gap: 0.5rem !important;
+        }
+        .copilotKitMessageActions,
+        [class*="MessageActions"],
+        [class*="messageActions"],
+        [class*="feedbackActions"],
+        [class*="FeedbackActions"] {
+          padding-top: 0.5rem !important;
+          margin-top: 0.5rem !important;
         }
         /* User message bubble */
         .copilotKitUserMessage {
