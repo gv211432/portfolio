@@ -116,6 +116,16 @@ model ChatMessage {
   @@index([threadId, createdAt])
 }
 
+// Admin users — for the admin dashboard
+model AdminUser {
+  id           String    @id @default(cuid())
+  username     String    @unique
+  passwordHash String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  lastLoginAt  DateTime?
+}
+
 // Chat leads — visitors who expressed interest via the chatbot
 model ChatLead {
   id             String   @id @default(cuid())
