@@ -124,8 +124,24 @@ function Sidebar({
 export default function AdminShell() {
   const [authed, setAuthed] = useState<boolean | null>(null); // null = checking
   const [username, setUsername] = useState("");
-  const [active, setActive] = useState<Section>("dashboard");
+  const [active, setActiveState] = useState<Section>("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Hydrate active tab from URL on mount
+  useEffect(() => {
+    const sp = new URLSearchParams(window.location.search);
+    const tab = sp.get("tab") as Section | null;
+    if (tab && ["dashboard", "contacts", "careers", "chats"].includes(tab)) {
+      setActiveState(tab);
+    }
+  }, []);
+
+  function setActive(tab: Section) {
+    // Replace the entire URL — clears all section-specific filter/detail params on tab switch
+    const qs = tab === "dashboard" ? "" : `?tab=${tab}`;
+    window.history.replaceState(null, "", `${window.location.pathname}${qs}`);
+    setActiveState(tab);
+  }
 
   // Check existing session
   useEffect(() => {

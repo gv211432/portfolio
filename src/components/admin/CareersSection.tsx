@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import StatusBadge from "./shared/StatusBadge";
+import { useUrlState } from "@/hooks/useUrlState";
 
 type AppStatus = "PENDING" | "REVIEWED" | "INTERVIEWING" | "OFFERED" | "REJECTED" | "HIRED";
 
@@ -134,13 +135,19 @@ function DetailPanel({ app, onClose, onUpdate }: { app: Application; onClose: ()
 }
 
 export default function CareersSection() {
+  const [urlState, setUrlState] = useUrlState({
+    search: "", status: "", sort: "desc", page: "1", id: "",
+  });
+
+  const search = urlState.search;
+  const statusFilter = urlState.status;
+  const sortOrder = urlState.sort as "asc" | "desc";
+  const page = Math.max(1, parseInt(urlState.page) || 1);
+  const openId = urlState.id;
+
   const [applications, setApplications] = useState<Application[]>([]);
   const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Application | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
@@ -164,6 +171,23 @@ export default function CareersSection() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
+  // Restore open panel from URL after data loads
+  useEffect(() => {
+    if (!openId || applications.length === 0) return;
+    const app = applications.find((a) => a.id === openId);
+    if (app) setSelected(app);
+  }, [openId, applications]);
+
+  function openPanel(a: Application) {
+    setSelected(a);
+    setUrlState({ id: a.id });
+  }
+
+  function closePanel() {
+    setSelected(null);
+    setUrlState({ id: "" });
+  }
+
   async function deleteApp(id: string) {
     if (!confirm("Delete this application? This cannot be undone.")) return;
     setDeleting(id);
@@ -178,7 +202,7 @@ export default function CareersSection() {
       {selected && (
         <DetailPanel
           app={selected}
-          onClose={() => setSelected(null)}
+          onClose={closePanel}
           onUpdate={(updated) => {
             setApplications((prev) => prev.map((a) => a.id === updated.id ? updated : a));
             setSelected(updated);
@@ -199,12 +223,12 @@ export default function CareersSection() {
           type="search"
           placeholder="Search name, email, position…"
           value={search}
-          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+          onChange={(e) => setUrlState({ search: e.target.value, page: "1" })}
           className="flex-1 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
         />
         <select
           value={statusFilter}
-          onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+          onChange={(e) => setUrlState({ status: e.target.value, page: "1" })}
           className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
         >
           <option value="">All Statuses</option>
@@ -212,7 +236,7 @@ export default function CareersSection() {
         </select>
         <select
           value={sortOrder}
-          onChange={(e) => setSortOrder(e.target.value as "asc" | "desc")}
+          onChange={(e) => setUrlState({ sort: e.target.value, page: "1" })}
           className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
         >
           <option value="desc">Newest first</option>
@@ -246,7 +270,7 @@ export default function CareersSection() {
                   <tr
                     key={a.id}
                     className="hover:bg-gray-50 dark:hover:bg-slate-700/30 transition cursor-pointer"
-                    onClick={() => setSelected(a)}
+                    onClick={() => openPanel(a)}
                   >
                     <td className="px-4 py-3">
                       <p className="font-medium text-gray-900 dark:text-white">{a.legalName}</p>
@@ -280,9 +304,9 @@ export default function CareersSection() {
         <div className="flex items-center justify-between text-sm">
           <span className="text-gray-500 dark:text-slate-400">Page {page} of {pages}</span>
           <div className="flex gap-2">
-            <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}
+            <button onClick={() => setUrlState({ page: String(Math.max(1, page - 1)) })} disabled={page === 1}
               className="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-slate-600 disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-slate-700 transition text-gray-700 dark:text-slate-300">Prev</button>
-            <button onClick={() => setPage((p) => Math.min(pages, p + 1))} disabled={page === pages}
+            <button onClick={() => setUrlState({ page: String(Math.min(pages, page + 1)) })} disabled={page === pages}
               className="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-slate-600 disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-slate-700 transition text-gray-700 dark:text-slate-300">Next</button>
           </div>
         </div>

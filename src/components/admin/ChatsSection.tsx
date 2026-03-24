@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useUrlState } from "@/hooks/useUrlState";
 
 interface ChatMessage {
   id: string;
@@ -92,15 +93,20 @@ function ThreadViewer({ id, onClose }: { id: string; onClose: () => void }) {
 }
 
 export default function ChatsSection() {
+  const [urlState, setUrlState] = useUrlState({
+    search: "", money: "", sort: "desc", page: "1", thread: "",
+  });
+
+  const search = urlState.search;
+  const moneyOnly = urlState.money === "1";
+  const sortOrder = urlState.sort as "asc" | "desc";
+  const page = Math.max(1, parseInt(urlState.page) || 1);
+  const viewingId = urlState.thread || null;
+
   const [threads, setThreads] = useState<ChatThread[]>([]);
   const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
-  const [search, setSearch] = useState("");
-  const [moneyOnly, setMoneyOnly] = useState(false);
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [loading, setLoading] = useState(true);
-  const [viewingId, setViewingId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [cleanDays, setCleanDays] = useState("30");
   const [cleaning, setCleaning] = useState(false);
@@ -147,7 +153,7 @@ export default function ChatsSection() {
 
   return (
     <div className="space-y-4">
-      {viewingId && <ThreadViewer id={viewingId} onClose={() => setViewingId(null)} />}
+      {viewingId && <ThreadViewer id={viewingId} onClose={() => setUrlState({ thread: "" })} />}
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
@@ -185,11 +191,11 @@ export default function ChatsSection() {
           type="search"
           placeholder="Search message content…"
           value={search}
-          onChange={(e) => { setSearch(e.target.value); setMoneyOnly(false); setPage(1); }}
+          onChange={(e) => setUrlState({ search: e.target.value, money: "", page: "1" })}
           className="flex-1 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
         />
         <button
-          onClick={() => { setMoneyOnly((v) => !v); setSearch(""); setPage(1); }}
+          onClick={() => setUrlState({ money: moneyOnly ? "" : "1", search: "", page: "1" })}
           className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition ${
             moneyOnly
               ? "bg-yellow-500 border-yellow-500 text-white"
@@ -201,7 +207,7 @@ export default function ChatsSection() {
         </button>
         <select
           value={sortOrder}
-          onChange={(e) => setSortOrder(e.target.value as "asc" | "desc")}
+          onChange={(e) => setUrlState({ sort: e.target.value, page: "1" })}
           className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
         >
           <option value="desc">Newest first</option>
@@ -226,7 +232,7 @@ export default function ChatsSection() {
                 <div
                   key={t.id}
                   className="px-4 py-3 hover:bg-gray-50 dark:hover:bg-slate-700/30 transition cursor-pointer"
-                  onClick={() => setViewingId(t.id)}
+                  onClick={() => setUrlState({ thread: t.id })}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
@@ -287,9 +293,9 @@ export default function ChatsSection() {
         <div className="flex items-center justify-between text-sm">
           <span className="text-gray-500 dark:text-slate-400">Page {page} of {pages}</span>
           <div className="flex gap-2">
-            <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}
+            <button onClick={() => setUrlState({ page: String(Math.max(1, page - 1)) })} disabled={page === 1}
               className="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-slate-600 disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-slate-700 transition text-gray-700 dark:text-slate-300">Prev</button>
-            <button onClick={() => setPage((p) => Math.min(pages, p + 1))} disabled={page === pages}
+            <button onClick={() => setUrlState({ page: String(Math.min(pages, page + 1)) })} disabled={page === pages}
               className="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-slate-600 disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-slate-700 transition text-gray-700 dark:text-slate-300">Next</button>
           </div>
         </div>

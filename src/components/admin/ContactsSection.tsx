@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import StatusBadge from "./shared/StatusBadge";
+import { useUrlState } from "@/hooks/useUrlState";
 
 type ContactStatus = "NEW" | "CONTACTED" | "IN_DISCUSSION" | "PROPOSAL_SENT" | "CONVERTED" | "CLOSED";
 
@@ -119,13 +120,19 @@ function DetailPanel({ contact, onClose, onUpdate }: { contact: Submission; onCl
 }
 
 export default function ContactsSection() {
+  const [urlState, setUrlState] = useUrlState({
+    search: "", status: "", sort: "desc", page: "1", id: "",
+  });
+
+  const search = urlState.search;
+  const statusFilter = urlState.status;
+  const sortOrder = urlState.sort as "asc" | "desc";
+  const page = Math.max(1, parseInt(urlState.page) || 1);
+  const openId = urlState.id;
+
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Submission | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
@@ -149,6 +156,23 @@ export default function ContactsSection() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
+  // Restore open panel from URL after submissions load
+  useEffect(() => {
+    if (!openId || submissions.length === 0) return;
+    const sub = submissions.find((s) => s.id === openId);
+    if (sub) setSelected(sub);
+  }, [openId, submissions]);
+
+  function openPanel(s: Submission) {
+    setSelected(s);
+    setUrlState({ id: s.id });
+  }
+
+  function closePanel() {
+    setSelected(null);
+    setUrlState({ id: "" });
+  }
+
   async function deleteContact(id: string) {
     if (!confirm("Delete this contact? This cannot be undone.")) return;
     setDeleting(id);
@@ -163,7 +187,7 @@ export default function ContactsSection() {
       {selected && (
         <DetailPanel
           contact={selected}
-          onClose={() => setSelected(null)}
+          onClose={closePanel}
           onUpdate={(updated) => {
             setSubmissions((prev) => prev.map((s) => s.id === updated.id ? updated : s));
             setSelected(updated);
@@ -184,12 +208,12 @@ export default function ContactsSection() {
           type="search"
           placeholder="Search name, email, message…"
           value={search}
-          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+          onChange={(e) => setUrlState({ search: e.target.value, page: "1" })}
           className="flex-1 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
         />
         <select
           value={statusFilter}
-          onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+          onChange={(e) => setUrlState({ status: e.target.value, page: "1" })}
           className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
         >
           <option value="">All Statuses</option>
@@ -197,7 +221,7 @@ export default function ContactsSection() {
         </select>
         <select
           value={sortOrder}
-          onChange={(e) => setSortOrder(e.target.value as "asc" | "desc")}
+          onChange={(e) => setUrlState({ sort: e.target.value, page: "1" })}
           className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
         >
           <option value="desc">Newest first</option>
@@ -230,7 +254,7 @@ export default function ContactsSection() {
                   <tr
                     key={s.id}
                     className="hover:bg-gray-50 dark:hover:bg-slate-700/30 transition cursor-pointer"
-                    onClick={() => setSelected(s)}
+                    onClick={() => openPanel(s)}
                   >
                     <td className="px-4 py-3">
                       <p className="font-medium text-gray-900 dark:text-white">{s.name}</p>
@@ -265,14 +289,14 @@ export default function ContactsSection() {
           <span className="text-gray-500 dark:text-slate-400">Page {page} of {pages}</span>
           <div className="flex gap-2">
             <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              onClick={() => setUrlState({ page: String(Math.max(1, page - 1)) })}
               disabled={page === 1}
               className="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-slate-600 disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-slate-700 transition text-gray-700 dark:text-slate-300"
             >
               Prev
             </button>
             <button
-              onClick={() => setPage((p) => Math.min(pages, p + 1))}
+              onClick={() => setUrlState({ page: String(Math.min(pages, page + 1)) })}
               disabled={page === pages}
               className="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-slate-600 disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-slate-700 transition text-gray-700 dark:text-slate-300"
             >
