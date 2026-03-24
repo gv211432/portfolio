@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { verifyRecaptchaToken } from "@/utils/recaptcha";
 import { collectClientInfo, getIpInfo } from "@/utils/clientInfo";
+import { sendTelegramNotification } from "@/lib/telegram";
 
 // Constants
 const MAX_MESSAGE_LENGTH = 10000;
@@ -119,7 +120,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Fetch IP info in background and update the record
+    // Fetch IP info in background and update the record + send Telegram notification
     getIpInfo(ip).then((ipInfo) => {
       if (ipInfo) {
         prisma.contactSubmission.update({
@@ -127,6 +128,29 @@ export async function POST(request: NextRequest) {
           data: { ipInfo: ipInfo as unknown as Prisma.InputJsonValue },
         }).catch(console.error);
       }
+
+      const location = ipInfo
+        ? [ipInfo.city, ipInfo.region, ipInfo.country].filter(Boolean).join(", ")
+        : ip ?? "Unknown";
+
+      const tgMessage = [
+        `📬 <b>New Contact Form Submission</b>`,
+        ``,
+        `👤 <b>Name:</b> ${submission.name}`,
+        `📧 <b>Email:</b> ${submission.email}`,
+        submission.phone ? `📞 <b>Phone:</b> ${submission.phone}` : null,
+        `💰 <b>Budget:</b> ${submission.budget}`,
+        ``,
+        `📝 <b>Message:</b>`,
+        submission.message,
+        ``,
+        `🌍 <b>Location:</b> ${location}`,
+        `🖥️ <b>Device:</b> ${submission.userAgent ?? "Unknown"}`,
+        `🕐 <b>Time:</b> ${submission.createdAt.toUTCString()}`,
+        `🆔 <b>ID:</b> ${submission.id}`,
+      ].filter((line) => line !== null).join("\n");
+
+      sendTelegramNotification(tgMessage).catch(console.error);
     });
 
     console.log("=== New Contact Form Submission Saved ===");
