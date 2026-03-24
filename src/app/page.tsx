@@ -776,14 +776,21 @@ export default function LandingPage() {
   }, [darkMode]);
 
   const videoRef = useRef(null);
+  const [videoSrcReady, setVideoSrcReady] = useState(false);
 
   useEffect(() => {
-    if (videoRef.current) {
-      // @ts-ignore
-      videoRef.current.playbackRate = 0.8; // Half speed
-      // Other options: 0.25 (quarter speed), 0.75, etc.
-    }
+    const timer = setTimeout(() => setVideoSrcReady(true), 3500);
+    return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    if (videoSrcReady && videoRef.current) {
+      // @ts-ignore
+      videoRef.current.playbackRate = 0.8;
+      // @ts-ignore
+      videoRef.current.load();
+    }
+  }, [videoSrcReady]);
 
   return (
     <div className="min-h-screen bg-secondary dark:bg-obsidian transition-colors duration-300">
@@ -904,8 +911,12 @@ export default function LandingPage() {
           poster="/videos/hero/video.poster.jpg"
           className="absolute inset-0 w-full h-full object-cover opacity-25 dark:opacity-20 pointer-events-none"
         >
-          <source src="/videos/hero/video.web.mp4" type="video/mp4" />
-          <source src="/videos/hero/video.webm" type="video/webm" />
+          {videoSrcReady && (
+            <>
+              <source src="/videos/hero/video.web.mp4" type="video/mp4" />
+              <source src="/videos/hero/video.webm" type="video/webm" />
+            </>
+          )}
         </video>
 
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/10 dark:bg-primary/5 rounded-full blur-[120px]" />
