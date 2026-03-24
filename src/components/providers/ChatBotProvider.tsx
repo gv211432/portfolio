@@ -87,7 +87,6 @@ export default function ChatBotProvider() {
         window.open(`${base}?token=${chatToken}`, "_blank");
       };
 
-      // Append to header; CSS positions it absolutely to the left of the close button.
       header.appendChild(btn);
     };
 
@@ -164,18 +163,18 @@ export default function ChatBotProvider() {
         .copilotKitHeader * {
           color: #0a0a0a !important;
         }
-        /* Enlarge button — absolutely positioned to the left of the close button */
+        /* Enlarge button — absolutely positioned just left of the native close button */
         .copilotKitHeader { position: relative !important; }
         .chat-enlarge-btn {
           position: absolute !important;
-          right: 2.4rem !important;
+          right: 2.75rem !important;
           top: 50% !important;
           transform: translateY(-50%) !important;
           background: transparent !important;
           border: none !important;
           cursor: pointer !important;
           color: #0a0a0a !important;
-          padding: 0.3rem !important;
+          padding: 0.25rem !important;
           border-radius: 0.35rem !important;
           display: flex !important;
           align-items: center !important;
