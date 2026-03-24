@@ -70,12 +70,12 @@ function DetailPanel({ contact, onClose, onUpdate }: { contact: Submission; onCl
 
         <div className="p-5 space-y-4">
           <div className="grid grid-cols-2 gap-3 text-sm">
-            <div><p className="text-xs text-gray-400 mb-0.5">Name</p><p className="font-medium dark:text-white">{contact.name}</p></div>
-            <div><p className="text-xs text-gray-400 mb-0.5">Email</p><p className="font-medium dark:text-white break-all">{contact.email}</p></div>
-            <div><p className="text-xs text-gray-400 mb-0.5">Phone</p><p className="font-medium dark:text-white">{contact.phone ?? "—"}</p></div>
-            <div><p className="text-xs text-gray-400 mb-0.5">Budget</p><p className="font-medium dark:text-white">{contact.budget}</p></div>
-            <div><p className="text-xs text-gray-400 mb-0.5">Location</p><p className="font-medium dark:text-white">{loc}</p></div>
-            <div><p className="text-xs text-gray-400 mb-0.5">Received</p><p className="font-medium dark:text-white">{new Date(contact.createdAt).toLocaleDateString()}</p></div>
+            <div><p className="text-xs text-gray-400 mb-0.5">Name</p><p className="font-medium text-gray-900 dark:text-white">{contact.name}</p></div>
+            <div><p className="text-xs text-gray-400 mb-0.5">Email</p><p className="font-medium text-gray-900 dark:text-white break-all">{contact.email}</p></div>
+            <div><p className="text-xs text-gray-400 mb-0.5">Phone</p><p className="font-medium text-gray-900 dark:text-white">{contact.phone ?? "—"}</p></div>
+            <div><p className="text-xs text-gray-400 mb-0.5">Budget</p><p className="font-medium text-gray-900 dark:text-white">{contact.budget}</p></div>
+            <div><p className="text-xs text-gray-400 mb-0.5">Location</p><p className="font-medium text-gray-900 dark:text-white">{loc}</p></div>
+            <div><p className="text-xs text-gray-400 mb-0.5">Received</p><p className="font-medium text-gray-900 dark:text-white">{new Date(contact.createdAt).toLocaleDateString()}</p></div>
           </div>
 
           <div>

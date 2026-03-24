@@ -142,6 +142,7 @@ export default function AdminShell() {
   }, []);
 
   async function handleLogout() {
+    if (!confirm("Sign out of the admin dashboard?")) return;
     await fetch("/api/admin/auth", { method: "DELETE" });
     setAuthed(false);
     setUsername("");

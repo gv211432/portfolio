@@ -74,14 +74,14 @@ function DetailPanel({ app, onClose, onUpdate }: { app: Application; onClose: ()
 
         <div className="p-5 space-y-4">
           <div className="grid grid-cols-2 gap-3 text-sm">
-            <div><p className="text-xs text-gray-400 mb-0.5">Full Name</p><p className="font-medium dark:text-white">{app.legalName}</p></div>
-            <div><p className="text-xs text-gray-400 mb-0.5">Email</p><p className="font-medium dark:text-white break-all">{app.email}</p></div>
-            <div><p className="text-xs text-gray-400 mb-0.5">Position</p><p className="font-medium dark:text-white">{app.jobTitle}</p></div>
-            <div><p className="text-xs text-gray-400 mb-0.5">Experience</p><p className="font-medium dark:text-white">{app.experience}</p></div>
-            <div><p className="text-xs text-gray-400 mb-0.5">Country</p><p className="font-medium dark:text-white">{app.countryOfOrigin}</p></div>
-            <div><p className="text-xs text-gray-400 mb-0.5">Passport No.</p><p className="font-medium dark:text-white font-mono text-xs">{app.passportNo}</p></div>
-            <div><p className="text-xs text-gray-400 mb-0.5">Location</p><p className="font-medium dark:text-white">{loc}</p></div>
-            <div><p className="text-xs text-gray-400 mb-0.5">Applied</p><p className="font-medium dark:text-white">{new Date(app.createdAt).toLocaleDateString()}</p></div>
+            <div><p className="text-xs text-gray-400 mb-0.5">Full Name</p><p className="font-medium text-gray-900 dark:text-white">{app.legalName}</p></div>
+            <div><p className="text-xs text-gray-400 mb-0.5">Email</p><p className="font-medium text-gray-900 dark:text-white break-all">{app.email}</p></div>
+            <div><p className="text-xs text-gray-400 mb-0.5">Position</p><p className="font-medium text-gray-900 dark:text-white">{app.jobTitle}</p></div>
+            <div><p className="text-xs text-gray-400 mb-0.5">Experience</p><p className="font-medium text-gray-900 dark:text-white">{app.experience}</p></div>
+            <div><p className="text-xs text-gray-400 mb-0.5">Country</p><p className="font-medium text-gray-900 dark:text-white">{app.countryOfOrigin}</p></div>
+            <div><p className="text-xs text-gray-400 mb-0.5">Passport No.</p><p className="font-medium text-gray-900 dark:text-white font-mono text-xs">{app.passportNo}</p></div>
+            <div><p className="text-xs text-gray-400 mb-0.5">Location</p><p className="font-medium text-gray-900 dark:text-white">{loc}</p></div>
+            <div><p className="text-xs text-gray-400 mb-0.5">Applied</p><p className="font-medium text-gray-900 dark:text-white">{new Date(app.createdAt).toLocaleDateString()}</p></div>
           </div>
 
           {app.resumeUrl && (
