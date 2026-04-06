@@ -76,7 +76,7 @@
     "lodash-es": ">=4.18.0",
     "minimatch": "^3.1.4",
     "path-to-regexp": "~0.1.13",
-    "picomatch": ">=2.3.2"
+    "picomatch": ">=4.0.4"
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.19",
