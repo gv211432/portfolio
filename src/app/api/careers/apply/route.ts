@@ -6,6 +6,8 @@ import path from "path";
 import { existsSync } from "fs";
 import { verifyRecaptchaToken } from "@/utils/recaptcha";
 import { collectClientInfo, getIpInfo } from "@/utils/clientInfo";
+import { sendTelegramNotification } from "@/lib/telegram";
+import { sendJobApplicationAck } from "@/lib/email";
 
 // Ensure uploads directory exists
 const UPLOADS_DIR = path.join(process.cwd(), "uploads", "resumes");
@@ -128,15 +130,44 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Fetch IP info in background and update the record
-    getIpInfo(ip).then((ipInfo) => {
+    // Background: geo lookup, Telegram notification, acknowledgment email
+    getIpInfo(ip).then(async (ipInfo) => {
       if (ipInfo) {
         prisma.jobApplication.update({
           where: { id: application.id },
           data: { ipInfo: ipInfo as unknown as Prisma.InputJsonValue },
         }).catch(console.error);
       }
+
+      const location = ipInfo
+        ? [ipInfo.city, ipInfo.region, ipInfo.country].filter(Boolean).join(", ")
+        : ip ?? "Unknown";
+
+      const tgMessage = [
+        `💼 <b>New Job Application</b>`,
+        ``,
+        `👤 <b>Name:</b> ${application.legalName}`,
+        `📧 <b>Email:</b> ${application.email}`,
+        `🎯 <b>Position:</b> ${application.jobTitle}`,
+        `🌍 <b>Country:</b> ${application.countryOfOrigin}`,
+        `📋 <b>Experience:</b> ${application.experience}`,
+        application.resumeFileName ? `📎 <b>Resume:</b> ${application.resumeFileName}` : null,
+        ``,
+        `🌐 <b>Location:</b> ${location}`,
+        `🕐 <b>Time:</b> ${application.createdAt.toUTCString()}`,
+        `🆔 <b>ID:</b> ${application.id}`,
+      ].filter((l) => l !== null).join("\n");
+
+      sendTelegramNotification(tgMessage, { refType: "job_application", refId: application.id }).catch(console.error);
     });
+
+    // Acknowledgment email — fire-and-forget, doesn't block response
+    sendJobApplicationAck({
+      to: application.email,
+      name: application.legalName,
+      jobTitle: application.jobTitle,
+      applicationId: application.id,
+    }).catch(console.error);
 
     return NextResponse.json(
       {

@@ -84,6 +84,45 @@ enum ContactStatus {
   CLOSED
 }
 
+// Notification log — all emails and Telegram messages sent by the system
+model NotificationLog {
+  id        String              @id @default(cuid())
+  createdAt DateTime            @default(now())
+
+  channel   NotificationChannel
+  status    NotificationStatus
+
+  // Shared
+  subject   String?             // email subject | first line of telegram msg
+  body      String              @db.Text
+
+  // Email-specific
+  toEmail   String?
+  toName    String?
+  fromEmail String?
+
+  // Source context
+  refType   String?             // "job_application" | "enquiry" | "ngo_application"
+  refId     String?             // ID of the source record
+
+  // On failure
+  error     String?             @db.Text
+
+  @@index([channel, createdAt])
+  @@index([toEmail])
+  @@index([refType, refId])
+}
+
+enum NotificationChannel {
+  EMAIL
+  TELEGRAM
+}
+
+enum NotificationStatus {
+  SENT
+  FAILED
+}
+
 // NGO applications — free website development program
 model NgoApplication {
   id               String               @id @default(cuid())

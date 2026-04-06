@@ -2,6 +2,7 @@
   "name": "gaurav_portfolio",
   "version": "0.1.0",
   "dependencies": {
+    "@aws-sdk/client-ses": "^3.1024.0",
     "@copilotkit/react-core": "^1.52.1",
     "@copilotkit/react-ui": "^1.52.1",
     "@copilotkit/runtime": "^1.52.1",

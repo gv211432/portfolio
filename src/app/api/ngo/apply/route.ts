@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { collectClientInfo, getIpInfo } from "@/utils/clientInfo";
 import { sendTelegramNotification } from "@/lib/telegram";
+import { sendNgoApplicationAck } from "@/lib/email";
 
 function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -97,8 +98,16 @@ export async function POST(request: NextRequest) {
         `🆔 <b>ID:</b> ${application.id}`,
       ].filter((line) => line !== null).join("\n");
 
-      sendTelegramNotification(msg).catch(console.error);
+      sendTelegramNotification(msg, { refType: "ngo_application", refId: application.id }).catch(console.error);
     });
+
+    // Acknowledgment email — fire-and-forget
+    sendNgoApplicationAck({
+      to: application.email,
+      organizationName: application.organizationName,
+      subdomain: application.subdomain,
+      applicationId: application.id,
+    }).catch(console.error);
 
     return NextResponse.json({
       success: true,

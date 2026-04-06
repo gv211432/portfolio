@@ -4,6 +4,7 @@ import { Prisma } from "@prisma/client";
 import { verifyRecaptchaToken } from "@/utils/recaptcha";
 import { collectClientInfo, getIpInfo } from "@/utils/clientInfo";
 import { sendTelegramNotification } from "@/lib/telegram";
+import { sendEnquiryAck } from "@/lib/email";
 
 // Constants
 const MAX_MESSAGE_LENGTH = 10000;
@@ -150,8 +151,15 @@ export async function POST(request: NextRequest) {
         `🆔 <b>ID:</b> ${submission.id}`,
       ].filter((line) => line !== null).join("\n");
 
-      sendTelegramNotification(tgMessage).catch(console.error);
+      sendTelegramNotification(tgMessage, { refType: "enquiry", refId: submission.id }).catch(console.error);
     });
+
+    // Acknowledgment email — fire-and-forget
+    sendEnquiryAck({
+      to: submission.email,
+      name: submission.name,
+      submissionId: submission.id,
+    }).catch(console.error);
 
     console.log("=== New Contact Form Submission Saved ===");
     console.log("ID:", submission.id);
