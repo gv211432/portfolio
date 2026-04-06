@@ -14,7 +14,7 @@ const impactStats = [
 
 const showcaseProjects = [
   {
-    name: "Nandgaonkar Foundation",
+    name: "Nandgaonkar",
     subdomain: "nandgaonkar",
     description: "Empowering rural communities through education and healthcare initiatives.",
     category: "Education & Health",
@@ -27,20 +27,20 @@ const showcaseProjects = [
     category: "Legal Aid",
     status: "Live",
   },
-  {
-    name: "Green Earth Initiative",
-    subdomain: "greenearth",
-    description: "Environmental conservation and sustainable development programs.",
-    category: "Environment",
-    status: "In Development",
-  },
-  {
-    name: "Skill India Foundation",
-    subdomain: "skillindia",
-    description: "Vocational training and employment opportunities for youth.",
-    category: "Skill Development",
-    status: "Live",
-  },
+  // {
+  //   name: "Green Earth Initiative",
+  //   subdomain: "greenearth",
+  //   description: "Environmental conservation and sustainable development programs.",
+  //   category: "Environment",
+  //   status: "In Development",
+  // },
+  // {
+  //   name: "Skill India Foundation",
+  //   subdomain: "skillindia",
+  //   description: "Vocational training and employment opportunities for youth.",
+  //   category: "Skill Development",
+  //   status: "Live",
+  // },
 ];
 
 // Raw markdown for copy functionality
@@ -210,6 +210,9 @@ export default function NgoPage() {
     impact: "",
     timeline: false,
   });
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  const [submitted, setSubmitted] = useState(false);
   const { darkMode, toggleDarkMode } = useDarkModeStore();
 
   useEffect(() => {
@@ -224,6 +227,36 @@ export default function NgoPage() {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
+
+  async function handleSubmit() {
+    setSubmitError("");
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/ngo/apply", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          organizationName: formData.organizationName,
+          email: formData.email,
+          phone: formData.phone,
+          subdomain: formData.website,
+          description: formData.description,
+          impact: formData.impact,
+          agreedToTerms: formData.timeline,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSubmitted(true);
+      } else {
+        setSubmitError(data.message ?? "Submission failed. Please try again.");
+      }
+    } catch {
+      setSubmitError("Network error. Please check your connection and try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-50 dark:from-[#0A3622] dark:via-[#0F5132] dark:to-[#0A3622]">
@@ -568,9 +601,36 @@ export default function NgoPage() {
             className="max-w-4xl mx-auto"
           >
             <div className="bg-white dark:bg-[#0F5132]/30 backdrop-blur-sm rounded-3xl border border-[#198754]/30 p-8 md:p-12 shadow-xl dark:shadow-none">
+              {/* Success screen */}
+              <AnimatePresence mode="wait">
+                {submitted && (
+                  <motion.div
+                    key="success"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.4 }}
+                    className="text-center py-12"
+                  >
+                    <div className="w-20 h-20 bg-[#20c997]/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <svg className="w-10 h-10 text-[#20c997]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <h3 className="text-2xl font-bold text-[#0F5132] dark:text-white mb-3">Application Submitted!</h3>
+                    <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto mb-2">
+                      Thank you, <span className="text-[#198754] dark:text-[#20c997] font-medium">{formData.organizationName}</span>!
+                      We've received your application and will review it within <strong>3–5 business days</strong>.
+                    </p>
+                    <p className="text-gray-400 dark:text-gray-500 text-sm">
+                      A confirmation has been noted. We'll reach out to <span className="font-medium">{formData.email}</span>.
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               {/* Step 1 */}
               <AnimatePresence mode="wait">
-                {activeStep === 1 && (
+                {!submitted && activeStep === 1 && (
                   <motion.div
                     key="step1"
                     initial={{ opacity: 0, x: 20 }}
@@ -770,7 +830,7 @@ export default function NgoPage() {
                 )}
 
                 {/* Step 2 */}
-                {activeStep === 2 && (
+                {!submitted && activeStep === 2 && (
                   <motion.div
                     key="step2"
                     initial={{ opacity: 0, x: 20 }}
@@ -880,7 +940,7 @@ Be specific about the positive change this will enable."
                 )}
 
                 {/* Step 3 */}
-                {activeStep === 3 && (
+                {!submitted && activeStep === 3 && (
                   <motion.div
                     key="step3"
                     initial={{ opacity: 0, x: 20 }}
@@ -1003,29 +1063,37 @@ Be specific about the positive change this will enable."
                         </svg>
                         Back
                       </button>
-                      <button
-                        disabled={!formData.timeline}
-                        className={`inline-flex items-center gap-2 px-8 py-3 rounded-full font-semibold transition-all ${
-                          formData.timeline
-                            ? "bg-gradient-to-r from-[#20c997] to-[#198754] hover:from-[#1abc9c] hover:to-[#157347] text-white hover:shadow-xl hover:shadow-[#20c997]/30"
-                            : "bg-gray-600 text-gray-400 cursor-not-allowed"
-                        }`}
-                      >
-                        Submit Application
-                        <svg
-                          className="w-5 h-5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
+                      <div className="flex flex-col items-end gap-2">
+                        {submitError && (
+                          <p className="text-red-500 text-sm">{submitError}</p>
+                        )}
+                        <button
+                          disabled={!formData.timeline || submitting}
+                          onClick={handleSubmit}
+                          className={`inline-flex items-center gap-2 px-8 py-3 rounded-full font-semibold transition-all ${
+                            formData.timeline && !submitting
+                              ? "bg-gradient-to-r from-[#20c997] to-[#198754] hover:from-[#1abc9c] hover:to-[#157347] text-white hover:shadow-xl hover:shadow-[#20c997]/30"
+                              : "bg-gray-300 dark:bg-gray-600 text-gray-400 cursor-not-allowed"
+                          }`}
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
-                      </button>
+                          {submitting ? (
+                            <>
+                              <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                              </svg>
+                              Submitting…
+                            </>
+                          ) : (
+                            <>
+                              Submit Application
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                            </>
+                          )}
+                        </button>
+                      </div>
                     </div>
                   </motion.div>
                 )}

@@ -84,6 +84,43 @@ enum ContactStatus {
   CLOSED
 }
 
+// NGO applications — free website development program
+model NgoApplication {
+  id               String               @id @default(cuid())
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+
+  // Applicant info
+  organizationName String
+  email            String
+  phone            String?
+  subdomain        String
+
+  // Application content
+  description      String               @db.Text
+  impact           String               @db.Text
+  agreedToTerms    Boolean              @default(false)
+
+  // Client info
+  ipAddress        String?
+  userAgent        String?
+  deviceInfo       Json?
+  ipInfo           Json?
+
+  // Status tracking
+  status           NgoApplicationStatus @default(PENDING)
+  notes            String?
+}
+
+enum NgoApplicationStatus {
+  PENDING
+  REVIEWING
+  APPROVED
+  IN_DEVELOPMENT
+  COMPLETED
+  REJECTED
+}
+
 // Chat KV store — persistent key-value memory for the AI agent
 model ChatKVStore {
   id        String   @id @default(cuid())
