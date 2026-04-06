@@ -1,33 +1,59 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useRef, useEffect } from "react";
+import TotpSetup from "./TotpSetup";
 
 interface Props {
   onLogin: (username: string) => void;
 }
 
 export default function AdminLogin({ onLogin }: Props) {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [username, setUsername]   = useState("");
+  const [password, setPassword]   = useState("");
+  const [totp, setTotp]           = useState("");
+  const [error, setError]         = useState("");
+  const [loading, setLoading]     = useState(false);
+  const [setupToken, setSetupToken] = useState<string | null>(null);
+  const totpRef = useRef<HTMLInputElement>(null);
+
+  // After returning from 2FA setup, nudge user to enter their TOTP
+  const [justSetup, setJustSetup] = useState(false);
+
+  useEffect(() => {
+    if (justSetup) totpRef.current?.focus();
+  }, [justSetup]);
+
+  function handleSetupComplete() {
+    setSetupToken(null);
+    setJustSetup(true);
+    setError("");
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError("");
     setLoading(true);
     try {
-      const res = await fetch("/api/admin/auth", {
+      const res  = await fetch("/api/admin/auth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username, password, totp: totp.trim() || undefined }),
       });
       const data = await res.json();
+
+      if (data.requiresTotpSetup) {
+        // Password correct but 2FA not set — go to setup flow
+        setSetupToken(data.setupToken);
+        return;
+      }
+
       if (!res.ok || !data.success) {
         setError(data.message ?? "Invalid credentials");
-      } else {
-        onLogin(data.username);
+        setTotp("");
+        return;
       }
+
+      onLogin(data.username);
     } catch {
       setError("Network error. Please try again.");
     } finally {
@@ -35,6 +61,12 @@ export default function AdminLogin({ onLogin }: Props) {
     }
   }
 
+  // ── 2FA setup flow ────────────────────────────────────────────────────────
+  if (setupToken) {
+    return <TotpSetup setupToken={setupToken} onComplete={handleSetupComplete} />;
+  }
+
+  // ── Login form ────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
@@ -48,52 +80,75 @@ export default function AdminLogin({ onLogin }: Props) {
           <p className="text-slate-400 text-sm mt-1">Gaurav.One Dashboard</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-slate-900 rounded-2xl p-6 shadow-xl border border-slate-800">
+        {justSetup && (
+          <div className="mb-4 px-3 py-2.5 rounded-xl bg-green-500/10 border border-green-500/30 text-green-400 text-sm text-center">
+            2FA enabled! Sign in with your authenticator code below.
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="bg-slate-900 rounded-2xl p-6 shadow-xl border border-slate-800 space-y-4">
           {error && (
-            <div className="mb-4 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+            <div className="px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
               {error}
             </div>
           )}
 
-          <div className="space-y-4">
-            <div>
-              <label className="block text-xs font-medium text-slate-400 mb-1.5 uppercase tracking-wide">
-                Username
-              </label>
-              <input
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
-                placeholder="admin"
-                required
-                autoComplete="username"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-medium text-slate-400 mb-1.5 uppercase tracking-wide">
-                Password
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
-                placeholder="••••••••"
-                required
-                autoComplete="current-password"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg py-2.5 text-sm transition mt-2"
-            >
-              {loading ? "Signing in…" : "Sign In"}
-            </button>
+          <div>
+            <label className="block text-xs font-medium text-slate-400 mb-1.5 uppercase tracking-wide">
+              Username
+            </label>
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
+              placeholder="admin"
+              required
+              autoComplete="username"
+            />
           </div>
+
+          <div>
+            <label className="block text-xs font-medium text-slate-400 mb-1.5 uppercase tracking-wide">
+              Password
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
+              placeholder="••••••••"
+              required
+              autoComplete="current-password"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-slate-400 mb-1.5 uppercase tracking-wide">
+              Authenticator Code
+              <span className="ml-1 text-slate-600 normal-case font-normal">(required after setup)</span>
+            </label>
+            <input
+              ref={totpRef}
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={6}
+              value={totp}
+              onChange={(e) => setTotp(e.target.value.replace(/[^0-9]/g, ""))}
+              className="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-2.5 text-sm text-center tracking-[0.4em] font-mono focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition placeholder:tracking-normal placeholder:font-sans"
+              placeholder="6-digit code"
+              autoComplete="one-time-code"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg py-2.5 text-sm transition mt-2"
+          >
+            {loading ? "Signing in…" : "Sign In"}
+          </button>
         </form>
 
         <p className="text-center text-slate-600 text-xs mt-4">

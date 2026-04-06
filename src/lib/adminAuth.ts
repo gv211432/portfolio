@@ -78,6 +78,28 @@ export function clearAdminCookie(response: NextResponse): NextResponse {
 }
 
 /**
+ * Short-lived token issued after password verification but before TOTP.
+ * Used to authenticate the TOTP setup/verify flow without granting a full session.
+ */
+export async function signSetupToken(adminId: string): Promise<string> {
+  return new SignJWT({ adminId, purpose: "totp_setup" })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime("10m")
+    .sign(secret);
+}
+
+export async function verifySetupToken(token: string): Promise<string | null> {
+  try {
+    const { payload } = await jwtVerify(token, secret);
+    if (payload.purpose !== "totp_setup") return null;
+    return payload.adminId as string;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Returns the current IST hour (0–23).
  * The admin path /admin/[hour] is valid only when [hour] === getISTHour().
  */

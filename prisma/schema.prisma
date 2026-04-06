@@ -200,6 +200,11 @@ model AdminUser {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   lastLoginAt  DateTime?
+
+  // TOTP 2FA
+  totpSecret    String?          // base32 secret (stored only after setup verified)
+  totpEnabled   Boolean          @default(false)
+  recoveryCodes Json?            // [{ hash: string, used: boolean }]
 }
 
 // Chat leads — visitors who expressed interest via the chatbot
