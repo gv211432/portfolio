@@ -26,12 +26,12 @@ export const domainUrls = {
 };
 
 // Email uses the domain without protocol
-export const domainEmail = `hi@gaurav.one`;
+export const domainEmail = `connect@gaurav.one`;
 
 export const globalConfig = {
   displayName: "Gaurav.one",
   email: domainEmail,
-  email2: "contact@gaurav.one",
+  email2: "hi@gaurav.one",
   github: "https://github.com/organizations/Gaurav-Dot-One",
   linkedin: "https://www.linkedin.com/company/gaurav-dot-one",
   twitter: "https://twitter.com/formal_gaurav",

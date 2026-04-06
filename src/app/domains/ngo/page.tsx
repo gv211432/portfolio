@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDarkModeStore } from "@/Atoms/globalAtoms";
+import { globalConfig } from "@/config/global";
 
 const impactStats = [
   { number: "15+", label: "Projects Delivered", icon: "🌐" },
@@ -1323,7 +1324,7 @@ Be specific about the positive change this will enable."
             <div>
               <h4 className="text-[#0F5132] dark:text-white font-semibold mb-4">Contact</h4>
               <ul className="space-y-2 text-gray-500 dark:text-gray-400 text-sm">
-                <li>ngo@gaurav.one</li>
+                <li>{globalConfig.email}</li>
                 <li>Mumbai, India</li>
               </ul>
             </div>
