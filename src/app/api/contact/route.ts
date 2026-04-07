@@ -130,6 +130,9 @@ export async function POST(request: NextRequest) {
         }).catch(console.error);
       }
 
+      const esc = (s: string) =>
+        s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
       const location = ipInfo
         ? [ipInfo.city, ipInfo.region, ipInfo.country].filter(Boolean).join(", ")
         : ip ?? "Unknown";
@@ -137,13 +140,13 @@ export async function POST(request: NextRequest) {
       const tgMessage = [
         `📬 <b>New Contact Form Submission</b>`,
         ``,
-        `👤 <b>Name:</b> ${submission.name}`,
-        `📧 <b>Email:</b> ${submission.email}`,
-        submission.phone ? `📞 <b>Phone:</b> ${submission.phone}` : null,
-        `💰 <b>Budget:</b> ${submission.budget}`,
+        `👤 <b>Name:</b> ${esc(submission.name)}`,
+        `📧 <b>Email:</b> ${esc(submission.email)}`,
+        submission.phone ? `📞 <b>Phone:</b> ${esc(submission.phone)}` : null,
+        `💰 <b>Budget:</b> ${esc(submission.budget)}`,
         ``,
         `📝 <b>Message:</b>`,
-        submission.message,
+        esc(submission.message),
         ``,
         `🌍 <b>Location:</b> ${location}`,
         `🖥️ <b>Device:</b> ${submission.userAgent ?? "Unknown"}`,

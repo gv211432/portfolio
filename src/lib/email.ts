@@ -15,6 +15,9 @@ import prisma from "@/lib/prisma";
 
 const FROM = process.env.AWS_SES_FROM_EMAIL ?? "noreply@gaurav.one";
 
+const LOGO_FULL  = "https://www.gaurav.one/img/logo/light-gaurav.one.webp";
+const LOGO_ICON  = "https://www.gaurav.one/img/logo/gaurav-dot-one-white.webp";
+
 function getClient(): SESClient {
   return new SESClient({
     region: process.env.AWS_SES_REGION ?? "us-east-1",
@@ -67,7 +70,7 @@ async function sendEmail(opts: SendOptions): Promise<void> {
     const client = getClient();
     await client.send(
       new SendEmailCommand({
-        Source: `Gaurav Vishwakarma <${FROM}>`,
+        Source: `Gaurav.One <${FROM}>`,
         Destination: { ToAddresses: [to] },
         Message: {
           Subject: { Data: subject, Charset: "UTF-8" },
@@ -110,7 +113,7 @@ function wrap(body: string): string {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Gaurav Vishwakarma</title>
+  <title>Gaurav.One</title>
 </head>
 <body style="margin:0;padding:0;background:#f4f6f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6f9;padding:32px 16px;">
@@ -118,13 +121,19 @@ function wrap(body: string): string {
       <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.08);">
 
         <!-- Header -->
-        <tr><td style="background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);padding:28px 32px;">
-          <p style="margin:0;font-size:20px;font-weight:700;color:#ffffff;letter-spacing:-0.3px;">
-            Gaurav<span style="color:#6366f1;">.</span>One
-          </p>
-          <p style="margin:4px 0 0;font-size:12px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px;">
-            Portfolio &amp; Services
-          </p>
+        <tr><td style="background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);padding:24px 32px;">
+          <table cellpadding="0" cellspacing="0">
+            <tr>
+              <td style="padding-right:12px;vertical-align:middle;">
+                <img src="${LOGO_ICON}" alt="Gaurav.One" width="36" height="36"
+                     style="display:block;border-radius:6px;" />
+              </td>
+              <td style="vertical-align:middle;">
+                <img src="${LOGO_FULL}" alt="Gaurav.One" height="28"
+                     style="display:block;max-height:28px;" />
+              </td>
+            </tr>
+          </table>
         </td></tr>
 
         <!-- Body -->
@@ -133,12 +142,27 @@ function wrap(body: string): string {
         </td></tr>
 
         <!-- Footer -->
-        <tr><td style="border-top:1px solid #f0f0f0;padding:20px 32px;text-align:center;">
-          <p style="margin:0;font-size:12px;color:#9ca3af;">
-            This is an automated message from
-            <a href="https://gaurav.one" style="color:#6366f1;text-decoration:none;">gaurav.one</a>.
-            Please do not reply to this email.
-          </p>
+        <tr><td style="border-top:1px solid #f0f0f0;padding:20px 32px;">
+          <table width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+              <td style="text-align:center;padding-bottom:12px;">
+                <a href="https://gaurav.one/domains/whitelabel" style="color:#6366f1;text-decoration:none;font-size:12px;margin:0 8px;">White-label</a>
+                <span style="color:#d1d5db;font-size:12px;">·</span>
+                <a href="https://gaurav.one/domains/casestudy" style="color:#6366f1;text-decoration:none;font-size:12px;margin:0 8px;">Case Studies</a>
+                <span style="color:#d1d5db;font-size:12px;">·</span>
+                <a href="https://gaurav.one/blog" style="color:#6366f1;text-decoration:none;font-size:12px;margin:0 8px;">Blog</a>
+              </td>
+            </tr>
+            <tr>
+              <td style="text-align:center;">
+                <p style="margin:0;font-size:11px;color:#9ca3af;">
+                  This is an automated message from
+                  <a href="https://gaurav.one" style="color:#6366f1;text-decoration:none;">gaurav.one</a>.
+                  Please do not reply to this email.
+                </p>
+              </td>
+            </tr>
+          </table>
         </td></tr>
 
       </table>
@@ -183,8 +207,11 @@ export async function sendJobApplicationAck(params: {
     </div>
 
     <p style="margin:16px 0 0;font-size:14px;color:#6b7280;line-height:1.6;">
-      In the meantime, feel free to explore more about the work at
-      <a href="https://gaurav.one" style="color:#6366f1;text-decoration:none;">gaurav.one</a>.
+      In the meantime, feel free to explore our
+      <a href="https://gaurav.one/domains/whitelabel" style="color:#6366f1;text-decoration:none;">white-label solutions</a>,
+      <a href="https://gaurav.one/domains/casestudy" style="color:#6366f1;text-decoration:none;">case studies</a>,
+      or the latest on our
+      <a href="https://gaurav.one/blog" style="color:#6366f1;text-decoration:none;">blog</a>.
     </p>
   `);
 
@@ -196,7 +223,7 @@ Thank you for applying for the ${jobTitle} position. We've successfully received
 
 We typically review applications within 5–7 business days. If your profile is a strong match, our team will reach out to you.
 
-— Gaurav Vishwakarma | gaurav.one`;
+— Gaurav.One | gaurav.one`;
 
   await sendEmail({
     to,
@@ -220,7 +247,7 @@ export async function sendEnquiryAck(params: {
 }): Promise<void> {
   const { to, name, submissionId } = params;
 
-  const subject = "Enquiry Received — I'll be in touch soon!";
+  const subject = "Enquiry Received — We'll be in touch soon!";
 
   const html = wrap(`
     <h2 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111827;">
@@ -232,16 +259,17 @@ export async function sendEnquiryAck(params: {
       Hi <strong>${name}</strong>,
     </p>
     <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">
-      Thanks for reaching out! I've received your enquiry and will get back to you as soon as possible — usually within <strong>24 hours</strong>.
+      Thanks for reaching out! We've received your enquiry and will get back to you as soon as possible — usually within <strong>24 hours</strong>.
     </p>
 
     <div style="background:#f8fafc;border-left:3px solid #6366f1;border-radius:0 8px 8px 0;padding:16px 20px;margin:24px 0;">
       <p style="margin:0;font-size:14px;color:#4b5563;line-height:1.6;">
-        While you wait, you can explore my
-        <a href="https://gaurav.one" style="color:#6366f1;text-decoration:none;">portfolio</a>
-        or check out my
-        <a href="https://gaurav.one/domains/casestudy" style="color:#6366f1;text-decoration:none;">case studies</a>
-        to see past work.
+        While you wait, explore our
+        <a href="https://gaurav.one/domains/whitelabel" style="color:#6366f1;text-decoration:none;">white-label solutions</a>,
+        browse our
+        <a href="https://gaurav.one/domains/casestudy" style="color:#6366f1;text-decoration:none;">case studies</a>,
+        or read the latest on our
+        <a href="https://gaurav.one/blog" style="color:#6366f1;text-decoration:none;">blog</a>.
       </p>
     </div>
 
@@ -249,7 +277,7 @@ export async function sendEnquiryAck(params: {
       Looking forward to the conversation!
     </p>
     <p style="margin:8px 0 0;font-size:14px;color:#374151;font-weight:600;">
-      — Gaurav Vishwakarma
+      — Gaurav.One Team
     </p>
   `);
 
@@ -257,11 +285,11 @@ export async function sendEnquiryAck(params: {
 
 Hi ${name},
 
-Thanks for reaching out! I've received your enquiry (ID: ${submissionId}) and will get back to you within 24 hours.
+Thanks for reaching out! We've received your enquiry (ID: ${submissionId}) and will get back to you within 24 hours.
 
-In the meantime, feel free to explore gaurav.one.
+In the meantime, explore our white-label solutions, case studies, and blog at gaurav.one.
 
-— Gaurav Vishwakarma | gaurav.one`;
+— Gaurav.One Team | gaurav.one`;
 
   await sendEmail({
     to,
@@ -314,7 +342,8 @@ export async function sendNgoApplicationAck(params: {
     </div>
 
     <p style="margin:16px 0 0;font-size:14px;color:#6b7280;line-height:1.6;">
-      We're excited about the possibility of supporting your mission.
+      We're excited about the possibility of supporting your mission. Learn more about how we work with NGOs on our
+      <a href="https://gaurav.one/domains/casestudy" style="color:#6366f1;text-decoration:none;">case studies</a> page.
     </p>
   `);
 

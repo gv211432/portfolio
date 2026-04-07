@@ -75,6 +75,9 @@ export async function POST(request: NextRequest) {
         }).catch(console.error);
       }
 
+      const esc = (s: string) =>
+        s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
       const location = ipInfo
         ? [ipInfo.city, ipInfo.region, ipInfo.country].filter(Boolean).join(", ")
         : ip ?? "Unknown";
@@ -82,16 +85,16 @@ export async function POST(request: NextRequest) {
       const msg = [
         `🌱 <b>New NGO Application</b>`,
         ``,
-        `🏛️ <b>Org:</b> ${application.organizationName}`,
-        `📧 <b>Email:</b> ${application.email}`,
-        application.phone ? `📞 <b>Phone:</b> ${application.phone}` : null,
-        `🌐 <b>Subdomain:</b> ${application.subdomain}.myorg.in`,
+        `🏛️ <b>Org:</b> ${esc(application.organizationName)}`,
+        `📧 <b>Email:</b> ${esc(application.email)}`,
+        application.phone ? `📞 <b>Phone:</b> ${esc(application.phone)}` : null,
+        `🌐 <b>Subdomain:</b> ${esc(application.subdomain)}.myorg.in`,
         ``,
         `📝 <b>Description:</b>`,
-        application.description.slice(0, 500) + (application.description.length > 500 ? "…" : ""),
+        esc(application.description.slice(0, 500) + (application.description.length > 500 ? "…" : "")),
         ``,
         `💚 <b>Impact:</b>`,
-        application.impact.slice(0, 300) + (application.impact.length > 300 ? "…" : ""),
+        esc(application.impact.slice(0, 300) + (application.impact.length > 300 ? "…" : "")),
         ``,
         `🌍 <b>Location:</b> ${location}`,
         `🕐 <b>Time:</b> ${application.createdAt.toUTCString()}`,

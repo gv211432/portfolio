@@ -139,6 +139,9 @@ export async function POST(request: NextRequest) {
         }).catch(console.error);
       }
 
+      const esc = (s: string) =>
+        s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
       const location = ipInfo
         ? [ipInfo.city, ipInfo.region, ipInfo.country].filter(Boolean).join(", ")
         : ip ?? "Unknown";
@@ -146,12 +149,12 @@ export async function POST(request: NextRequest) {
       const tgMessage = [
         `💼 <b>New Job Application</b>`,
         ``,
-        `👤 <b>Name:</b> ${application.legalName}`,
-        `📧 <b>Email:</b> ${application.email}`,
-        `🎯 <b>Position:</b> ${application.jobTitle}`,
-        `🌍 <b>Country:</b> ${application.countryOfOrigin}`,
-        `📋 <b>Experience:</b> ${application.experience}`,
-        application.resumeFileName ? `📎 <b>Resume:</b> ${application.resumeFileName}` : null,
+        `👤 <b>Name:</b> ${esc(application.legalName)}`,
+        `📧 <b>Email:</b> ${esc(application.email)}`,
+        `🎯 <b>Position:</b> ${esc(application.jobTitle)}`,
+        `🌍 <b>Country:</b> ${esc(application.countryOfOrigin)}`,
+        `📋 <b>Experience:</b> ${esc(application.experience)}`,
+        application.resumeFileName ? `📎 <b>Resume:</b> ${esc(application.resumeFileName)}` : null,
         ``,
         `🌐 <b>Location:</b> ${location}`,
         `🕐 <b>Time:</b> ${application.createdAt.toUTCString()}`,
