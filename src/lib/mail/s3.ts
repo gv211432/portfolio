@@ -21,10 +21,10 @@ let _client: S3Client | null = null;
 export function s3(): S3Client {
   if (_client) return _client;
   _client = new S3Client({
-    region: MAIL_ENV.AWS_REGION,
+    region: MAIL_ENV.S3_REGION,
     credentials: {
-      accessKeyId: MAIL_ENV.AWS_KEY,
-      secretAccessKey: MAIL_ENV.AWS_SECRET,
+      accessKeyId: MAIL_ENV.S3_KEY,
+      secretAccessKey: MAIL_ENV.S3_SECRET,
     },
   });
   return _client;
