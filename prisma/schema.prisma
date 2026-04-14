@@ -221,3 +221,345 @@ model ChatLead {
   deviceInfo     Json?
   notified       Boolean  @default(false)
 }
+
+// =============================================================================
+// EMAIL PLATFORM — staff users, mail, policies
+// =============================================================================
+
+// Staff users — completely separate regime from AdminUser.
+// Each staff has exactly one StaffEmailAddress for now; aliases/shared inboxes
+// can be added later by flipping the unique constraint on StaffEmailAddress.staffId.
+model Staff {
+  id               String    @id @default(cuid())
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  // Profile
+  firstName        String
+  lastName         String
+  displayName      String?   // preferred display name (for email "From: Name <addr>")
+  profileImageUrl  String?
+  dateOfBirth      DateTime?
+  joinedAt         DateTime? // date of joining
+  role             String?   // job title / role (free text: "Engineer", "Designer", etc.)
+  employeeCode     String?   @unique // "roll number" / employee id
+
+  // Login / recovery
+  recoveryEmail    String    // personal email; used for initial creds delivery + email-OTP bootstrap
+  phone            String?
+
+  // Auth
+  passwordHash     String
+  mustResetPassword Boolean  @default(true)  // forces password change on first login
+  lastLoginAt      DateTime?
+  lastLoginIp      String?
+  status           StaffStatus @default(ACTIVE)
+
+  // Policy override — if non-null, replaces GlobalPolicy.allowedDomains entirely.
+  // null → fall back to global policy. Empty array → block ALL outgoing (explicit lockdown).
+  allowedDomainsOverride Json? // string[] | null
+
+  // Relations
+  emailAddress     StaffEmailAddress?
+  twoFactor        StaffTwoFactor[]
+  sessions         StaffSession[]
+  emails           Email[]
+  drafts           EmailDraft[]
+  outbox           OutboxEmail[]
+  labels           EmailLabel[]
+
+  @@index([status])
+}
+
+enum StaffStatus {
+  ACTIVE
+  SUSPENDED
+  OFFBOARDED
+}
+
+// Email address mapping — separated from Staff so aliases/sharing can be added later.
+model StaffEmailAddress {
+  id        String   @id @default(cuid())
+  email     String   @unique  // e.g. "jack@email.gaurav.one" (lowercased)
+  staffId   String   @unique  // unique for now (1:1). Drop @unique later for aliases.
+  staff     Staff    @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  isPrimary Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@index([email])
+}
+
+// 2FA methods — a staff can enable TOTP, EMAIL_OTP, or both.
+// During login, all enabled methods are challenged in order: TOTP → EMAIL_OTP.
+model StaffTwoFactor {
+  id         String            @id @default(cuid())
+  staffId    String
+  staff      Staff             @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  method     TwoFactorMethod
+  enabled    Boolean           @default(false)  // only true after setup verified
+
+  // TOTP fields
+  totpSecret String?           // base32, stored only after verification
+
+  // EMAIL_OTP fields
+  otpTargetEmail String?       // which email receives the OTP (staff's own address once verified)
+  otpTargetVerified Boolean    @default(false) // true after bootstrap OTP confirmed
+
+  // Transient: current pending OTP (login or setup). Cleared on success.
+  pendingOtpHash    String?
+  pendingOtpExpires DateTime?
+  pendingOtpPurpose String?    // "setup" | "login"
+
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+
+  @@unique([staffId, method])
+}
+
+enum TwoFactorMethod {
+  TOTP
+  EMAIL_OTP
+}
+
+// Session tokens for staff. JWT could work, but DB sessions let admin revoke instantly.
+model StaffSession {
+  id         String   @id @default(cuid())
+  staffId    String
+  staff      Staff    @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  tokenHash  String   @unique  // sha256 of the opaque token stored in cookie
+  createdAt  DateTime @default(now())
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  ipAddress  String?
+  userAgent  String?
+
+  // Login challenge state — for multi-step 2FA login.
+  // A session is "pending" until all required factors pass.
+  stage      SessionStage @default(ACTIVE)
+
+  @@index([staffId])
+  @@index([expiresAt])
+}
+
+enum SessionStage {
+  PENDING_PASSWORD_RESET   // authed with temp password, must set new one
+  PENDING_2FA_SETUP        // no 2FA method enabled yet; must enroll at least one
+  PENDING_TOTP             // 2FA login: waiting for TOTP code
+  PENDING_EMAIL_OTP        // 2FA login: waiting for email OTP
+  ACTIVE                   // fully authenticated
+}
+
+// Global outbound policy. Single-row table (id = "global").
+model GlobalPolicy {
+  id              String   @id @default("global")
+  allowedDomains  Json     @default("[]") // string[], e.g. ["gaurav.one", "google.com"]. Empty = block all.
+  updatedAt       DateTime @updatedAt
+  updatedBy       String?  // AdminUser.id
+}
+
+// =============================================================================
+// MAIL
+// =============================================================================
+
+// An email — one row per recipient-staff (if an inbound mail has 3 staff recipients,
+// we create 3 rows so each staff's mailbox state — read/trash/labels — is independent).
+model Email {
+  id          String      @id @default(cuid())
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  // Owner — whose mailbox this row belongs to.
+  staffId     String
+  staff       Staff       @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  // Idempotency — (messageId, staffId) unique prevents duplicate inserts on SES retry.
+  messageId   String      // RFC 5322 Message-ID (or synthesized for sent mails)
+
+  // Threading
+  threadId    String?
+  thread      EmailThread? @relation(fields: [threadId], references: [id], onDelete: SetNull)
+  inReplyTo   String?     // Message-ID this is replying to
+  referencesJson Json?    // string[] of Message-IDs in the thread
+
+  // Envelope
+  fromEmail   String
+  fromName    String?
+  toJson      Json        // Array<{ email, name? }>
+  ccJson      Json?
+  bccJson     Json?
+  subject     String?     @db.VarChar(1000)
+
+  // Body
+  snippet     String      @db.VarChar(500)
+  bodyText    String      @db.Text    // NEUTRALIZED plain text, used for fuzzy search
+  s3Key       String?     // raw .eml in S3 (null for DRAFT before first save-to-s3)
+  hasAttachments Boolean  @default(false)
+  sizeBytes   Int?
+
+  // Mailbox state
+  folder      EmailFolder @default(INBOX)
+  isRead      Boolean     @default(false)
+  isStarred   Boolean     @default(false)
+
+  // Direction — needed because SENT row is also owned by the sender staff.
+  direction   EmailDirection
+
+  attachments EmailAttachment[]
+  labels      EmailLabelOnEmail[]
+
+  @@unique([staffId, messageId])
+  @@index([staffId, folder, createdAt(sort: Desc)])
+  @@index([staffId, threadId])
+  @@index([threadId])
+  // Fuzzy search indexes added via migration SQL (pg_trgm GIN on bodyText + subject + fromEmail)
+}
+
+enum EmailFolder {
+  INBOX
+  SENT
+  TRASH
+  DRAFT
+  SPAM
+}
+
+enum EmailDirection {
+  INBOUND
+  OUTBOUND
+}
+
+// Conversation threads — grouped by normalized subject + references.
+model EmailThread {
+  id             String   @id @default(cuid())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  subjectKey     String   // normalized subject (lowercased, "re:"/"fwd:" stripped)
+  rootMessageId  String?  // Message-ID of earliest known mail
+  lastMessageAt  DateTime @default(now())
+
+  emails         Email[]
+
+  @@index([subjectKey])
+  @@index([rootMessageId])
+}
+
+model EmailAttachment {
+  id          String   @id @default(cuid())
+  emailId     String
+  email       Email    @relation(fields: [emailId], references: [id], onDelete: Cascade)
+  filename    String
+  contentType String
+  sizeBytes   Int
+  s3Key       String   // stored under attachments/ prefix in same bucket
+  contentId   String?  // for inline images (cid:)
+  createdAt   DateTime @default(now())
+
+  @@index([emailId])
+}
+
+// Labels — per-staff custom tags (Gmail-style).
+model EmailLabel {
+  id        String   @id @default(cuid())
+  staffId   String
+  staff     Staff    @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  name      String
+  color     String?  // hex
+  createdAt DateTime @default(now())
+
+  emails    EmailLabelOnEmail[]
+
+  @@unique([staffId, name])
+}
+
+model EmailLabelOnEmail {
+  emailId String
+  labelId String
+  email   Email      @relation(fields: [emailId], references: [id], onDelete: Cascade)
+  label   EmailLabel @relation(fields: [labelId], references: [id], onDelete: Cascade)
+
+  @@id([emailId, labelId])
+  @@index([labelId])
+}
+
+// Drafts — separate from Email so we don't pollute main table with half-written content.
+// On send, a Draft is converted into an Email(folder=SENT) and deleted.
+model EmailDraft {
+  id          String   @id @default(cuid())
+  staffId     String
+  staff       Staff    @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  toJson      Json     @default("[]")   // Array<{ email, name? }>
+  ccJson      Json?
+  bccJson     Json?
+  subject     String?  @db.VarChar(1000)
+  bodyText    String?  @db.Text
+  bodyHtml    String?  @db.Text
+
+  // Reply context
+  replyToEmailId String?
+
+  @@index([staffId, updatedAt(sort: Desc)])
+}
+
+// Outbox — emails REJECTED by policy. Admin can review, release, or discard.
+model OutboxEmail {
+  id          String            @id @default(cuid())
+  createdAt   DateTime          @default(now())
+  staffId     String
+  staff       Staff             @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  fromEmail   String
+  toJson      Json              // Array<{ email, name? }>
+  ccJson      Json?
+  bccJson     Json?
+  subject     String?           @db.VarChar(1000)
+  bodyText    String?           @db.Text
+  bodyHtml    String?           @db.Text
+
+  status      OutboxStatus      @default(BLOCKED)
+  reason      String?           // e.g. "recipient example.com not in allowed domains"
+  blockedRecipients Json?       // string[] of offending addresses
+  reviewedBy  String?           // AdminUser.id
+  reviewedAt  DateTime?
+
+  @@index([staffId, status, createdAt(sort: Desc)])
+}
+
+enum OutboxStatus {
+  BLOCKED    // rejected by policy, awaiting review
+  RELEASED   // admin overrode and sent
+  DISCARDED  // admin rejected
+}
+
+// =============================================================================
+// ACTIVITY LOG — every admin + staff action (login, read, send, impersonation, policy change)
+// =============================================================================
+
+model ActivityLog {
+  id          String        @id @default(cuid())
+  createdAt   DateTime      @default(now())
+
+  actorType   ActorType     // ADMIN | STAFF | SYSTEM
+  actorId     String?       // AdminUser.id | Staff.id | null
+  actorLabel  String?       // denormalized username/email for fast display
+
+  action      String        // "staff.login", "staff.send_email", "admin.impersonate_read_email", "policy.update", ...
+  targetType  String?       // "Staff" | "Email" | "GlobalPolicy" | ...
+  targetId    String?
+
+  metadata    Json?         // action-specific payload
+  ipAddress   String?
+  userAgent   String?
+
+  @@index([actorType, actorId, createdAt(sort: Desc)])
+  @@index([action, createdAt(sort: Desc)])
+  @@index([targetType, targetId])
+  @@index([createdAt(sort: Desc)])
+}
+
+enum ActorType {
+  ADMIN
+  STAFF
+  SYSTEM
+}
