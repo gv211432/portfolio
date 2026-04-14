@@ -1,0 +1,10 @@
+{
+  "name": "ses-inbound",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "index.mjs",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.600.0",
+    "mailparser": "^3.7.1"
+  }
+}

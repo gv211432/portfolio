@@ -12,8 +12,9 @@ import NotificationsSection from "./NotificationsSection";
 import StaffSection from "./StaffSection";
 import PolicySection from "./PolicySection";
 import ActivitySection from "./ActivitySection";
+import MailboxSection from "./MailboxSection";
 
-type Section = "dashboard" | "contacts" | "careers" | "chats" | "database" | "ngo" | "notifications" | "staff" | "policy" | "activity";
+type Section = "dashboard" | "contacts" | "careers" | "chats" | "database" | "ngo" | "notifications" | "staff" | "mailbox" | "policy" | "activity";
 
 const NAV: { id: Section; label: string; icon: React.ReactNode }[] = [
   {
@@ -76,6 +77,15 @@ const NAV: { id: Section; label: string; icon: React.ReactNode }[] = [
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-5.13a4 4 0 11-8 0 4 4 0 018 0zm6 0a4 4 0 11-8 0 4 4 0 018 0z" />
+      </svg>
+    ),
+  },
+  {
+    id: "mailbox",
+    label: "Mailbox",
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M21 8l-9 5-9-5m18 0v10a2 2 0 01-2 2H5a2 2 0 01-2-2V8m18 0L12 3 3 8" />
       </svg>
     ),
   },
@@ -191,7 +201,7 @@ export default function AdminShell() {
   useEffect(() => {
     const sp = new URLSearchParams(window.location.search);
     const tab = sp.get("tab") as Section | null;
-    if (tab && ["dashboard", "contacts", "careers", "chats", "database", "ngo", "notifications", "staff", "policy", "activity"].includes(tab)) {
+    if (tab && ["dashboard", "contacts", "careers", "chats", "database", "ngo", "notifications", "staff", "mailbox", "policy", "activity"].includes(tab)) {
       setActiveState(tab);
     }
   }, []);
@@ -304,6 +314,7 @@ export default function AdminShell() {
           {active === "ngo" && <NgoSection />}
           {active === "notifications" && <NotificationsSection />}
           {active === "staff" && <StaffSection />}
+          {active === "mailbox" && <MailboxSection />}
           {active === "policy" && <PolicySection />}
           {active === "activity" && <ActivitySection />}
           {active === "database" && <DatabaseSection />}
