@@ -22,11 +22,8 @@ Next.js app can serve them via signed URLs.
 
 ## 1. S3 bucket
 
-```
-aws s3 mb s3://gaurav-mail --region ap-south-1
-```
-
-Block public access (default). The app reaches the bucket via IAM.
+Bucket `gaurav.one` already exists in `us-east-1`. All mail artifacts
+(raw `.eml` under `inbound/`, attachments under `attachments/`) live in it.
 
 Bucket policy: allow SES to `PutObject` into `inbound/*`:
 
@@ -39,11 +36,9 @@ Bucket policy: allow SES to `PutObject` into `inbound/*`:
       "Effect": "Allow",
       "Principal": { "Service": "ses.amazonaws.com" },
       "Action": "s3:PutObject",
-      "Resource": "arn:aws:s3:::gaurav-mail/inbound/*",
+      "Resource": "arn:aws:s3:::gaurav.one/inbound/*",
       "Condition": {
-        "StringEquals": {
-          "aws:Referer": "<YOUR_AWS_ACCOUNT_ID>"
-        }
+        "StringEquals": { "aws:Referer": "598888049190" }
       }
     }
   ]
@@ -57,18 +52,18 @@ Bucket policy: allow SES to `PutObject` into `inbound/*`:
 In your DNS provider (for domain `mail.gaurav.one`):
 
 ```
-mail.gaurav.one.   MX   10   inbound-smtp.ap-south-1.amazonaws.com.
+mail.gaurav.one.   MX   10   inbound-smtp.us-east-1.amazonaws.com.
 ```
 
-(replace region if not `ap-south-1`). Also add SPF + DKIM + DMARC for outbound:
+Also add SPF + DKIM + DMARC for outbound:
 
 ```
 mail.gaurav.one.   TXT   "v=spf1 include:amazonses.com -all"
 _dmarc.mail.gaurav.one.   TXT   "v=DMARC1; p=quarantine; rua=mailto:postmaster@gaurav.one"
 ```
 
-DKIM: run `aws ses verify-domain-dkim --domain mail.gaurav.one` and copy the
-three CNAMEs it returns into DNS.
+DKIM: run `aws ses verify-domain-dkim --domain mail.gaurav.one --region us-east-1`
+and copy the three CNAMEs it returns into DNS.
 
 ---
 
@@ -77,16 +72,17 @@ three CNAMEs it returns into DNS.
 Verify the domain:
 
 ```
-aws ses verify-domain-identity --domain mail.gaurav.one --region ap-south-1
+aws ses verify-domain-identity --domain mail.gaurav.one --region us-east-1
 ```
 
 Create a receipt rule set + rule that drops to S3:
 
 ```
-aws ses create-receipt-rule-set --rule-set-name default-inbound
+aws ses create-receipt-rule-set --rule-set-name default-inbound --region us-east-1
 
 aws ses create-receipt-rule \
   --rule-set-name default-inbound \
+  --region us-east-1 \
   --rule '{
     "Name": "inbound-to-s3",
     "Enabled": true,
@@ -94,11 +90,11 @@ aws ses create-receipt-rule \
     "TlsPolicy": "Optional",
     "Recipients": ["mail.gaurav.one"],
     "Actions": [
-      { "S3Action": { "BucketName": "gaurav-mail", "ObjectKeyPrefix": "inbound/" } }
+      { "S3Action": { "BucketName": "gaurav.one", "ObjectKeyPrefix": "inbound/" } }
     ]
   }'
 
-aws ses set-active-receipt-rule-set --rule-set-name default-inbound
+aws ses set-active-receipt-rule-set --rule-set-name default-inbound --region us-east-1
 ```
 
 ---
@@ -121,14 +117,10 @@ aws lambda create-function \
   --runtime nodejs20.x \
   --handler index.handler \
   --zip-file fileb://fn.zip \
-  --role arn:aws:iam::<ACCOUNT_ID>:role/ses-inbound-role \
+  --role arn:aws:iam::598888049190:role/ses-inbound-role \
   --timeout 30 --memory-size 512 \
-  --environment "Variables={
-    WEBHOOK_URL=https://gaurav.one/api/mail/inbound,
-    WEBHOOK_API_KEY=<MAIL_WEBHOOK_API_KEY>,
-    BUCKET=gaurav-mail,
-    ATTACHMENT_PREFIX=attachments/
-  }"
+  --region us-east-1 \
+  --environment 'Variables={WEBHOOK_URL=https://gaurav.one/api/mail/inbound,WEBHOOK_API_KEY=<MAIL_WEBHOOK_API_KEY>,BUCKET=gaurav.one,ATTACHMENT_PREFIX=attachments/}'
 ```
 
 ### S3 event → Lambda
@@ -138,12 +130,13 @@ aws lambda add-permission \
   --function-name ses-inbound \
   --statement-id s3invoke --action lambda:InvokeFunction \
   --principal s3.amazonaws.com \
-  --source-arn arn:aws:s3:::gaurav-mail
+  --source-arn arn:aws:s3:::gaurav.one \
+  --region us-east-1
 
-aws s3api put-bucket-notification-configuration --bucket gaurav-mail \
+aws s3api put-bucket-notification-configuration --bucket gaurav.one \
   --notification-configuration '{
     "LambdaFunctionConfigurations": [{
-      "LambdaFunctionArn": "arn:aws:lambda:ap-south-1:<ACCOUNT_ID>:function:ses-inbound",
+      "LambdaFunctionArn": "arn:aws:lambda:us-east-1:598888049190:function:ses-inbound",
       "Events": ["s3:ObjectCreated:*"],
       "Filter": { "Key": { "FilterRules": [{ "Name": "prefix", "Value": "inbound/" }] } }
     }]
@@ -159,8 +152,8 @@ aws s3api put-bucket-notification-configuration --bucket gaurav-mail \
   "Version": "2012-10-17",
   "Statement": [
     { "Effect": "Allow", "Action": ["logs:CreateLogGroup","logs:CreateLogStream","logs:PutLogEvents"], "Resource": "*" },
-    { "Effect": "Allow", "Action": ["s3:GetObject"], "Resource": "arn:aws:s3:::gaurav-mail/inbound/*" },
-    { "Effect": "Allow", "Action": ["s3:PutObject"], "Resource": "arn:aws:s3:::gaurav-mail/attachments/*" }
+    { "Effect": "Allow", "Action": ["s3:GetObject"], "Resource": "arn:aws:s3:::gaurav.one/inbound/*" },
+    { "Effect": "Allow", "Action": ["s3:PutObject"], "Resource": "arn:aws:s3:::gaurav.one/attachments/*" }
   ]
 }
 ```
@@ -177,14 +170,15 @@ The app needs to read attachments (signed URLs) and send via SES.
 {
   "Version": "2012-10-17",
   "Statement": [
-    { "Effect": "Allow", "Action": ["s3:GetObject","s3:PutObject","s3:DeleteObject"], "Resource": "arn:aws:s3:::gaurav-mail/*" },
+    { "Effect": "Allow", "Action": ["s3:GetObject","s3:PutObject","s3:DeleteObject"], "Resource": "arn:aws:s3:::gaurav.one/*" },
     { "Effect": "Allow", "Action": ["ses:SendRawEmail","ses:SendEmail"], "Resource": "*" }
   ]
 }
 ```
 
 Put the access key + secret in Railway env (`AWS_ACCESS_KEY_ID`,
-`AWS_SECRET_ACCESS_KEY`, `AWS_REGION=ap-south-1`).
+`AWS_SECRET_ACCESS_KEY`, `AWS_REGION=us-east-1`). App is hosted on Railway
+(Amsterdam) but talks to AWS `us-east-1` where SES/S3 live.
 
 ---
 
