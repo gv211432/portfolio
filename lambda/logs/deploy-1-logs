@@ -1,0 +1,87 @@
+{
+    "Role": {
+        "Path": "/",
+        "RoleName": "ses-inbound-role",
+        "RoleId": "AROAYW4ECNITEZAFQQ46P",
+        "Arn": "arn:aws:iam::598888049190:role/ses-inbound-role",
+        "CreateDate": "2026-04-15T11:56:31+00:00",
+        "AssumeRolePolicyDocument": {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Principal": {
+                        "Service": "lambda.amazonaws.com"
+                    },
+                    "Action": "sts:AssumeRole"
+                }
+            ]
+        }
+    }
+}
+
+{
+    "FunctionName": "ses-inbound",
+    "FunctionArn": "arn:aws:lambda:us-east-1:598888049190:function:ses-inbound",
+    "Runtime": "nodejs20.x",
+    "Role": "arn:aws:iam::598888049190:role/ses-inbound-role",
+    "Handler": "index.handler",
+    "CodeSize": 5294386,
+    "Description": "",
+    "Timeout": 30,
+    "MemorySize": 512,
+    "LastModified": "2026-04-15T12:01:02.116+0000",
+    "CodeSha256": "J6Sa1732U7P8u94W/GqG3tH+aVkdhdN+9xcN4Phttz8=",
+    "Version": "$LATEST",
+    "Environment": {
+        "Variables": {
+            "WEBHOOK_URL": "https://gaurav.one/api/mail/inbound",
+            "BUCKET": "gaurav.one",
+            "ATTACHMENT_PREFIX": "attachments/",
+            "WEBHOOK_API_KEY": "3ssdfh2389y2u3h4jk5h2kei788a7s6d5f4g3h2j1k0l9m8n7o6p5q4r3s2t1u0v"
+        }
+    },
+    "TracingConfig": {
+        "Mode": "PassThrough"
+    },
+    "RevisionId": "84727cc9-8fab-4323-9d8a-af9f5484f231",
+    "State": "Pending",
+    "StateReason": "The function is being created.",
+    "StateReasonCode": "Creating",
+    "PackageType": "Zip",
+    "Architectures": [
+        "x86_64"
+    ],
+    "EphemeralStorage": {
+        "Size": 512
+    },
+    "SnapStart": {
+ "ApplyOn": "None",
+        "OptimizationStatus": "Off"
+    },
+    "RuntimeVersionConfig": {
+        "RuntimeVersionArn": "arn:aws:lambda:us-east-1::runtime:2d788b26ac416854c5eb831c9f46cb2e0a0ddcee84b1a9b114acbdfdb644c8c1"
+    },
+    "LoggingConfig": {
+        "LogFormat": "Text",
+        "LogGroup": "/aws/lambda/ses-inbound"
+    }
+}
+
+{
+    "Statement": "{\"Sid\":\"s3invoke\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"s3.amazonaws.com\"},\"Action\":\"lambda:InvokeFunction\",\"Resource\":\"arn:aws:lambda:us-east-1:598888049190:function:ses-inbound\",\"Condition\":{\"ArnLike\":{\"AWS:SourceArn\":\"arn:aws:s3:::gaurav.one\"}}}"
+}
+
+
+{
+    "VerificationToken": "XyV4DQfrWFBxNQL0sYwoPQIZz+rI2xMIzmgR+owKFio="
+}
+
+
+{
+    "DkimTokens": [
+        "a22qo3j3msggvuz7l6ai4xnlabxdr4bp",
+        "3fgsu7yfezkkep5nw3wu4fjoq2atwrpk",
+        "tvjlv3e3gkhlgifeyxtmmsbfaj56n3tb"
+    ]
+}
