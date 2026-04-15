@@ -83,11 +83,12 @@ export default function middleware(req: NextRequest) {
   }
 
   // Mail subdomain — rewrite to the first-class /mail app (not under /domains).
-  if (subdomain === 'mail') {
-    if (!url.pathname.startsWith('/mail')) {
-      url.pathname = url.pathname === '/' ? '/mail' : `/mail${url.pathname}`;
+  const mailSubdomain = process.env.NEXT_PUBLIC_MAIL_DOMAIN ? process.env.NEXT_PUBLIC_MAIL_DOMAIN.split('.')?.[0] : '';
+  if (subdomain.includes(mailSubdomain)) {
+    if (!url.pathname.startsWith(`/${mailSubdomain}`)) {
+      url.pathname = url.pathname === '/' ? `/${mailSubdomain}` : `/${mailSubdomain}${url.pathname}`;
     }
-    console.log(`[Middleware] Rewriting mail → ${url.pathname}`);
+    console.log(`[Middleware] Rewriting ${mailSubdomain} → ${url.pathname}`);
     return NextResponse.rewrite(url);
   }
 
