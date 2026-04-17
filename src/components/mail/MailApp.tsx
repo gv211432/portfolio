@@ -408,7 +408,7 @@ export default function MailApp({ me, asStaffId }: Props) {
               return (
                 <button
                   key={f.key}
-                  onClick={() => { setFolder(f.key); setLabelId(null); setSelectedId(null); setQuery(""); setSidebarOpen(false); setMobilePanel("list"); }}
+                  onClick={() => { setFolder(f.key); setLabelId(null); setSelectedId(null); setQuery(""); setSidebarOpen(false); setMobilePanel("list"); setEmails([]); }}
                   className={`w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-3 transition ${
                     active
                       ? "bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 font-medium"
@@ -437,7 +437,7 @@ export default function MailApp({ me, asStaffId }: Props) {
             {labels.map((l) => (
               <button
                 key={l.id}
-                onClick={() => { setLabelId(l.id); setSelectedId(null); setSidebarOpen(false); }}
+                onClick={() => { setLabelId(l.id); setSelectedId(null); setSidebarOpen(false); setEmails([]); }}
                 className={`w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-3 transition ${
                   labelId === l.id
                     ? "bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 font-medium"
@@ -462,18 +462,31 @@ export default function MailApp({ me, asStaffId }: Props) {
             <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
               {searchMode ? "Search Results" : labelId ? labels.find((l) => l.id === labelId)?.name ?? "" : FOLDERS.find((f) => f.key === folder)?.label}
             </h2>
+            {loading && (
+              <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin shrink-0" />
+            )}
             {searchMode && (
               <button onClick={() => { setQuery(""); setSearchMode(false); }}
                 className="text-xs text-indigo-600 hover:underline">Clear</button>
             )}
             <div className="flex-1" />
-            <span className="text-xs text-gray-400">{emails.length} {emails.length === 1 ? "email" : "emails"}</span>
+            {!loading && <span className="text-xs text-gray-400">{emails.length} {emails.length === 1 ? "email" : "emails"}</span>}
           </div>
 
           <div className="flex-1 overflow-y-auto">
-            {loading && (
-              <div className="p-8 flex items-center justify-center">
-                <div className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+            {loading && emails.length === 0 && (
+              <div className="p-2 space-y-1">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className="px-4 py-3 animate-pulse">
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded bg-gray-200 dark:bg-gray-800" />
+                      <div className="flex-1 h-3.5 rounded bg-gray-200 dark:bg-gray-800" />
+                      <div className="w-8 h-3 rounded bg-gray-200 dark:bg-gray-800" />
+                    </div>
+                    <div className="mt-1.5 h-3.5 rounded bg-gray-100 dark:bg-gray-800/60 w-3/4" />
+                    <div className="mt-1 h-3 rounded bg-gray-100 dark:bg-gray-800/40 w-full" />
+                  </div>
+                ))}
               </div>
             )}
             {!loading && emails.length === 0 && (
@@ -611,9 +624,7 @@ export default function MailApp({ me, asStaffId }: Props) {
                     dangerouslySetInnerHTML={{ __html: selected.html }}
                   />
                 ) : (
-                  <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-gray-800 dark:text-gray-200">
-                    {selected.bodyText}
-                  </pre>
+                  <PlainTextBody text={selected.bodyText} />
                 )}
               </div>
 
@@ -668,6 +679,62 @@ export default function MailApp({ me, asStaffId }: Props) {
           }}
         />
       )}
+    </div>
+  );
+}
+
+/**
+ * Renders plain text email body with `>` quoted lines styled as blockquotes.
+ * Supports nested quoting (`>>`, `>>>`, etc.) with increasing indentation.
+ */
+function PlainTextBody({ text }: { text: string }) {
+  const lines = text.split("\n");
+
+  // Group consecutive lines by their quote depth
+  const groups: { depth: number; lines: string[] }[] = [];
+  for (const raw of lines) {
+    const match = raw.match(/^(>[\s>]*)/);
+    const depth = match ? (match[1].match(/>/g) ?? []).length : 0;
+    const content = depth > 0 ? raw.replace(/^(>[\s>]*)/, "").trimStart() : raw;
+    const last = groups[groups.length - 1];
+    if (last && last.depth === depth) {
+      last.lines.push(content);
+    } else {
+      groups.push({ depth, lines: [content] });
+    }
+  }
+
+  return (
+    <div className="text-sm leading-relaxed text-gray-800 dark:text-gray-200 space-y-1">
+      {groups.map((g, i) => {
+        const content = g.lines.join("\n");
+        if (g.depth === 0) {
+          return (
+            <pre key={i} className="whitespace-pre-wrap font-sans m-0">
+              {content}
+            </pre>
+          );
+        }
+        // Nested quotes get progressively lighter colors
+        const colors = [
+          "border-amber-400 bg-amber-50/50 dark:bg-amber-950/20",
+          "border-blue-400 bg-blue-50/50 dark:bg-blue-950/20",
+          "border-green-400 bg-green-50/50 dark:bg-green-950/20",
+          "border-purple-400 bg-purple-50/50 dark:bg-purple-950/20",
+        ];
+        const colorClass = colors[Math.min(g.depth - 1, colors.length - 1)];
+        return (
+          <blockquote
+            key={i}
+            className={`border-l-[3px] ${colorClass} pl-3 py-1.5 rounded-r-md my-1`}
+            style={{ marginLeft: `${(g.depth - 1) * 12}px` }}
+          >
+            <pre className="whitespace-pre-wrap font-sans m-0 text-gray-600 dark:text-gray-400 text-[13px]">
+              {content}
+            </pre>
+          </blockquote>
+        );
+      })}
     </div>
   );
 }
