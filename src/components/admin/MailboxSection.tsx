@@ -46,12 +46,12 @@ export default function MailboxSection() {
     (async () => {
       const res = await fetch("/api/admin/staff?limit=100");
       const data = await res.json();
-      const list: StaffOption[] = (data.staff ?? []).map((s: { id: string; firstName: string; lastName: string; displayName: string | null; emailAddress?: { email: string } | null }) => ({
+      const list: StaffOption[] = (data.staff ?? []).map((s: { id: string; firstName: string; lastName: string; displayName: string | null; email?: string | null }) => ({
         id: s.id,
         firstName: s.firstName,
         lastName: s.lastName,
         displayName: s.displayName,
-        email: s.emailAddress?.email ?? null,
+        email: s.email ?? null,
       }));
       setStaffList(list);
     })();
@@ -135,7 +135,7 @@ export default function MailboxSection() {
 }
 
 function OutboxReview() {
-  const [status, setStatus] = useState<"BLOCKED" | "RELEASED" | "REJECTED">("BLOCKED");
+  const [status, setStatus] = useState<"BLOCKED" | "RELEASED" | "DISCARDED">("BLOCKED");
   const [items, setItems] = useState<OutboxItem[]>([]);
   const [selected, setSelected] = useState<OutboxItem | null>(null);
   const [loading, setLoading] = useState(false);
@@ -179,12 +179,12 @@ function OutboxReview() {
     <div className="grid grid-cols-1 md:grid-cols-[320px_1fr] gap-4">
       <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 overflow-hidden">
         <div className="p-2 border-b border-slate-200 dark:border-slate-800 flex gap-1">
-          {(["BLOCKED", "RELEASED", "REJECTED"] as const).map((s) => (
+          {(["BLOCKED", "RELEASED", "DISCARDED"] as const).map((s) => (
             <button
               key={s}
               onClick={() => { setStatus(s); setSelected(null); }}
               className={`flex-1 px-2 py-1 text-xs rounded ${status === s ? "bg-indigo-600 text-white" : "text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"}`}
-            >{s}</button>
+            >{s === "DISCARDED" ? "REJECTED" : s}</button>
           ))}
         </div>
         <div className="max-h-[calc(100vh-280px)] overflow-y-auto">

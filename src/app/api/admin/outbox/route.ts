@@ -1,6 +1,6 @@
 /**
  * GET /api/admin/outbox — list blocked/pending outbox items (admin review).
- * Query: status=BLOCKED|PENDING|RELEASED|REJECTED, staffId?, page, limit
+ * Query: status=BLOCKED|RELEASED|DISCARDED, staffId?, page, limit
  */
 
 import { NextRequest, NextResponse } from "next/server";
