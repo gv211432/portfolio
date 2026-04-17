@@ -64,6 +64,7 @@ export async function GET(req: NextRequest, ctx: Ctx) {
       bcc: email.bccJson,
       subject: email.subject,
       bodyText: email.bodyText,
+      html: email.bodyHtml ?? undefined,
       s3Key: email.s3Key, // admin can fetch raw if needed via separate endpoint
       folder: email.folder,
       isRead: actor.viewingAsAdmin ? email.isRead : true,

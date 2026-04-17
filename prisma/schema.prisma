@@ -392,6 +392,7 @@ model Email {
   // Body
   snippet     String      @db.VarChar(500)
   bodyText    String      @db.Text    // NEUTRALIZED plain text, used for fuzzy search
+  bodyHtml    String?     @db.Text    // Original HTML body (for rich-text rendering)
   s3Key       String?     // raw .eml in S3 (null for DRAFT before first save-to-s3)
   hasAttachments Boolean  @default(false)
   sizeBytes   Int?

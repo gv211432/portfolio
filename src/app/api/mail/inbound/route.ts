@@ -134,6 +134,7 @@ export async function POST(req: NextRequest) {
         subject: payload.subject?.slice(0, 1000) ?? null,
         snippet,
         bodyText,
+        bodyHtml: payload.html ?? null,
         s3Key: payload.s3Key,
         hasAttachments: !!(payload.attachments && payload.attachments.length),
         sizeBytes: payload.sizeBytes ?? null,

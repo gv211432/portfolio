@@ -10,6 +10,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import {
   X, Send, ChevronDown, ChevronUp, AlertTriangle, Users, History,
+  Paperclip, FileText, Trash2,
 } from "lucide-react";
 
 const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
@@ -82,6 +83,8 @@ export default function Compose({ me, asStaffId, initial, onClose }: Props) {
       ? `<pre style="font-family:sans-serif;white-space:pre-wrap">${initial.bodyText.replace(/&/g, "&amp;").replace(/</g, "&lt;")}</pre>`
       : ""
   );
+  const [attachments, setAttachments] = useState<{ file: File; uploading: boolean; s3Key?: string; url?: string; error?: string }[]>([]);
+  const attachRef = useRef<HTMLInputElement>(null);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [blocked, setBlocked] = useState<string[] | null>(null);
@@ -130,6 +133,36 @@ export default function Compose({ me, asStaffId, initial, onClose }: Props) {
     return div.textContent || div.innerText || "";
   }
 
+  async function addFiles(files: FileList) {
+    const newAtts = Array.from(files).map((file) => ({ file, uploading: true }));
+    setAttachments((prev) => [...prev, ...newAtts]);
+
+    for (let i = 0; i < newAtts.length; i++) {
+      const att = newAtts[i];
+      try {
+        const form = new FormData();
+        form.append("file", att.file);
+        const uploadUrl = asStaffId
+          ? `/api/mail/attachments/upload?asStaffId=${asStaffId}`
+          : "/api/mail/attachments/upload";
+        const res = await fetch(uploadUrl, { method: "POST", body: form });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error ?? "Upload failed");
+        setAttachments((prev) => prev.map((a) =>
+          a.file === att.file ? { ...a, uploading: false, s3Key: data.key, url: data.url } : a
+        ));
+      } catch (err) {
+        setAttachments((prev) => prev.map((a) =>
+          a.file === att.file ? { ...a, uploading: false, error: (err as Error).message } : a
+        ));
+      }
+    }
+  }
+
+  function removeAttachment(idx: number) {
+    setAttachments((prev) => prev.filter((_, i) => i !== idx));
+  }
+
   async function send() {
     setSending(true);
     setError(null);
@@ -145,9 +178,17 @@ export default function Compose({ me, asStaffId, initial, onClose }: Props) {
           bcc: parseList(bcc),
           subject,
           bodyText: htmlToPlainText(htmlBody),
-          html: htmlBody,
+          bodyHtml: htmlBody,
           inReplyTo: initial?.inReplyTo,
           references: initial?.references,
+          attachments: attachments
+            .filter((a) => a.s3Key)
+            .map((a) => ({
+              filename: a.file.name,
+              contentType: a.file.type || "application/octet-stream",
+              sizeBytes: a.file.size,
+              s3Key: a.s3Key,
+            })),
         }),
       });
       const data = await res.json();
@@ -255,6 +296,26 @@ export default function Compose({ me, asStaffId, initial, onClose }: Props) {
           </div>
         </div>
 
+        {/* Attachments */}
+        {attachments.length > 0 && (
+          <div className="px-5 py-2 border-t border-gray-100 dark:border-gray-800/60 space-y-1.5">
+            {attachments.map((a, i) => (
+              <div key={i} className="flex items-center gap-2 text-sm">
+                <FileText size={14} className="text-gray-400 shrink-0" />
+                <span className="truncate flex-1">{a.file.name}</span>
+                <span className="text-xs text-gray-400 shrink-0">
+                  {a.uploading ? "Uploading..." : a.error ? <span className="text-red-500">{a.error}</span> : formatSize(a.file.size)}
+                </span>
+                {a.uploading && <div className="w-3 h-3 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin shrink-0" />}
+                <button onClick={() => removeAttachment(i)} className="p-0.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded shrink-0">
+                  <Trash2 size={13} className="text-gray-400 hover:text-red-500" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        <input ref={attachRef} type="file" multiple className="hidden" onChange={(e) => { if (e.target.files?.length) addFiles(e.target.files); e.target.value = ""; }} />
+
         {/* Error */}
         {error && (
           <div className="mx-5 mb-2 p-3 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50">
@@ -273,14 +334,23 @@ export default function Compose({ me, asStaffId, initial, onClose }: Props) {
         )}
 
         {/* Footer */}
-        <footer className="px-5 py-3 border-t border-gray-200 dark:border-gray-800 flex items-center justify-between gap-3">
+        <footer className="px-5 py-3 border-t border-gray-200 dark:border-gray-800 flex items-center gap-3">
           <button onClick={() => onClose(false)}
             className="px-4 py-2 text-sm rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition font-medium">
             Discard
           </button>
           <button
+            type="button"
+            onClick={() => attachRef.current?.click()}
+            className="p-2 rounded-lg text-gray-500 hover:text-indigo-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+            title="Attach files"
+          >
+            <Paperclip size={18} />
+          </button>
+          <div className="flex-1" />
+          <button
             onClick={send}
-            disabled={sending || !to.trim()}
+            disabled={sending || !to.trim() || attachments.some((a) => a.uploading)}
             className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 disabled:opacity-50 text-white text-sm font-medium shadow-sm shadow-indigo-600/20 transition"
           >
             <Send size={15} />
@@ -353,6 +423,12 @@ export default function Compose({ me, asStaffId, initial, onClose }: Props) {
       `}</style>
     </div>
   );
+}
+
+function formatSize(b: number) {
+  if (b < 1024) return `${b} B`;
+  if (b < 1024 * 1024) return `${Math.ceil(b / 1024)} KB`;
+  return `${(b / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 function ComposeField({ label, value, onChange, placeholder }: {

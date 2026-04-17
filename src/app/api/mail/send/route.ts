@@ -22,6 +22,8 @@ import { sendViaSes, type MailAddress } from "@/lib/mail/ses";
 import { htmlToText, makeSnippet, isValidEmail } from "@/lib/mail/text";
 import { assignThread } from "@/lib/mail/threading";
 import { Activity } from "@/lib/mail/activity";
+import { getObjectBuffer } from "@/lib/mail/s3";
+import type { SesAttachment } from "@/lib/mail/ses";
 
 interface Addr { email: string; name?: string }
 
@@ -116,6 +118,23 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // Resolve attachments from S3 (uploaded by Compose UI)
+  const rawAttachments = Array.isArray(body.attachments) ? body.attachments : [];
+  const sesAttachments: SesAttachment[] = [];
+  for (const att of rawAttachments) {
+    if (!att.s3Key || typeof att.s3Key !== "string") continue;
+    try {
+      const content = await getObjectBuffer(att.s3Key);
+      sesAttachments.push({
+        filename: att.filename ?? "attachment",
+        contentType: att.contentType ?? "application/octet-stream",
+        content,
+      });
+    } catch (err) {
+      console.error("[mail/send] failed to read attachment", att.s3Key, err);
+    }
+  }
+
   // Send via SES
   let sent;
   try {
@@ -127,6 +146,7 @@ export async function POST(req: NextRequest) {
       bodyHtml,
       inReplyTo,
       references,
+      attachments: sesAttachments.length ? sesAttachments : undefined,
     });
   } catch (err) {
     console.error("[mail/send] SES error", err);
@@ -159,15 +179,31 @@ export async function POST(req: NextRequest) {
       subject: subject.slice(0, 1000) || null,
       snippet: makeSnippet(bodyText),
       bodyText,
+      bodyHtml: bodyHtml ?? null,
       s3Key: null,
       folder: "SENT",
       direction: "OUTBOUND",
       isRead: true,
-      hasAttachments: false,
+      hasAttachments: sesAttachments.length > 0,
       sizeBytes: Buffer.byteLength(bodyText, "utf8"),
       createdAt: now,
     },
   });
+
+  // Save outbound attachment records
+  if (rawAttachments.length > 0) {
+    await prisma.emailAttachment.createMany({
+      data: rawAttachments
+        .filter((a: { s3Key?: string }) => a.s3Key)
+        .map((a: { s3Key: string; filename?: string; contentType?: string; sizeBytes?: number }) => ({
+          emailId: email.id,
+          filename: a.filename ?? "attachment",
+          contentType: a.contentType ?? "application/octet-stream",
+          sizeBytes: a.sizeBytes ?? 0,
+          s3Key: a.s3Key,
+        })),
+    });
+  }
 
   if (draftId) {
     await prisma.emailDraft.deleteMany({ where: { id: draftId, staffId: actor.staffId } });
