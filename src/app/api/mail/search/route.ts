@@ -22,6 +22,7 @@ interface Hit {
   folder: string;
   isRead: boolean;
   isStarred: boolean;
+  hasAttachments: boolean;
   direction: string;
   threadId: string | null;
   score: number;
@@ -55,9 +56,11 @@ export async function GET(req: NextRequest) {
     });
     return NextResponse.json({
       emails: rows.map((e) => ({
-        id: e.id, createdAt: e.createdAt, fromEmail: e.fromEmail, fromName: e.fromName,
+        id: e.id, createdAt: e.createdAt,
+        from: { email: e.fromEmail, name: e.fromName },
         subject: e.subject, snippet: e.snippet, folder: e.folder, isRead: e.isRead,
-        isStarred: e.isStarred, direction: e.direction, threadId: e.threadId, score: 1,
+        isStarred: e.isStarred, hasAttachments: e.hasAttachments, direction: e.direction,
+        threadId: e.threadId, score: 1,
       })),
     });
   }
@@ -70,7 +73,7 @@ export async function GET(req: NextRequest) {
 
   const rows = await prisma.$queryRawUnsafe<Hit[]>(
     `SELECT "id", "createdAt", "fromEmail", "fromName", "subject", "snippet",
-            "folder"::text as "folder", "isRead", "isStarred", "direction"::text as "direction", "threadId",
+            "folder"::text as "folder", "isRead", "isStarred", "hasAttachments", "direction"::text as "direction", "threadId",
             GREATEST(
               similarity(COALESCE("subject",''), $2),
               similarity("bodyText", $2),
@@ -89,5 +92,13 @@ export async function GET(req: NextRequest) {
     ...params,
   );
 
-  return NextResponse.json({ emails: rows });
+  return NextResponse.json({
+    emails: rows.map((e) => ({
+      id: e.id, createdAt: e.createdAt,
+      from: { email: e.fromEmail, name: e.fromName },
+      subject: e.subject, snippet: e.snippet, folder: e.folder, isRead: e.isRead,
+      isStarred: e.isStarred, hasAttachments: e.hasAttachments ?? false,
+      direction: e.direction, threadId: e.threadId, score: e.score,
+    })),
+  });
 }

@@ -248,7 +248,7 @@ export default function AdminShell() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-950 flex">
+    <div className="h-screen bg-gray-50 dark:bg-slate-950 flex overflow-hidden">
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div
@@ -274,7 +274,7 @@ export default function AdminShell() {
       </aside>
 
       {/* Main */}
-      <div className="flex-1 flex flex-col min-w-0 lg:ml-0">
+      <div className="flex-1 flex flex-col min-w-0 lg:ml-0 h-screen overflow-hidden">
         {/* Top bar */}
         <header className="bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 px-4 sm:px-6 py-3 flex items-center gap-4 sticky top-0 z-30">
           <button
@@ -306,7 +306,7 @@ export default function AdminShell() {
         </header>
 
         {/* Content */}
-        <main className="flex-1 p-4 sm:p-6 overflow-auto">
+        <main className="flex-1 p-4 sm:p-6 overflow-y-auto min-h-0">
           {active === "dashboard" && <Dashboard />}
           {active === "contacts" && <ContactsSection />}
           {active === "careers" && <CareersSection />}

@@ -5,7 +5,7 @@
  * Matches the indigo/slate admin theme used across other sections.
  */
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface StaffRow {
   id: string;
@@ -255,7 +255,10 @@ function CreateStaff({ onCancel, onCreated }: { onCancel: () => void; onCreated:
           <Input label="Joined on" type="date" value={form.joinedAt} onChange={(v) => setForm({ ...form, joinedAt: v })} />
         </div>
         <Input label="Phone" value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} />
-        <Input label="Profile image URL" value={form.profileImageUrl} onChange={(v) => setForm({ ...form, profileImageUrl: v })} />
+        <ImageUpload
+          value={form.profileImageUrl}
+          onChange={(v) => setForm({ ...form, profileImageUrl: v })}
+        />
 
         <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-slate-300">
           <input type="checkbox" checked={form.sendCredentialsEmail}
@@ -492,6 +495,58 @@ function StaffDetail({ id, onBack, onOpenMail }: { id: string; onBack: () => voi
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function ImageUpload({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [preview, setPreview] = useState(value || "");
+
+  async function handleFile(file: File) {
+    setUploading(true);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const res = await fetch("/api/admin/upload", { method: "POST", body: form });
+      const data = await res.json();
+      if (!res.ok) { alert(data.error ?? "Upload failed"); return; }
+      setPreview(data.url);
+      onChange(data.url);
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  return (
+    <div>
+      <label className="block text-xs font-medium text-gray-500 dark:text-slate-400 mb-1">Profile photo</label>
+      <div className="flex items-center gap-4">
+        <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-slate-800 border-2 border-dashed border-gray-300 dark:border-slate-600 flex items-center justify-center overflow-hidden shrink-0">
+          {preview ? (
+            <img src={preview} alt="Preview" className="w-full h-full object-cover rounded-full" />
+          ) : (
+            <span className="text-gray-400 text-xs text-center">No photo</span>
+          )}
+        </div>
+        <div className="flex flex-col gap-2">
+          <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading}
+            className="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-slate-700 text-sm font-medium text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800 disabled:opacity-50">
+            {uploading ? "Uploading..." : "Upload image"}
+          </button>
+          <input ref={fileRef} type="file" accept="image/*" className="hidden"
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
+          <p className="text-[11px] text-gray-400">JPEG, PNG, WebP. Max 5 MB.</p>
+        </div>
+      </div>
+      {/* Fallback: paste URL */}
+      <input
+        value={value}
+        onChange={(e) => { onChange(e.target.value); setPreview(e.target.value); }}
+        placeholder="Or paste image URL"
+        className="mt-2 w-full px-3 py-1.5 rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs text-gray-900 dark:text-white placeholder-gray-400"
+      />
     </div>
   );
 }
