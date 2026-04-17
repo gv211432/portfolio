@@ -6,7 +6,7 @@ ACCOUNT=598888049190
 BUCKET=gaurav.one
 FN=ses-inbound
 ROLE=ses-inbound-role
-WEBHOOK_URL=https://gaurav.one/api/mail/inbound
+WEBHOOK_URL=https://www.gaurav.one/api/mail/inbound
 WEBHOOK_API_KEY=3ssdfh2389y2u3h4jk5h2kei788a7s6d5f4g3h2j1k0l9m8n7o6p5q4r3s2t1u0v
 
 cd "$(dirname "$0")/../ses-inbound"
