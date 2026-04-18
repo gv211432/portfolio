@@ -56,6 +56,7 @@ export const Activity = {
   StaffEmailSend: "staff.email.send",
   StaffEmailSendBlocked: "staff.email.send.blocked",
   StaffEmailTrash: "staff.email.trash",
+  StaffEmailArchive: "staff.email.archive",
   StaffEmailDelete: "staff.email.delete",
   StaffDraftSave: "staff.draft.save",
   StaffLabelCreate: "staff.label.create",

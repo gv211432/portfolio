@@ -401,6 +401,7 @@ model Email {
   folder      EmailFolder @default(INBOX)
   isRead      Boolean     @default(false)
   isStarred   Boolean     @default(false)
+  isPinned    Boolean     @default(false)
 
   // Direction — needed because SENT row is also owned by the sender staff.
   direction   EmailDirection
@@ -421,6 +422,7 @@ enum EmailFolder {
   TRASH
   DRAFT
   SPAM
+  ARCHIVE
 }
 
 enum EmailDirection {

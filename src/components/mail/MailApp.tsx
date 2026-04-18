@@ -13,11 +13,12 @@ import MailSettings from "./MailSettings";
 import {
   Send, FileEdit, Trash2, ShieldBan, Star, Search,
   PenSquare, Plus, ChevronLeft, Paperclip, Reply,
-  ReplyAll, Forward, Mail, MailOpen, Tag, Menu, X, Clock,
-  Users, History, Inbox, Settings, LogOut, ChevronDown, UserCircle,
+  ReplyAll, Forward, Mail, MailOpen, Tag, Menu, Clock,
+  Users, History, Inbox, Settings, LogOut, ChevronDown,
+  Archive, Pin, Check, ChevronUp,
 } from "lucide-react";
 
-type Folder = "INBOX" | "SENT" | "DRAFT" | "TRASH" | "SPAM" | "STARRED";
+type Folder = "INBOX" | "SENT" | "DRAFT" | "TRASH" | "SPAM" | "STARRED" | "ARCHIVE";
 
 interface Me {
   staffId: string;
@@ -39,6 +40,7 @@ interface EmailRow {
   folder: string;
   isRead: boolean;
   isStarred: boolean;
+  isPinned: boolean;
   hasAttachments: boolean;
   direction: string;
   threadId: string | null;
@@ -72,6 +74,7 @@ const FOLDERS: { key: Folder; label: string; icon: React.ReactNode }[] = [
   { key: "INBOX", label: "Inbox", icon: <Inbox size={18} /> },
   { key: "SENT", label: "Sent", icon: <Send size={18} /> },
   { key: "DRAFT", label: "Drafts", icon: <FileEdit size={18} /> },
+  { key: "ARCHIVE", label: "Archive", icon: <Archive size={18} /> },
   { key: "TRASH", label: "Trash", icon: <Trash2 size={18} /> },
   { key: "SPAM", label: "Spam", icon: <ShieldBan size={18} /> },
 ];
@@ -100,6 +103,28 @@ function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/);
   if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
   return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+}
+
+const AVATAR_PALETTE = [
+  { bg: "#fee2e2", text: "#dc2626" }, // red
+  { bg: "#ffedd5", text: "#ea580c" }, // orange
+  { bg: "#fef9c3", text: "#ca8a04" }, // yellow
+  { bg: "#dcfce7", text: "#16a34a" }, // green
+  { bg: "#d1fae5", text: "#059669" }, // emerald
+  { bg: "#ccfbf1", text: "#0d9488" }, // teal
+  { bg: "#cffafe", text: "#0891b2" }, // cyan
+  { bg: "#e0f2fe", text: "#0284c7" }, // sky
+  { bg: "#dbeafe", text: "#2563eb" }, // blue
+  { bg: "#e0e7ff", text: "#4f46e5" }, // indigo
+  { bg: "#ede9fe", text: "#7c3aed" }, // violet
+  { bg: "#f3e8ff", text: "#9333ea" }, // purple
+  { bg: "#fce7f3", text: "#db2777" }, // pink
+  { bg: "#ffe4e6", text: "#e11d48" }, // rose
+];
+
+function senderAvatarColor(char: string) {
+  const code = char.toUpperCase().charCodeAt(0);
+  return AVATAR_PALETTE[code % AVATAR_PALETTE.length];
 }
 
 export default function MailApp({ me, asStaffId }: Props) {
@@ -145,6 +170,12 @@ export default function MailApp({ me, asStaffId }: Props) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
 
+  // Multi-select + hover state
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [hoverId, setHoverId] = useState<string | null>(null);
+  const [bulkMenuOpen, setBulkMenuOpen] = useState(false);
+  const bulkMenuRef = useRef<HTMLDivElement>(null);
+
   // Layout direction (RTL/LTR from localStorage)
   const [dir, setDir] = useState<"ltr" | "rtl">("ltr");
   useEffect(() => {
@@ -158,6 +189,9 @@ export default function MailApp({ me, asStaffId }: Props) {
       if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
         setProfileOpen(false);
         setLogoutConfirm(false);
+      }
+      if (bulkMenuRef.current && !bulkMenuRef.current.contains(e.target as Node)) {
+        setBulkMenuOpen(false);
       }
     }
     document.addEventListener("mousedown", handler);
@@ -330,10 +364,63 @@ export default function MailApp({ me, asStaffId }: Props) {
     setFolder(f);
     setLabelId(null);
     setSelectedId(null);
+    setSelectedIds(new Set());
     setQuery("");
     setSidebarOpen(false);
     setMobilePanel("list");
     setEmails([]);
+  }
+
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  function selectAll() {
+    if (selectedIds.size === emails.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(emails.map((e) => e.id)));
+    }
+  }
+
+  async function bulkAction(action: string) {
+    if (selectedIds.size === 0) return;
+    setBulkMenuOpen(false);
+    const ids = Array.from(selectedIds);
+    await fetch(withQs("/api/mail/emails/bulk"), {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ ids, action }),
+    });
+    if (action === "delete" || action === "trash" || action === "archive" || action === "spam") {
+      setEmails((p) => p.filter((e) => !selectedIds.has(e.id)));
+      if (selectedId && selectedIds.has(selectedId)) { setSelectedId(null); setMobilePanel("list"); }
+    } else if (action === "markRead") {
+      setEmails((p) => p.map((e) => selectedIds.has(e.id) ? { ...e, isRead: true } : e));
+    } else if (action === "markUnread") {
+      setEmails((p) => p.map((e) => selectedIds.has(e.id) ? { ...e, isRead: false } : e));
+    } else if (action === "pin") {
+      setEmails((p) => p.map((e) => selectedIds.has(e.id) ? { ...e, isPinned: true } : e));
+    } else if (action === "unpin") {
+      setEmails((p) => p.map((e) => selectedIds.has(e.id) ? { ...e, isPinned: false } : e));
+    }
+    setSelectedIds(new Set());
+  }
+
+  async function archiveEmail(id: string) {
+    await patchEmail(id, { folder: "ARCHIVE" });
+    setEmails((p) => p.filter((e) => e.id !== id));
+    if (selectedId === id) { setSelectedId(null); setMobilePanel("list"); }
+  }
+
+  async function togglePin(e: EmailRow) {
+    const next = !e.isPinned;
+    setEmails((p) => p.map((x) => x.id === e.id ? { ...x, isPinned: next } : x));
+    await patchEmail(e.id, { isPinned: next });
   }
 
   const unreadCount = useMemo(() => emails.filter((e) => !e.isRead).length, [emails]);
@@ -341,7 +428,7 @@ export default function MailApp({ me, asStaffId }: Props) {
   return (
     <div dir={dir} className="h-screen flex flex-col bg-gray-50 dark:bg-[#0f0f0f] text-gray-900 dark:text-gray-100">
       {/* ===== Top bar ===== */}
-      <header className="flex items-center gap-2 sm:gap-3 px-3 sm:px-5 h-14 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-[#161616] shrink-0">
+      <header className="relative z-30 flex items-center gap-2 sm:gap-3 px-3 sm:px-5 h-14 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-[#161616] shrink-0">
         {/* Mobile menu toggle */}
         <button onClick={() => setSidebarOpen(!sidebarOpen)} className="lg:hidden p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
           <Menu size={20} />
@@ -354,7 +441,7 @@ export default function MailApp({ me, asStaffId }: Props) {
             alt="Gaurav.one"
             width={100}
             height={28}
-            className="block dark:hidden h-7 w-auto object-contain"
+            className="block dark:hidden h-7 w-auto object-contain rounded-lg"
             priority
           />
           <Image
@@ -362,7 +449,7 @@ export default function MailApp({ me, asStaffId }: Props) {
             alt="Gaurav.one"
             width={100}
             height={28}
-            className="hidden dark:block h-7 w-auto object-contain"
+            className="hidden dark:block h-7 w-auto object-contain rounded-lg"
             priority
           />
           {me.isAdminView && (
@@ -613,25 +700,92 @@ export default function MailApp({ me, asStaffId }: Props) {
           flex flex-col bg-white dark:bg-[#161616]
           ${mobilePanel !== "list" ? "hidden sm:flex" : "flex"}
         `}>
-          <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800/60 flex items-center gap-2">
-            <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
-              {searchMode
-                ? "Search Results"
-                : folder === "STARRED"
-                ? "Starred"
-                : labelId
-                ? labels.find((l) => l.id === labelId)?.name ?? ""
-                : FOLDERS.find((f) => f.key === folder)?.label}
-            </h2>
-            {loading && (
-              <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin shrink-0" />
+          {/* List header: title + bulk bar */}
+          <div className="px-3 py-2.5 border-b border-gray-100 dark:border-gray-800/60 flex items-center gap-2 min-h-[44px]">
+            {/* Select-all checkbox */}
+            <button
+              onClick={selectAll}
+              className={`w-5 h-5 rounded border flex items-center justify-center shrink-0 transition ${
+                selectedIds.size > 0 && selectedIds.size === emails.length
+                  ? "bg-indigo-600 border-indigo-600"
+                  : selectedIds.size > 0
+                  ? "bg-indigo-100 dark:bg-indigo-900/40 border-indigo-400"
+                  : "border-gray-300 dark:border-gray-600 hover:border-indigo-400"
+              }`}
+              title="Select all"
+            >
+              {selectedIds.size > 0 && (
+                <Check size={12} className="text-white" strokeWidth={3} />
+              )}
+            </button>
+
+            {selectedIds.size > 0 ? (
+              <>
+                <span className="text-xs font-medium text-gray-700 dark:text-gray-300 ml-1">
+                  {selectedIds.size} selected
+                </span>
+                {/* Bulk actions dropdown */}
+                <div className="relative ml-1" ref={bulkMenuRef}>
+                  <button
+                    onClick={() => setBulkMenuOpen(!bulkMenuOpen)}
+                    className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition"
+                  >
+                    Actions <ChevronUp size={12} className={`transition-transform ${bulkMenuOpen ? "" : "rotate-180"}`} />
+                  </button>
+                  {bulkMenuOpen && (
+                    <div className="absolute left-0 top-full mt-1 w-44 bg-white dark:bg-[#1e1e1e] border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl z-50 overflow-hidden py-1">
+                      {([
+                        { label: "Mark as read", action: "markRead" },
+                        { label: "Mark as unread", action: "markUnread" },
+                        { label: "Archive", action: "archive" },
+                        { label: "Move to trash", action: "trash" },
+                        { label: "Mark as spam", action: "spam" },
+                        { label: "Pin", action: "pin" },
+                        { label: "Unpin", action: "unpin" },
+                        { label: "Delete permanently", action: "delete" },
+                      ] as { label: string; action: string }[]).map((item) => (
+                        <button
+                          key={item.action}
+                          onClick={() => void bulkAction(item.action)}
+                          className={`w-full text-left px-3 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-800 transition ${
+                            item.action === "delete" ? "text-red-600 dark:text-red-400" : "text-gray-700 dark:text-gray-300"
+                          }`}
+                        >
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={() => setSelectedIds(new Set())}
+                  className="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 ml-auto"
+                >
+                  Clear
+                </button>
+              </>
+            ) : (
+              <>
+                <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
+                  {searchMode
+                    ? "Search Results"
+                    : folder === "STARRED"
+                    ? "Starred"
+                    : labelId
+                    ? labels.find((l) => l.id === labelId)?.name ?? ""
+                    : FOLDERS.find((f) => f.key === folder)?.label}
+                </h2>
+                {loading && (
+                  <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin shrink-0" />
+                )}
+                {searchMode && (
+                  <button onClick={() => { setQuery(""); setSearchMode(false); }}
+                    className="text-xs text-indigo-600 hover:underline">Clear</button>
+                )}
+                <div className="flex-1" />
+                {!loading && <span className="text-xs text-gray-400">{emails.length} {emails.length === 1 ? "email" : "emails"}</span>}
+              </>
             )}
-            {searchMode && (
-              <button onClick={() => { setQuery(""); setSearchMode(false); }}
-                className="text-xs text-indigo-600 hover:underline">Clear</button>
-            )}
-            <div className="flex-1" />
-            {!loading && <span className="text-xs text-gray-400">{emails.length} {emails.length === 1 ? "email" : "emails"}</span>}
           </div>
 
           <div className="flex-1 overflow-y-auto">
@@ -658,53 +812,127 @@ export default function MailApp({ me, asStaffId }: Props) {
                 </p>
               </div>
             )}
-            {emails.map((e) => (
-              <button
-                key={e.id}
-                onClick={() => selectEmail(e.id)}
-                className={`w-full text-left px-4 py-3 border-b border-gray-100 dark:border-gray-800/50 transition-colors ${
-                  selectedId === e.id
-                    ? "bg-indigo-50 dark:bg-indigo-950/40"
-                    : "hover:bg-gray-50 dark:hover:bg-[#1a1a1a]"
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={(ev) => { ev.stopPropagation(); void toggleStar(e); }}
-                    className="shrink-0"
-                    aria-label="Star"
-                  >
-                    <Star size={16}
-                      className={e.isStarred ? "fill-amber-400 text-amber-400" : "text-gray-300 dark:text-gray-700 hover:text-amber-400"}
-                    />
-                  </button>
-                  <div className={`flex-1 truncate text-sm ${!e.isRead ? "font-semibold text-gray-900 dark:text-white" : "text-gray-700 dark:text-gray-300"}`}>
-                    {e.from.name || e.from.email}
-                  </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    {e.hasAttachments && <Paperclip size={13} className="text-gray-400" />}
-                    <span className="text-[11px] text-gray-400">{timeAgo(e.createdAt)}</span>
+            {emails.map((e) => {
+              const isHovered = hoverId === e.id;
+              const isChecked = selectedIds.has(e.id);
+              return (
+                <div
+                  key={e.id}
+                  onClick={() => selectEmail(e.id)}
+                  onMouseEnter={() => setHoverId(e.id)}
+                  onMouseLeave={() => setHoverId(null)}
+                  className={`relative cursor-pointer px-3 py-3 border-b border-gray-100 dark:border-gray-800/50 transition-colors ${
+                    selectedId === e.id
+                      ? "bg-indigo-50 dark:bg-indigo-950/40"
+                      : isChecked
+                      ? "bg-indigo-50/60 dark:bg-indigo-950/20"
+                      : "hover:bg-gray-50 dark:hover:bg-[#1a1a1a]"
+                  }`}
+                >
+                  <div className="flex items-start gap-2">
+                    {/* Left column: avatar → checkbox on hover/select; star on hover or if starred */}
+                    <div className="shrink-0 flex flex-col items-center gap-1 pt-0.5" style={{ width: 22 }}>
+                      {(isHovered || isChecked) ? (
+                        <button
+                          onClick={(ev) => { ev.stopPropagation(); toggleSelect(e.id); }}
+                          className={`w-5 h-5 rounded border-2 flex items-center justify-center transition ${
+                            isChecked
+                              ? "bg-indigo-600 border-indigo-600"
+                              : "border-gray-400 dark:border-gray-500 hover:border-indigo-500 bg-white dark:bg-[#1e1e1e]"
+                          }`}
+                          aria-label="Select"
+                        >
+                          {isChecked && <Check size={11} className="text-white" strokeWidth={3} />}
+                        </button>
+                      ) : (() => {
+                        const initial = (e.from.name || e.from.email).charAt(0).toUpperCase();
+                        const color = senderAvatarColor(initial);
+                        return (
+                          <div
+                            className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold select-none"
+                            style={{ background: color.bg, color: color.text }}
+                          >
+                            {initial}
+                          </div>
+                        );
+                      })()}
+                      {(isHovered || e.isStarred) && (
+                        <button
+                          onClick={(ev) => { ev.stopPropagation(); void toggleStar(e); }}
+                          aria-label="Star"
+                        >
+                          <Star size={13}
+                            className={e.isStarred ? "fill-amber-400 text-amber-400" : "text-gray-300 dark:text-gray-600 hover:text-amber-400"}
+                          />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Main content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <div className={`flex-1 truncate text-sm ${!e.isRead ? "font-semibold text-gray-900 dark:text-white" : "text-gray-700 dark:text-gray-300"}`}>
+                          {e.isPinned && <Pin size={11} className="inline mr-1 text-indigo-500 -mt-0.5" />}
+                          {e.from.name || e.from.email}
+                        </div>
+
+                        {/* Right: quick actions on hover, otherwise time */}
+                        <div className="shrink-0 flex items-center gap-1">
+                          {isHovered ? (
+                            <div onClick={(ev) => ev.stopPropagation()} className="flex items-center gap-0.5">
+                              <button
+                                onClick={() => void togglePin(e)}
+                                title={e.isPinned ? "Unpin" : "Pin"}
+                                className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+                              >
+                                <Pin size={13} className={e.isPinned ? "text-indigo-500" : "text-gray-400 hover:text-indigo-500"} />
+                              </button>
+                              <button
+                                onClick={() => void archiveEmail(e.id)}
+                                title="Archive"
+                                className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+                              >
+                                <Archive size={13} className="text-gray-400 hover:text-gray-700 dark:hover:text-gray-200" />
+                              </button>
+                              <button
+                                onClick={() => void deleteEmail(e.id)}
+                                title="Trash"
+                                className="p-1 rounded hover:bg-red-100 dark:hover:bg-red-950/40 transition"
+                              >
+                                <Trash2 size={13} className="text-gray-400 hover:text-red-500" />
+                              </button>
+                            </div>
+                          ) : (
+                            <>
+                              {e.hasAttachments && <Paperclip size={12} className="text-gray-400" />}
+                              <span className="text-[11px] text-gray-400">{timeAgo(e.createdAt)}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className={`mt-0.5 text-sm truncate ${!e.isRead ? "font-medium text-gray-800 dark:text-gray-200" : "text-gray-600 dark:text-gray-400"}`}>
+                        {e.subject || "(no subject)"}
+                      </div>
+                      <div className="mt-0.5 text-xs text-gray-500 dark:text-gray-600 truncate leading-relaxed">
+                        {e.snippet}
+                      </div>
+                      {e.labels && e.labels.length > 0 && (
+                        <div className="mt-1.5 flex gap-1 flex-wrap">
+                          {e.labels.map((l) => (
+                            <span key={l.id} className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-md font-medium"
+                              style={{ background: (l.color ?? "#64748b") + "15", color: l.color ?? "#64748b" }}>
+                              <Tag size={9} />
+                              {l.name}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-                <div className={`mt-0.5 text-sm truncate ${!e.isRead ? "font-medium text-gray-800 dark:text-gray-200" : "text-gray-600 dark:text-gray-400"}`}>
-                  {e.subject || "(no subject)"}
-                </div>
-                <div className="mt-0.5 text-xs text-gray-500 dark:text-gray-600 truncate leading-relaxed">
-                  {e.snippet}
-                </div>
-                {e.labels && e.labels.length > 0 && (
-                  <div className="mt-1.5 flex gap-1 flex-wrap">
-                    {e.labels.map((l) => (
-                      <span key={l.id} className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-md font-medium"
-                        style={{ background: (l.color ?? "#64748b") + "15", color: l.color ?? "#64748b" }}>
-                        <Tag size={9} />
-                        {l.name}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </button>
-            ))}
+              );
+            })}
           </div>
         </section>
 

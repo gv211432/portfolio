@@ -94,7 +94,8 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
   const data: Record<string, unknown> = {};
   if (typeof body.isRead === "boolean") data.isRead = body.isRead;
   if (typeof body.isStarred === "boolean") data.isStarred = body.isStarred;
-  if (typeof body.folder === "string" && ["INBOX","SENT","TRASH","DRAFT","SPAM"].includes(body.folder)) {
+  if (typeof body.isPinned === "boolean") data.isPinned = body.isPinned;
+  if (typeof body.folder === "string" && ["INBOX","SENT","TRASH","DRAFT","SPAM","ARCHIVE"].includes(body.folder)) {
     data.folder = body.folder;
   }
 
@@ -118,6 +119,8 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
 
   if (data.folder === "TRASH") {
     await logAsActor(actor, Activity.StaffEmailTrash, { targetType: "Email", targetId: id });
+  } else if (data.folder === "ARCHIVE") {
+    await logAsActor(actor, Activity.StaffEmailArchive, { targetType: "Email", targetId: id });
   }
 
   return NextResponse.json({ ok: true });
