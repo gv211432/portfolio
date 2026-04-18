@@ -15,7 +15,7 @@ import {
   PenSquare, Plus, ChevronLeft, Paperclip, Reply,
   ReplyAll, Forward, Mail, MailOpen, Tag, Menu, Clock,
   Users, History, Inbox, Settings, LogOut, ChevronDown,
-  Archive, Pin, Check, ChevronUp,
+  Archive, Pin, Check, ChevronUp, RotateCcw,
 } from "lucide-react";
 
 type Folder = "INBOX" | "SENT" | "DRAFT" | "TRASH" | "SPAM" | "STARRED" | "ARCHIVE";
@@ -53,7 +53,7 @@ interface EmailFull extends EmailRow {
   inReplyTo: string | null;
   references: unknown;
   messageId: string;
-  attachments: { id: string; filename: string; contentType: string; sizeBytes: number; url: string }[];
+  attachments: { id: string; filename: string; contentType: string; sizeBytes: number; s3Key: string; url: string }[];
   cc?: unknown;
   bcc?: unknown;
 }
@@ -149,8 +149,17 @@ export default function MailApp({ me, asStaffId }: Props) {
   const [searchMode, setSearchMode] = useState(false);
   const [composeOpen, setComposeOpen] = useState(false);
   const [composeInit, setComposeInit] = useState<
-    { draftId?: string; to?: { email: string; name?: string }[]; cc?: { email: string; name?: string }[]; subject?: string; bodyText?: string; bodyHtml?: string; inReplyTo?: string; references?: string[] }
-    | undefined
+    {
+      draftId?: string;
+      to?: { email: string; name?: string }[];
+      cc?: { email: string; name?: string }[];
+      subject?: string;
+      bodyText?: string;
+      bodyHtml?: string;
+      inReplyTo?: string;
+      references?: string[];
+      forwardAttachments?: { filename: string; contentType: string; sizeBytes: number; s3Key: string; url?: string }[];
+    } | undefined
   >(undefined);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -375,8 +384,37 @@ export default function MailApp({ me, asStaffId }: Props) {
     const subject = selected.subject?.toLowerCase().startsWith("fwd:")
       ? selected.subject
       : `Fwd: ${selected.subject ?? ""}`;
-    const bodyText = `\n\n--- Forwarded message ---\nFrom: ${selected.from.email}\nSubject: ${selected.subject ?? ""}\n\n${selected.bodyText}`;
-    setComposeInit({ subject, bodyText });
+    const date = new Date(selected.createdAt).toLocaleString();
+    const toStr = Array.isArray(selected.to)
+      ? (selected.to as { email: string; name?: string }[])
+          .map((a) => (a.name ? `${a.name} &lt;${a.email}&gt;` : a.email))
+          .join(", ")
+      : "";
+    const originalBody = selected.html
+      ?? `<pre style="font-family:inherit;white-space:pre-wrap;margin:0">${
+           (selected.bodyText ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;")
+         }</pre>`;
+    const bodyHtml =
+      `<p><br></p>` +
+      `<div style="border-left:3px solid #e5e7eb;padding:4px 12px;color:#6b7280;font-size:13px;margin:8px 0">` +
+      `<div style="margin-bottom:6px">———— Forwarded message ————</div>` +
+      `<div><strong>From:</strong> ${selected.from.name ? `${selected.from.name} &lt;${selected.from.email}&gt;` : selected.from.email}</div>` +
+      `<div><strong>Date:</strong> ${date}</div>` +
+      `<div><strong>Subject:</strong> ${selected.subject ?? ""}</div>` +
+      `<div><strong>To:</strong> ${toStr}</div>` +
+      `</div>` +
+      `<div style="margin-top:8px">${originalBody}</div>`;
+    setComposeInit({
+      subject,
+      bodyHtml,
+      forwardAttachments: selected.attachments.map((a) => ({
+        filename: a.filename,
+        contentType: a.contentType,
+        sizeBytes: a.sizeBytes,
+        s3Key: a.s3Key,
+        url: a.url,
+      })),
+    });
     setComposeOpen(true);
   }
 
@@ -934,27 +972,48 @@ export default function MailApp({ me, asStaffId }: Props) {
                         <div className="shrink-0 flex items-center gap-1">
                           {isHovered ? (
                             <div onClick={(ev) => ev.stopPropagation()} className="flex items-center gap-0.5">
-                              <button
-                                onClick={() => void togglePin(e)}
-                                title={e.isPinned ? "Unpin" : "Pin"}
-                                className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition"
-                              >
-                                <Pin size={13} className={e.isPinned ? "text-indigo-500" : "text-gray-400 hover:text-indigo-500"} />
-                              </button>
-                              <button
-                                onClick={() => void archiveEmail(e.id)}
-                                title="Archive"
-                                className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition"
-                              >
-                                <Archive size={13} className="text-gray-400 hover:text-gray-700 dark:hover:text-gray-200" />
-                              </button>
-                              <button
-                                onClick={() => void deleteEmail(e.id)}
-                                title="Trash"
-                                className="p-1 rounded hover:bg-red-100 dark:hover:bg-red-950/40 transition"
-                              >
-                                <Trash2 size={13} className="text-gray-400 hover:text-red-500" />
-                              </button>
+                              {folder === "TRASH" ? (
+                                <>
+                                  <button
+                                    onClick={() => void moveToFolder(e.id, "INBOX")}
+                                    title="Restore to Inbox"
+                                    className="p-1 rounded hover:bg-green-100 dark:hover:bg-green-950/40 transition"
+                                  >
+                                    <RotateCcw size={13} className="text-gray-400 hover:text-green-600" />
+                                  </button>
+                                  <button
+                                    onClick={() => void deleteEmail(e.id)}
+                                    title="Delete permanently"
+                                    className="p-1 rounded hover:bg-red-100 dark:hover:bg-red-950/40 transition"
+                                  >
+                                    <Trash2 size={13} className="text-gray-400 hover:text-red-500" />
+                                  </button>
+                                </>
+                              ) : (
+                                <>
+                                  <button
+                                    onClick={() => void togglePin(e)}
+                                    title={e.isPinned ? "Unpin" : "Pin"}
+                                    className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+                                  >
+                                    <Pin size={13} className={e.isPinned ? "text-indigo-500" : "text-gray-400 hover:text-indigo-500"} />
+                                  </button>
+                                  <button
+                                    onClick={() => void archiveEmail(e.id)}
+                                    title="Archive"
+                                    className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+                                  >
+                                    <Archive size={13} className="text-gray-400 hover:text-gray-700 dark:hover:text-gray-200" />
+                                  </button>
+                                  <button
+                                    onClick={() => void deleteEmail(e.id)}
+                                    title="Move to Trash"
+                                    className="p-1 rounded hover:bg-red-100 dark:hover:bg-red-950/40 transition"
+                                  >
+                                    <Trash2 size={13} className="text-gray-400 hover:text-red-500" />
+                                  </button>
+                                </>
+                              )}
                             </div>
                           ) : (
                             <>
@@ -1033,13 +1092,20 @@ export default function MailApp({ me, asStaffId }: Props) {
                       label="Archive"
                     />
                   )}
+                  {selected.folder === "TRASH" && (
+                    <ActionBtn
+                      onClick={() => moveToFolder(selected.id, "INBOX")}
+                      icon={<RotateCcw size={14} />}
+                      label="Restore"
+                    />
+                  )}
                   <ActionBtn
                     onClick={() => {
                       if (selected.folder === "TRASH") deleteEmail(selected.id);
                       else moveToFolder(selected.id, "TRASH");
                     }}
                     icon={<Trash2 size={14} />}
-                    label={selected.folder === "TRASH" ? "Delete" : "Trash"}
+                    label={selected.folder === "TRASH" ? "Delete permanently" : "Trash"}
                     danger
                   />
                 </div>

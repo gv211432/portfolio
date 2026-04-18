@@ -38,6 +38,7 @@ export async function GET(req: NextRequest, ctx: Ctx) {
       contentType: a.contentType,
       sizeBytes: a.sizeBytes,
       contentId: a.contentId,
+      s3Key: a.s3Key,
       url: await signedAttachmentUrl(a.s3Key),
     })),
   );

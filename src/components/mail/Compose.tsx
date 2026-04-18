@@ -24,6 +24,25 @@ interface Me {
   isAdminView: boolean;
 }
 
+interface ForwardAttachment {
+  filename: string;
+  contentType: string;
+  sizeBytes: number;
+  s3Key: string;
+  url?: string;
+}
+
+interface AttachmentItem {
+  file?: File;
+  filename: string;
+  contentType: string;
+  sizeBytes: number;
+  uploading: boolean;
+  s3Key?: string;
+  url?: string;
+  error?: string;
+}
+
 interface Props {
   me: Me;
   asStaffId?: string;
@@ -36,6 +55,7 @@ interface Props {
     bodyHtml?: string;
     inReplyTo?: string;
     references?: string[];
+    forwardAttachments?: ForwardAttachment[];
   };
   onClose: (sent: boolean) => void;
 }
@@ -178,7 +198,16 @@ export default function Compose({ me, asStaffId, initial, onClose }: Props) {
       ? `<pre style="font-family:sans-serif;white-space:pre-wrap">${initial.bodyText.replace(/&/g, "&amp;").replace(/</g, "&lt;")}</pre>`
       : ""
   );
-  const [attachments, setAttachments] = useState<{ file: File; uploading: boolean; s3Key?: string; url?: string; error?: string }[]>([]);
+  const [attachments, setAttachments] = useState<AttachmentItem[]>(() =>
+    (initial?.forwardAttachments ?? []).map((a) => ({
+      filename: a.filename,
+      contentType: a.contentType,
+      sizeBytes: a.sizeBytes,
+      uploading: false,
+      s3Key: a.s3Key,
+      url: a.url,
+    }))
+  );
   const attachRef = useRef<HTMLInputElement>(null);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -259,14 +288,19 @@ export default function Compose({ me, asStaffId, initial, onClose }: Props) {
   }
 
   async function addFiles(files: FileList) {
-    const newAtts = Array.from(files).map((file) => ({ file, uploading: true }));
+    const newAtts: AttachmentItem[] = Array.from(files).map((file) => ({
+      file,
+      filename: file.name,
+      contentType: file.type || "application/octet-stream",
+      sizeBytes: file.size,
+      uploading: true,
+    }));
     setAttachments((prev) => [...prev, ...newAtts]);
 
-    for (let i = 0; i < newAtts.length; i++) {
-      const att = newAtts[i];
+    for (const att of newAtts) {
       try {
         const form = new FormData();
-        form.append("file", att.file);
+        form.append("file", att.file!);
         const uploadUrl = asStaffId
           ? `/api/mail/attachments/upload?asStaffId=${asStaffId}`
           : "/api/mail/attachments/upload";
@@ -309,9 +343,9 @@ export default function Compose({ me, asStaffId, initial, onClose }: Props) {
           attachments: attachments
             .filter((a) => a.s3Key)
             .map((a) => ({
-              filename: a.file.name,
-              contentType: a.file.type || "application/octet-stream",
-              sizeBytes: a.file.size,
+              filename: a.filename,
+              contentType: a.contentType,
+              sizeBytes: a.sizeBytes,
               s3Key: a.s3Key,
             })),
         }),
@@ -411,9 +445,9 @@ export default function Compose({ me, asStaffId, initial, onClose }: Props) {
             {attachments.map((a, i) => (
               <div key={i} className="flex items-center gap-2 text-sm">
                 <FileText size={14} className="text-gray-400 shrink-0" />
-                <span className="truncate flex-1">{a.file.name}</span>
+                <span className="truncate flex-1">{a.filename}</span>
                 <span className="text-xs text-gray-400 shrink-0">
-                  {a.uploading ? "Uploading..." : a.error ? <span className="text-red-500">{a.error}</span> : formatSize(a.file.size)}
+                  {a.uploading ? "Uploading..." : a.error ? <span className="text-red-500">{a.error}</span> : formatSize(a.sizeBytes)}
                 </span>
                 {a.uploading && <div className="w-3 h-3 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin shrink-0" />}
                 <button onClick={() => removeAttachment(i)} className="p-0.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded shrink-0">
@@ -483,14 +517,25 @@ export default function Compose({ me, asStaffId, initial, onClose }: Props) {
           border: none !important;
           font-family: inherit;
           font-size: 14px;
+          background: #ffffff !important;
+          color-scheme: light;
         }
         .compose-editor .ql-editor {
           padding: 16px 20px;
           min-height: 240px;
           line-height: 1.6;
+          background: #ffffff !important;
+          color: #111827 !important;
+          color-scheme: light;
+        }
+        .dark .compose-editor .ql-container {
+          background: transparent !important;
+          color-scheme: dark;
         }
         .dark .compose-editor .ql-editor {
-          color: #e5e7eb;
+          background: transparent !important;
+          color: #e5e7eb !important;
+          color-scheme: dark;
         }
         .compose-editor .ql-editor.ql-blank::before {
           color: #9ca3af;
