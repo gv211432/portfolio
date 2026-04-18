@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
     // Fetch threads participating in this folder, sorted by latest mail in folder.
     const rows = await prisma.email.findMany({
       where,
-      orderBy: { createdAt: "desc" },
+      orderBy: [{ isPinned: "desc" }, { createdAt: "desc" }],
       take: limit * 3, // overfetch to group
       skip: (page - 1) * limit,
     });
@@ -69,7 +69,7 @@ export async function GET(req: NextRequest) {
   const [rows, total] = await Promise.all([
     prisma.email.findMany({
       where,
-      orderBy: threadId ? { createdAt: "asc" } : { createdAt: "desc" },
+      orderBy: threadId ? { createdAt: "asc" } : [{ isPinned: "desc" }, { createdAt: "desc" }],
       skip: (page - 1) * limit,
       take: limit,
       include: { labels: { include: { label: true } } },
@@ -90,7 +90,7 @@ function serialize(e: {
   id: string; createdAt: Date; messageId: string; threadId: string | null;
   fromEmail: string; fromName: string | null; toJson: unknown; ccJson: unknown;
   subject: string | null; snippet: string; folder: string; isRead: boolean;
-  isStarred: boolean; hasAttachments: boolean; direction: string;
+  isStarred: boolean; isPinned: boolean; hasAttachments: boolean; direction: string;
   labels?: { label: { id: string; name: string; color: string | null } }[];
 }) {
   return {
@@ -106,6 +106,7 @@ function serialize(e: {
     folder: e.folder,
     isRead: e.isRead,
     isStarred: e.isStarred,
+    isPinned: e.isPinned,
     hasAttachments: e.hasAttachments,
     direction: e.direction,
     labels: e.labels?.map((l) => l.label),

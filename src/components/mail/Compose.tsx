@@ -28,10 +28,12 @@ interface Props {
   me: Me;
   asStaffId?: string;
   initial?: {
+    draftId?: string;
     to?: Addr[];
     cc?: Addr[];
     subject?: string;
     bodyText?: string;
+    bodyHtml?: string;
     inReplyTo?: string;
     references?: string[];
   };
@@ -167,10 +169,12 @@ export default function Compose({ me, asStaffId, initial, onClose }: Props) {
   const [to, setTo] = useState((initial?.to ?? []).map((a) => a.email).join(", "));
   const [cc, setCc] = useState((initial?.cc ?? []).map((a) => a.email).join(", "));
   const [bcc, setBcc] = useState("");
-  const [showCcBcc, setShowCcBcc] = useState(false);
+  const [showCcBcc, setShowCcBcc] = useState(!!(initial?.cc?.length));
   const [subject, setSubject] = useState(initial?.subject ?? "");
   const [htmlBody, setHtmlBody] = useState(
-    initial?.bodyText
+    initial?.bodyHtml
+      ? initial.bodyHtml
+      : initial?.bodyText
       ? `<pre style="font-family:sans-serif;white-space:pre-wrap">${initial.bodyText.replace(/&/g, "&amp;").replace(/</g, "&lt;")}</pre>`
       : ""
   );
@@ -180,7 +184,74 @@ export default function Compose({ me, asStaffId, initial, onClose }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [blocked, setBlocked] = useState<string[] | null>(null);
 
-  // Extract plain text from HTML for sending
+  // Auto-draft
+  const draftIdRef = useRef<string | null>(initial?.draftId ?? null);
+  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
+
+  // Create a blank draft immediately on mount (if not resuming an existing one)
+  useEffect(() => {
+    if (draftIdRef.current) return;
+    const url = asStaffId ? `/api/mail/drafts?asStaffId=${asStaffId}` : "/api/mail/drafts";
+    fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({}) })
+      .then((r) => r.json())
+      .then((d) => { if (d.draft?.id) draftIdRef.current = d.draft.id; })
+      .catch(console.error);
+    return () => { if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function currentDraftPayload() {
+    return {
+      to: parseList(to),
+      cc: parseList(cc),
+      bcc: parseList(bcc),
+      subject,
+      bodyHtml: htmlBody,
+      bodyText: htmlToPlainText(htmlBody),
+    };
+  }
+
+  async function doSave() {
+    const id = draftIdRef.current;
+    if (!id) return;
+    setSaveStatus("saving");
+    try {
+      const url = asStaffId ? `/api/mail/drafts/${id}?asStaffId=${asStaffId}` : `/api/mail/drafts/${id}`;
+      await fetch(url, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(currentDraftPayload()),
+      });
+      setSaveStatus("saved");
+    } catch { setSaveStatus("idle"); }
+  }
+
+  function scheduleAutoSave() {
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    setSaveStatus("idle");
+    autoSaveTimer.current = setTimeout(() => void doSave(), 2000);
+  }
+
+  async function deleteDraft() {
+    const id = draftIdRef.current;
+    if (!id) return;
+    const url = asStaffId ? `/api/mail/drafts/${id}?asStaffId=${asStaffId}` : `/api/mail/drafts/${id}`;
+    await fetch(url, { method: "DELETE" }).catch(console.error);
+  }
+
+  async function handleClose() {
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    await doSave();
+    onClose(false);
+  }
+
+  async function handleDiscard() {
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    await deleteDraft();
+    onClose(false);
+  }
+
   function htmlToPlainText(html: string): string {
     const div = document.createElement("div");
     div.innerHTML = html;
@@ -255,6 +326,8 @@ export default function Compose({ me, asStaffId, initial, onClose }: Props) {
         }
         return;
       }
+      if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+      await deleteDraft();
       onClose(true);
     } finally {
       setSending(false);
@@ -262,21 +335,25 @@ export default function Compose({ me, asStaffId, initial, onClose }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/40 backdrop-blur-sm" onClick={() => onClose(false)}>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/40 backdrop-blur-sm" onClick={() => void handleClose()}>
       <div
         className="w-full sm:max-w-2xl lg:max-w-3xl bg-white dark:bg-[#161616] sm:rounded-2xl shadow-2xl flex flex-col max-h-[90vh] sm:max-h-[85vh] rounded-t-2xl border border-gray-200 dark:border-gray-800"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <header className="flex items-center px-5 py-3 border-b border-gray-200 dark:border-gray-800">
-          <div className="flex-1">
-            <div className="font-semibold text-sm text-gray-900 dark:text-white">New Message</div>
-            <div className="text-[11px] text-gray-500 mt-0.5">
-              From: {me.displayName} &lt;{me.email}&gt;
-              {me.isAdminView && <span className="ml-1.5 text-amber-600 font-medium">(admin)</span>}
+          <div className="flex-1 min-w-0">
+            <div className="font-semibold text-sm text-gray-900 dark:text-white">
+              {initial?.draftId ? "Edit Draft" : "New Message"}
+            </div>
+            <div className="text-[11px] text-gray-500 mt-0.5 flex items-center gap-2">
+              <span>From: {me.displayName} &lt;{me.email}&gt;</span>
+              {me.isAdminView && <span className="text-amber-600 font-medium">(admin)</span>}
+              {saveStatus === "saving" && <span className="text-gray-400 italic">Saving…</span>}
+              {saveStatus === "saved" && <span className="text-green-600 dark:text-green-400">Saved</span>}
             </div>
           </div>
-          <button onClick={() => onClose(false)} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+          <button onClick={() => void handleClose()} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition">
             <X size={18} className="text-gray-500" />
           </button>
         </header>
@@ -286,7 +363,7 @@ export default function Compose({ me, asStaffId, initial, onClose }: Props) {
           {/* To field */}
           <div className="flex items-start gap-0">
             <div className="flex-1">
-              <ContactInput label="To" value={to} onChange={setTo} asStaffId={asStaffId} autoFocus />
+              <ContactInput label="To" value={to} onChange={(v) => { setTo(v); scheduleAutoSave(); }} asStaffId={asStaffId} autoFocus />
             </div>
             <button
               onClick={() => setShowCcBcc(!showCcBcc)}
@@ -298,8 +375,8 @@ export default function Compose({ me, asStaffId, initial, onClose }: Props) {
 
           {showCcBcc && (
             <>
-              <ContactInput label="Cc" value={cc} onChange={setCc} asStaffId={asStaffId} />
-              <ContactInput label="Bcc" value={bcc} onChange={setBcc} asStaffId={asStaffId} />
+              <ContactInput label="Cc" value={cc} onChange={(v) => { setCc(v); scheduleAutoSave(); }} asStaffId={asStaffId} />
+              <ContactInput label="Bcc" value={bcc} onChange={(v) => { setBcc(v); scheduleAutoSave(); }} asStaffId={asStaffId} />
             </>
           )}
 
@@ -307,7 +384,7 @@ export default function Compose({ me, asStaffId, initial, onClose }: Props) {
             <label className="w-10 text-xs text-gray-400 font-medium shrink-0">Subject</label>
             <input
               value={subject}
-              onChange={(e) => setSubject(e.target.value)}
+              onChange={(e) => { setSubject(e.target.value); scheduleAutoSave(); }}
               className="flex-1 px-2 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 transition"
             />
           </div>
@@ -319,7 +396,7 @@ export default function Compose({ me, asStaffId, initial, onClose }: Props) {
             <ReactQuill
               theme="snow"
               value={htmlBody}
-              onChange={setHtmlBody}
+              onChange={(v) => { setHtmlBody(v); scheduleAutoSave(); }}
               modules={QUILL_MODULES}
               formats={QUILL_FORMATS}
               placeholder="Write your message..."
@@ -367,8 +444,8 @@ export default function Compose({ me, asStaffId, initial, onClose }: Props) {
 
         {/* Footer */}
         <footer className="px-5 py-3 border-t border-gray-200 dark:border-gray-800 flex items-center gap-3">
-          <button onClick={() => onClose(false)}
-            className="px-4 py-2 text-sm rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition font-medium">
+          <button onClick={() => void handleDiscard()}
+            className="px-4 py-2 text-sm rounded-lg text-gray-600 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-600 dark:hover:text-red-400 transition font-medium">
             Discard
           </button>
           <button

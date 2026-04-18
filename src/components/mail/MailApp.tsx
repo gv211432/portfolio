@@ -149,7 +149,7 @@ export default function MailApp({ me, asStaffId }: Props) {
   const [searchMode, setSearchMode] = useState(false);
   const [composeOpen, setComposeOpen] = useState(false);
   const [composeInit, setComposeInit] = useState<
-    { to?: { email: string; name?: string }[]; subject?: string; bodyText?: string; inReplyTo?: string; references?: string[] }
+    { draftId?: string; to?: { email: string; name?: string }[]; cc?: { email: string; name?: string }[]; subject?: string; bodyText?: string; bodyHtml?: string; inReplyTo?: string; references?: string[] }
     | undefined
   >(undefined);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -201,6 +201,31 @@ export default function MailApp({ me, asStaffId }: Props) {
   const fetchEmails = useCallback(async () => {
     setLoading(true);
     try {
+      if (folder === "DRAFT") {
+        const res = await fetch(withQs("/api/mail/drafts"));
+        const data = await res.json();
+        const drafts = (data.drafts ?? []) as {
+          id: string; createdAt: string; updatedAt: string;
+          toJson: { email: string; name?: string }[];
+          subject: string | null; bodyText: string | null;
+        }[];
+        setEmails(drafts.map((d) => ({
+          id: d.id,
+          createdAt: d.updatedAt ?? d.createdAt,
+          from: { email: me.email, name: me.displayName },
+          to: d.toJson ?? [],
+          subject: d.subject,
+          snippet: d.bodyText?.slice(0, 120) ?? "(no content)",
+          folder: "DRAFT",
+          isRead: true,
+          isStarred: false,
+          isPinned: false,
+          hasAttachments: false,
+          direction: "OUTBOUND",
+          threadId: null,
+        })));
+        return;
+      }
       const params: Record<string, string> = { limit: "100" };
       if (folder === "STARRED") {
         params.isStarred = "true";
@@ -217,7 +242,7 @@ export default function MailApp({ me, asStaffId }: Props) {
     } finally {
       setLoading(false);
     }
-  }, [folder, labelId, withQs]);
+  }, [folder, labelId, me.displayName, me.email, withQs]);
 
   const fetchLabels = useCallback(async () => {
     const res = await fetch(withQs("/api/mail/labels"));
@@ -356,6 +381,7 @@ export default function MailApp({ me, asStaffId }: Props) {
   }
 
   function selectEmail(id: string) {
+    if (folder === "DRAFT") { void openDraft(id); return; }
     setSelectedId(id);
     setMobilePanel("reader");
   }
@@ -419,8 +445,29 @@ export default function MailApp({ me, asStaffId }: Props) {
 
   async function togglePin(e: EmailRow) {
     const next = !e.isPinned;
-    setEmails((p) => p.map((x) => x.id === e.id ? { ...x, isPinned: next } : x));
+    setEmails((prev) => {
+      const updated = prev.map((x) => x.id === e.id ? { ...x, isPinned: next } : x);
+      return updated.sort((a, b) => {
+        if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1;
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
+    });
     await patchEmail(e.id, { isPinned: next });
+  }
+
+  async function openDraft(id: string) {
+    const res = await fetch(withQs(`/api/mail/drafts/${id}`));
+    if (!res.ok) return;
+    const { draft } = await res.json();
+    setComposeInit({
+      draftId: id,
+      to: draft.toJson ?? [],
+      cc: draft.ccJson ?? [],
+      subject: draft.subject ?? "",
+      bodyHtml: draft.bodyHtml ?? undefined,
+      bodyText: draft.bodyText ?? undefined,
+    });
+    setComposeOpen(true);
   }
 
   const unreadCount = useMemo(() => emails.filter((e) => !e.isRead).length, [emails]);
@@ -788,6 +835,13 @@ export default function MailApp({ me, asStaffId }: Props) {
             )}
           </div>
 
+          {folder === "TRASH" && (
+            <div className="mx-3 mt-2 mb-1 px-3 py-2 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-700 dark:text-amber-300 flex items-center gap-2">
+              <Trash2 size={13} className="shrink-0" />
+              Emails in Trash are automatically deleted after 30 days.
+            </div>
+          )}
+
           <div className="flex-1 overflow-y-auto">
             {loading && emails.length === 0 && (
               <div className="p-2 space-y-1">
@@ -965,6 +1019,20 @@ export default function MailApp({ me, asStaffId }: Props) {
                   <ActionBtn onClick={() => openReply(false)} icon={<Reply size={14} />} label="Reply" primary />
                   <ActionBtn onClick={() => openReply(true)} icon={<ReplyAll size={14} />} label="Reply all" />
                   <ActionBtn onClick={openForward} icon={<Forward size={14} />} label="Forward" />
+                  {selected.folder === "ARCHIVE" && (
+                    <ActionBtn
+                      onClick={() => moveToFolder(selected.id, "INBOX")}
+                      icon={<Archive size={14} />}
+                      label="Unarchive"
+                    />
+                  )}
+                  {selected.folder !== "ARCHIVE" && (
+                    <ActionBtn
+                      onClick={() => void archiveEmail(selected.id)}
+                      icon={<Archive size={14} />}
+                      label="Archive"
+                    />
+                  )}
                   <ActionBtn
                     onClick={() => {
                       if (selected.folder === "TRASH") deleteEmail(selected.id);
@@ -1058,7 +1126,7 @@ export default function MailApp({ me, asStaffId }: Props) {
           onClose={(sent) => {
             setComposeOpen(false);
             setComposeInit(undefined);
-            if (sent) void fetchEmails();
+            if (sent || folder === "DRAFT") void fetchEmails();
           }}
         />
       )}
