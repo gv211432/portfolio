@@ -20,6 +20,7 @@ export default async function Page() {
         displayName: s.staff.displayName ?? `${s.staff.firstName} ${s.staff.lastName}`,
         email: addr?.email ?? "",
         isAdminView: false,
+        profileImageUrl: s.staff.profileImageUrl ?? null,
       }}
     />
   );

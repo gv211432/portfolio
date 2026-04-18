@@ -41,6 +41,7 @@ interface Props {
 interface ContactSuggestion {
   email: string;
   name?: string;
+  designation?: string;
   source: "directory" | "history";
 }
 
@@ -72,6 +73,96 @@ const QUILL_FORMATS = [
   "blockquote", "code-block", "link", "image",
 ];
 
+/** Address input with live contact autocomplete (To / Cc / Bcc). */
+function ContactInput({
+  label, value, onChange, asStaffId, autoFocus,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  asStaffId?: string;
+  autoFocus?: boolean;
+}) {
+  const [suggestions, setSuggestions] = useState<ContactSuggestion[]>([]);
+  const [open, setOpen] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const fetchSuggestions = useCallback(
+    (raw: string) => {
+      if (timer.current) clearTimeout(timer.current);
+      const parts = raw.split(/[,;]/);
+      const last = (parts[parts.length - 1] ?? "").trim();
+      if (last.length < 1) { setSuggestions([]); return; }
+
+      timer.current = setTimeout(async () => {
+        try {
+          const url = asStaffId
+            ? `/api/mail/contacts?q=${encodeURIComponent(last)}&limit=7&asStaffId=${asStaffId}`
+            : `/api/mail/contacts?q=${encodeURIComponent(last)}&limit=7`;
+          const res = await fetch(url);
+          if (res.ok) {
+            const data = await res.json();
+            setSuggestions(data.contacts ?? []);
+            setOpen(true);
+          }
+        } catch { /* ignore */ }
+      }, 150);
+    },
+    [asStaffId],
+  );
+
+  function applySuggestion(email: string) {
+    const parts = value.split(/[,;]/);
+    parts[parts.length - 1] = " " + email;
+    onChange(parts.join(",") + ", ");
+    setSuggestions([]);
+    setOpen(false);
+    inputRef.current?.focus();
+  }
+
+  return (
+    <div className="relative flex items-center gap-2">
+      <label className="w-10 text-xs text-gray-400 font-medium shrink-0">{label}</label>
+      <input
+        ref={inputRef}
+        autoFocus={autoFocus}
+        value={value}
+        onChange={(e) => { onChange(e.target.value); fetchSuggestions(e.target.value); }}
+        onFocus={() => value.trim() && suggestions.length > 0 && setOpen(true)}
+        onBlur={() => setTimeout(() => setOpen(false), 200)}
+        placeholder="Recipients (comma separated)"
+        className="flex-1 px-2 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 transition"
+      />
+      {open && suggestions.length > 0 && (
+        <div className="absolute z-20 top-full mt-1 left-10 right-0 bg-white dark:bg-[#1e1e1e] border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl overflow-hidden">
+          {suggestions.map((c, i) => (
+            <button
+              key={`${c.email}-${i}`}
+              className="w-full text-left px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 last:border-0 text-sm"
+              onMouseDown={(e) => { e.preventDefault(); applySuggestion(c.email); }}
+            >
+              <div className="w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center text-[10px] font-bold text-indigo-600 dark:text-indigo-400 shrink-0">
+                {(c.name || c.email).charAt(0).toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                {c.name && <span className="font-medium mr-1.5">{c.name}</span>}
+                <span className="text-gray-500 text-xs">{c.email}</span>
+                {c.designation && (
+                  <span className="block text-[11px] text-gray-400 dark:text-gray-500 truncate">{c.designation}</span>
+                )}
+              </div>
+              {c.source === "directory"
+                ? <Users size={12} className="text-gray-400 shrink-0" />
+                : <History size={12} className="text-gray-400 shrink-0" />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Compose({ me, asStaffId, initial, onClose }: Props) {
   const [to, setTo] = useState((initial?.to ?? []).map((a) => a.email).join(", "));
   const [cc, setCc] = useState((initial?.cc ?? []).map((a) => a.email).join(", "));
@@ -88,43 +179,6 @@ export default function Compose({ me, asStaffId, initial, onClose }: Props) {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [blocked, setBlocked] = useState<string[] | null>(null);
-
-  // Contact autocomplete for To field
-  const [toSuggestions, setToSuggestions] = useState<ContactSuggestion[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const suggestTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const toInputRef = useRef<HTMLInputElement>(null);
-
-  const fetchSuggestions = useCallback((q: string) => {
-    if (suggestTimer.current) clearTimeout(suggestTimer.current);
-    const trimmed = q.trim();
-    // Get the last segment after comma
-    const parts = trimmed.split(/[,;]/);
-    const last = (parts[parts.length - 1] ?? "").trim();
-    if (last.length < 2) { setToSuggestions([]); return; }
-
-    suggestTimer.current = setTimeout(async () => {
-      try {
-        const url = asStaffId
-          ? `/api/mail/contacts?q=${encodeURIComponent(last)}&limit=6&asStaffId=${asStaffId}`
-          : `/api/mail/contacts?q=${encodeURIComponent(last)}&limit=6`;
-        const res = await fetch(url);
-        if (res.ok) {
-          const data = await res.json();
-          setToSuggestions(data.contacts ?? []);
-          setShowSuggestions(true);
-        }
-      } catch { /* ignore */ }
-    }, 200);
-  }, [asStaffId]);
-
-  function applySuggestion(email: string) {
-    const parts = to.split(/[,;]/);
-    parts[parts.length - 1] = " " + email;
-    setTo(parts.join(",") + ", ");
-    setShowSuggestions(false);
-    toInputRef.current?.focus();
-  }
 
   // Extract plain text from HTML for sending
   function htmlToPlainText(html: string): string {
@@ -229,56 +283,34 @@ export default function Compose({ me, asStaffId, initial, onClose }: Props) {
 
         {/* Fields */}
         <div className="px-5 py-3 space-y-2 border-b border-gray-100 dark:border-gray-800/60">
-          {/* To field with autocomplete */}
-          <div className="relative">
-            <div className="flex items-center gap-2">
-              <label className="w-10 text-xs text-gray-400 font-medium">To</label>
-              <input
-                ref={toInputRef}
-                value={to}
-                onChange={(e) => { setTo(e.target.value); fetchSuggestions(e.target.value); }}
-                onFocus={() => to.trim() && toSuggestions.length > 0 && setShowSuggestions(true)}
-                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                placeholder="Recipients (comma separated)"
-                className="flex-1 px-2 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 transition"
-              />
-              <button
-                onClick={() => setShowCcBcc(!showCcBcc)}
-                className="text-xs text-indigo-600 hover:text-indigo-700 flex items-center gap-0.5"
-              >
-                Cc/Bcc {showCcBcc ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-              </button>
+          {/* To field */}
+          <div className="flex items-start gap-0">
+            <div className="flex-1">
+              <ContactInput label="To" value={to} onChange={setTo} asStaffId={asStaffId} autoFocus />
             </div>
-            {showSuggestions && toSuggestions.length > 0 && (
-              <div className="absolute z-10 top-full mt-1 left-10 right-0 bg-white dark:bg-[#1e1e1e] border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl overflow-hidden">
-                {toSuggestions.map((c, i) => (
-                  <button
-                    key={`${c.email}-${i}`}
-                    className="w-full text-left px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 last:border-0 text-sm"
-                    onMouseDown={(e) => { e.preventDefault(); applySuggestion(c.email); }}
-                  >
-                    <div className="w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center text-[10px] font-bold text-indigo-600 dark:text-indigo-400 shrink-0">
-                      {(c.name || c.email).charAt(0).toUpperCase()}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      {c.name && <span className="font-medium mr-1.5">{c.name}</span>}
-                      <span className="text-gray-500 text-xs">{c.email}</span>
-                    </div>
-                    {c.source === "directory" ? <Users size={12} className="text-gray-400 shrink-0" /> : <History size={12} className="text-gray-400 shrink-0" />}
-                  </button>
-                ))}
-              </div>
-            )}
+            <button
+              onClick={() => setShowCcBcc(!showCcBcc)}
+              className="ml-2 text-xs text-indigo-600 hover:text-indigo-700 flex items-center gap-0.5 mt-1.5 shrink-0"
+            >
+              Cc/Bcc {showCcBcc ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+            </button>
           </div>
 
           {showCcBcc && (
             <>
-              <ComposeField label="Cc" value={cc} onChange={setCc} />
-              <ComposeField label="Bcc" value={bcc} onChange={setBcc} />
+              <ContactInput label="Cc" value={cc} onChange={setCc} asStaffId={asStaffId} />
+              <ContactInput label="Bcc" value={bcc} onChange={setBcc} asStaffId={asStaffId} />
             </>
           )}
 
-          <ComposeField label="Subject" value={subject} onChange={setSubject} />
+          <div className="flex items-center gap-2">
+            <label className="w-10 text-xs text-gray-400 font-medium shrink-0">Subject</label>
+            <input
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              className="flex-1 px-2 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 transition"
+            />
+          </div>
         </div>
 
         {/* Rich text editor */}
@@ -429,20 +461,4 @@ function formatSize(b: number) {
   if (b < 1024) return `${b} B`;
   if (b < 1024 * 1024) return `${Math.ceil(b / 1024)} KB`;
   return `${(b / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-function ComposeField({ label, value, onChange, placeholder }: {
-  label: string; value: string; onChange: (v: string) => void; placeholder?: string;
-}) {
-  return (
-    <div className="flex items-center gap-2">
-      <label className="w-10 text-xs text-gray-400 font-medium">{label}</label>
-      <input
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="flex-1 px-2 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 transition"
-      />
-    </div>
-  );
 }

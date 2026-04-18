@@ -29,11 +29,16 @@ export async function GET(req: NextRequest) {
   const groupByThread = sp.get("groupByThread") === "true";
 
   const where: Record<string, unknown> = { staffId: actor.staffId };
-  if (!threadId) where.folder = folder; // when viewing a thread, ignore folder filter
+  // "STARRED" is a virtual folder — skip folder filter, force isStarred=true
+  if (folder === "STARRED") {
+    where.isStarred = true;
+  } else {
+    if (!threadId) where.folder = folder;
+  }
   if (threadId) where.threadId = threadId;
   if (labelId) where.labels = { some: { labelId } };
   if (isRead !== null) where.isRead = isRead === "true";
-  if (isStarred !== null) where.isStarred = isStarred === "true";
+  if (isStarred !== null && folder !== "STARRED") where.isStarred = isStarred === "true";
 
   // Log admin impersonation mailbox view (once per request).
   await logImpersonationViewIfAny(actor, actor.staffId, "mailbox");
