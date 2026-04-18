@@ -15,7 +15,7 @@ import {
   PenSquare, Plus, ChevronLeft, Paperclip, Reply,
   ReplyAll, Forward, Mail, MailOpen, Tag, Menu, Clock,
   Users, History, Inbox, Settings, LogOut, ChevronDown,
-  Archive, Pin, Check, ChevronUp, RotateCcw,
+  Archive, Pin, Check, ChevronUp, RotateCcw, RefreshCw,
 } from "lucide-react";
 
 type Folder = "INBOX" | "SENT" | "DRAFT" | "TRASH" | "SPAM" | "STARRED" | "ARCHIVE";
@@ -167,6 +167,9 @@ export default function MailApp({ me, asStaffId }: Props) {
   const [mobilePanel, setMobilePanel] = useState<"sidebar" | "list" | "reader">("list");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  // Refresh
+  const [refreshing, setRefreshing] = useState(false);
+
   // Contact/address search
   const [contactQuery, setContactQuery] = useState("");
   const [contactResults, setContactResults] = useState<ContactSuggestion[]>([]);
@@ -311,6 +314,21 @@ export default function MailApp({ me, asStaffId }: Props) {
       setEmails((prev) => prev.map((e) => (e.id === selectedId ? { ...e, isRead: true } : e)));
     })();
   }, [selectedId, withQs]);
+
+  // Manual refresh + window-focus auto-refresh
+  async function handleRefresh() {
+    setRefreshing(true);
+    await fetchEmails();
+    setRefreshing(false);
+  }
+
+  useEffect(() => {
+    function onFocus() {
+      if (!searchMode) void fetchEmails();
+    }
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [fetchEmails, searchMode]);
 
   async function patchEmail(id: string, patch: Record<string, unknown>) {
     await fetch(withQs(`/api/mail/emails/${id}`), {
@@ -869,6 +887,14 @@ export default function MailApp({ me, asStaffId }: Props) {
                 )}
                 <div className="flex-1" />
                 {!loading && <span className="text-xs text-gray-400">{emails.length} {emails.length === 1 ? "email" : "emails"}</span>}
+                <button
+                  onClick={() => void handleRefresh()}
+                  disabled={loading || refreshing}
+                  title="Refresh"
+                  className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition disabled:opacity-40"
+                >
+                  <RefreshCw size={14} className={`text-gray-400 ${refreshing ? "animate-spin" : ""}`} />
+                </button>
               </>
             )}
           </div>
