@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
@@ -12,6 +12,7 @@ import {
   FloroActionButton,
   ContactDetails,
 } from "@/components/ui";
+import HeroVideo from "@/components/ui/HeroVideo";
 
 // Terminal typewriter lines for hero section
 const terminalLines = [
@@ -775,23 +776,6 @@ export default function LandingPage() {
     }
   }, [darkMode]);
 
-  const videoRef = useRef(null);
-  const [videoSrcReady, setVideoSrcReady] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setVideoSrcReady(true), 3500);
-    return () => clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
-    if (videoSrcReady && videoRef.current) {
-      // @ts-ignore
-      videoRef.current.playbackRate = 0.8;
-      // @ts-ignore
-      videoRef.current.load();
-    }
-  }, [videoSrcReady]);
-
   return (
     <div className="min-h-screen bg-secondary dark:bg-obsidian transition-colors duration-300">
       {/* Header */}
@@ -901,23 +885,7 @@ export default function LandingPage() {
         {/* Background Effects */}
         <div className="absolute inset-0 bg-gradient-to-br from-secondary via-light to-secondary dark:from-obsidian dark:via-obsidian-50 dark:to-obsidian transition-colors duration-300" />
 
-        <video
-          ref={videoRef}
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="none"
-          poster="/videos/hero/video.poster.jpg"
-          className="absolute inset-0 w-full h-full object-cover opacity-25 dark:opacity-20 pointer-events-none"
-        >
-          {videoSrcReady && (
-            <>
-              <source src="/videos/hero/video.web.mp4" type="video/mp4" />
-              <source src="/videos/hero/video.webm" type="video/webm" />
-            </>
-          )}
-        </video>
+        <HeroVideo className="absolute inset-0 w-full h-full object-cover opacity-25 dark:opacity-20 pointer-events-none" />
 
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/10 dark:bg-primary/5 rounded-full blur-[120px]" />
         <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-cyan/10 dark:bg-cyan/5 rounded-full blur-[100px]" />
