@@ -6,7 +6,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Mail — Gaurav.One",
+  title: "Mail | Gaurav.One",
   robots: { index: false, follow: false },
 };
 
