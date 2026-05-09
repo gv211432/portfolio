@@ -39,6 +39,7 @@ export default function InvoiceEditor({ invoiceId, onSaved, onClose }: Props) {
   const [notes, setNotes] = useState("");
 
   // Meta
+  const [loading, setLoading] = useState(!!invoiceId); // true while fetching existing invoice
   const [saving, setSaving] = useState(false);
   const [generatingPdf, setGeneratingPdf] = useState(false);
   const [error, setError] = useState("");
@@ -52,51 +53,78 @@ export default function InvoiceEditor({ invoiceId, onSaved, onClose }: Props) {
   const [status, setStatus] = useState<string>("DRAFT");
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const clientRef = useRef<HTMLDivElement>(null);
+  // Tracks whether invoice data has been loaded — prevents payment-profile default
+  // from overwriting the profile already set by the loaded invoice.
+  const invoiceLoadedRef = useRef(false);
 
   const isReadOnly = status === "SIGNED" || status === "VOID";
 
-  // Load existing invoice or next number
+  // Load existing invoice data or fetch next invoice number for new invoices
   useEffect(() => {
     if (invoiceId) {
-      fetch(`/api/admin/invoices/${invoiceId}`).then((r) => r.json()).then(({ invoice }) => {
-        if (!invoice) return;
-        setClientId(invoice.clientId);
-        setClientName(invoice.clientName);
-        setClientAddress(invoice.clientAddress ?? "");
-        setClientEmail(invoice.clientEmail ?? "");
-        setInvoiceNumber(invoice.invoiceNumber);
-        setInvoiceDate(invoice.invoiceDate.slice(0, 10));
-        setDueDate(invoice.dueDate.slice(0, 10));
-        setPaymentTerms(invoice.paymentTerms);
-        setCurrency(invoice.currency);
-        setItems(invoice.items.map((i: LineItem) => ({ ...i, hours: Number(i.hours), rate: Number(i.rate), amount: Number(i.amount) })));
-        setAdjustment(Number(invoice.adjustment));
-        setGstEnabled(invoice.gstEnabled);
-        if (invoice.gstRate) setGstRate(Number(invoice.gstRate));
-        setPaymentProfileId(invoice.paymentProfileId ?? null);
-        setNotes(invoice.notes ?? "");
-        setStatus(invoice.status);
-        if (invoice.pdfS3Key) setPdfUrl("has-pdf");
-      });
+      setLoading(true);
+      invoiceLoadedRef.current = false;
+      fetch(`/api/admin/invoices/${invoiceId}`)
+        .then((r) => {
+          if (!r.ok) throw new Error(`HTTP ${r.status}`);
+          return r.json();
+        })
+        .then(({ invoice }) => {
+          if (!invoice) throw new Error("Invoice not found");
+          setClientId(invoice.clientId);
+          setClientName(invoice.clientName);
+          setClientAddress(invoice.clientAddress ?? "");
+          setClientEmail(invoice.clientEmail ?? "");
+          setInvoiceNumber(invoice.invoiceNumber);
+          setInvoiceDate(invoice.invoiceDate.slice(0, 10));
+          setDueDate(invoice.dueDate.slice(0, 10));
+          setPaymentTerms(invoice.paymentTerms);
+          setCurrency(invoice.currency);
+          setItems(invoice.items.map((i: LineItem) => ({
+            ...i,
+            hours: Number(i.hours),
+            rate: Number(i.rate),
+            amount: Number(i.amount),
+          })));
+          setAdjustment(Number(invoice.adjustment));
+          setGstEnabled(invoice.gstEnabled);
+          if (invoice.gstRate) setGstRate(Number(invoice.gstRate));
+          setPaymentProfileId(invoice.paymentProfileId ?? null);
+          setNotes(invoice.notes ?? "");
+          setStatus(invoice.status);
+          if (invoice.pdfS3Key) setPdfUrl("has-pdf");
+          invoiceLoadedRef.current = true;
+        })
+        .catch((err) => {
+          setError(`Failed to load invoice: ${err.message}`);
+        })
+        .finally(() => setLoading(false));
     } else {
-      fetch("/api/admin/invoices/next-number").then((r) => r.json()).then(({ invoiceNumber }) => {
-        setInvoiceNumber(invoiceNumber);
-      });
+      invoiceLoadedRef.current = true;
+      fetch("/api/admin/invoices/next-number")
+        .then((r) => r.json())
+        .then(({ invoiceNumber }) => setInvoiceNumber(invoiceNumber))
+        .catch(() => {/* non-critical — user can edit the number */});
     }
   }, [invoiceId]);
 
-  // Load payment profiles + company
+  // Load payment profiles + company profile
   useEffect(() => {
     Promise.all([
       fetch("/api/admin/invoice-payment-profiles").then((r) => r.json()),
       fetch("/api/admin/invoice-company-profile").then((r) => r.json()),
     ]).then(([pp, cp]) => {
-      setPaymentProfiles(pp.profiles ?? []);
-      const def = pp.profiles?.find((p: PaymentProfile) => p.isDefault) ?? pp.profiles?.[0];
-      if (def && !paymentProfileId) setPaymentProfileId(def.id);
+      const profiles: PaymentProfile[] = pp.profiles ?? [];
+      setPaymentProfiles(profiles);
       setCompany(cp.profile);
-    });
-  }, []);
+      // Only set default profile when creating a new invoice AND the invoice
+      // data hasn't already set a profile (avoids stale-closure override).
+      if (!invoiceId && !invoiceLoadedRef.current) {
+        const def = profiles.find((p) => p.isDefault) ?? profiles[0];
+        if (def) setPaymentProfileId(def.id);
+      }
+    }).catch(() => {/* non-critical */});
+  }, [invoiceId]);
 
   // Update displayed payment info when profile changes
   useEffect(() => {
@@ -224,6 +252,24 @@ export default function InvoiceEditor({ invoiceId, onSaved, onClose }: Props) {
   }
 
   const inputCls = `w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50`;
+
+  if (loading) {
+    return (
+      <div className="flex flex-col h-full">
+        <div className="px-4 py-3 border-b border-gray-200 dark:border-slate-700 flex items-center gap-2 bg-white dark:bg-slate-900">
+          <button onClick={onClose} className="p-2 rounded-lg text-gray-400 hover:text-gray-700 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-800 transition">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <span className="text-sm font-semibold text-gray-500 dark:text-slate-400">Loading invoice…</span>
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full">

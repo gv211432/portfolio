@@ -83,12 +83,14 @@ export default function InvoiceSection() {
         )}
         {currentView === "new" && (
           <InvoiceEditor
+            key="new"
             onSaved={handleSaved}
             onClose={backToList}
           />
         )}
         {currentView === "edit" && selectedId && (
           <InvoiceEditor
+            key={selectedId}
             invoiceId={selectedId}
             onSaved={handleSaved}
             onClose={() => { setParams({ invoiceView: "detail" }); }}
