@@ -1,276 +1,8 @@
-import {
-  Document,
-  Page,
-  Text,
-  View,
-  StyleSheet,
-  renderToBuffer,
-} from "@react-pdf/renderer";
-
-// Built-in PDF fonts — no Font.register needed.
-// Use "Helvetica" for normal and "Helvetica-Bold" for bold weight.
-const BOLD = "Helvetica-Bold";
-const NORMAL = "Helvetica";
-
-const PURPLE_START = "#667eea";
-const PURPLE_END = "#764ba2";
-
-const styles = StyleSheet.create({
-  page: {
-    fontFamily: NORMAL,
-    fontSize: 9,
-    color: "#333",
-    backgroundColor: "#fff",
-    paddingHorizontal: 0,
-    paddingVertical: 0,
-  },
-  // ── Header ──────────────────────────────────────────────────────────────────
-  header: {
-    backgroundColor: PURPLE_START,
-    paddingHorizontal: 32,
-    paddingVertical: 28,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  logoCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "rgba(255,255,255,0.2)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  logoText: {
-    color: "#fff",
-    fontSize: 20,
-    fontFamily: BOLD,
-  },
-  headerRight: {
-    alignItems: "flex-end",
-  },
-  companyName: {
-    color: "#fff",
-    fontSize: 14,
-    fontFamily: BOLD,
-    letterSpacing: 0.5,
-  },
-  companyMeta: {
-    color: "rgba(255,255,255,0.8)",
-    fontSize: 8,
-    marginTop: 2,
-    textAlign: "right",
-  },
-  // ── Body ────────────────────────────────────────────────────────────────────
-  body: {
-    paddingHorizontal: 32,
-    paddingVertical: 24,
-    flexGrow: 1,
-  },
-  // ── Bill To + Meta row ──────────────────────────────────────────────────────
-  metaRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 20,
-  },
-  billToBlock: {
-    flex: 1,
-  },
-  sectionLabel: {
-    fontSize: 7,
-    fontFamily: BOLD,
-    color: "#888",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-    marginBottom: 5,
-  },
-  clientName: {
-    fontSize: 13,
-    fontFamily: BOLD,
-    color: "#1a1a2e",
-    marginBottom: 3,
-  },
-  clientAddress: {
-    fontSize: 8,
-    color: "#555",
-    lineHeight: 1.5,
-  },
-  metaBlock: {
-    alignItems: "flex-end",
-    minWidth: 150,
-  },
-  invoiceTitle: {
-    fontSize: 20,
-    fontFamily: BOLD,
-    color: PURPLE_START,
-    marginBottom: 8,
-  },
-  metaGrid: {
-    alignItems: "flex-end",
-  },
-  metaRow2: {
-    flexDirection: "row",
-    marginBottom: 3,
-  },
-  metaKey: {
-    fontSize: 7,
-    color: "#888",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    width: 70,
-    textAlign: "right",
-    marginRight: 8,
-  },
-  metaVal: {
-    fontSize: 8,
-    color: "#333",
-    fontFamily: BOLD,
-  },
-  // ── Work Table ──────────────────────────────────────────────────────────────
-  table: {
-    marginBottom: 20,
-  },
-  tableHeader: {
-    flexDirection: "row",
-    backgroundColor: PURPLE_START,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  tableHeaderText: {
-    color: "#fff",
-    fontSize: 7,
-    fontFamily: BOLD,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  colDesc: { flex: 1 },
-  colHours: { width: 55, textAlign: "right" },
-  colRate: { width: 55, textAlign: "right" },
-  colAmount: { width: 65, textAlign: "right" },
-  tableRow: {
-    flexDirection: "row",
-    paddingHorizontal: 12,
-    paddingVertical: 9,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
-  },
-  tableRowAlt: {
-    backgroundColor: "#fafaff",
-  },
-  dateBadge: {
-    backgroundColor: PURPLE_START,
-    borderRadius: 3,
-    paddingHorizontal: 4,
-    paddingVertical: 1,
-    alignSelf: "flex-start",
-    marginBottom: 3,
-  },
-  dateBadgeText: {
-    color: "#fff",
-    fontSize: 6,
-    fontFamily: BOLD,
-  },
-  descriptionText: {
-    fontSize: 8,
-    color: "#333",
-    lineHeight: 1.4,
-  },
-  cellNum: {
-    fontSize: 8,
-    color: "#333",
-    textAlign: "right",
-  },
-  // ── Summary ─────────────────────────────────────────────────────────────────
-  summaryContainer: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    marginBottom: 20,
-  },
-  summaryBox: {
-    backgroundColor: "#1a1a2e",
-    borderRadius: 6,
-    padding: 16,
-    minWidth: 200,
-  },
-  summaryRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 6,
-  },
-  summaryLabel: {
-    fontSize: 8,
-    color: "rgba(255,255,255,0.7)",
-  },
-  summaryValue: {
-    fontSize: 8,
-    color: "#fff",
-  },
-  divider: {
-    borderTopWidth: 1,
-    borderTopColor: "rgba(255,255,255,0.2)",
-    marginTop: 8,
-    marginBottom: 8,
-  },
-  totalLabel: {
-    fontSize: 10,
-    color: "#fff",
-    fontFamily: BOLD,
-  },
-  totalValue: {
-    fontSize: 10,
-    color: "#a78bfa",
-    fontFamily: BOLD,
-  },
-  // ── Payment Info ────────────────────────────────────────────────────────────
-  paymentSection: {
-    marginBottom: 20,
-  },
-  paymentGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-  },
-  paymentField: {
-    width: "33.33%",
-    marginBottom: 10,
-    paddingRight: 8,
-  },
-  paymentLabel: {
-    fontSize: 6,
-    color: "#999",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    marginBottom: 2,
-  },
-  paymentValue: {
-    fontSize: 8,
-    color: "#333",
-    fontFamily: BOLD,
-  },
-  // ── Footer ──────────────────────────────────────────────────────────────────
-  footer: {
-    backgroundColor: PURPLE_END,
-    paddingHorizontal: 32,
-    paddingVertical: 16,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  footerText: {
-    color: "#fff",
-    fontSize: 9,
-    fontFamily: BOLD,
-  },
-  footerSub: {
-    color: "rgba(255,255,255,0.7)",
-    fontSize: 7,
-    marginTop: 2,
-  },
-  footerNote: {
-    color: "rgba(255,255,255,0.6)",
-    fontSize: 7,
-    textAlign: "right",
-  },
-});
+/**
+ * Server-side invoice PDF generation using PDFKit.
+ * Pure Node.js — zero React dependency, zero bundling conflict.
+ */
+import PDFDocument from "pdfkit";
 
 export interface PdfLineItem {
   dateLabel: string;
@@ -318,6 +50,21 @@ export interface PdfInvoiceData {
   company: PdfCompany;
 }
 
+// ─── Design constants ─────────────────────────────────────────────────────────
+const PURPLE  = "#667eea";
+const DPURPLE = "#764ba2";
+const DARK    = "#1a1a2e";
+const WHITE   = "#ffffff";
+const GREY    = "#888888";
+const LTGREY  = "#f0f0f0";
+const TEXT    = "#333333";
+const SUBDUED = "#555555";
+
+const PAGE_W  = 595.28;
+const PAGE_H  = 841.89;
+const MARGIN  = 36;
+const BODY_W  = PAGE_W - MARGIN * 2;
+
 function fmt(amount: number, currency: string): string {
   try {
     return new Intl.NumberFormat("en-US", {
@@ -334,155 +81,251 @@ function fmtNum(n: number): string {
   return n % 1 === 0 ? String(n) : n.toFixed(2);
 }
 
-function InvoicePdf({ data }: { data: PdfInvoiceData }) {
-  const totalHours = data.items.reduce((s, i) => s + i.hours, 0);
+// ─── Main generator ───────────────────────────────────────────────────────────
 
-  const payFields: { label: string; value: string }[] = [
-    { label: "Account Name", value: data.paymentInfo?.accountName ?? "" },
-    { label: "Bank Name",    value: data.paymentInfo?.bankName ?? "" },
-    { label: "Account No.", value: data.paymentInfo?.accountNumber ?? "" },
-    { label: "IFSC Code",   value: data.paymentInfo?.ifscCode ?? "" },
-    { label: "SWIFT Code",  value: data.paymentInfo?.swiftCode ?? "" },
-    { label: "Branch",      value: data.paymentInfo?.branch ?? "" },
-    { label: "UPI ID",      value: data.paymentInfo?.upiId ?? "" },
-    { label: "PayPal/Other", value: data.paymentInfo?.paypalOther ?? "" },
-  ].filter((f) => f.value.trim() !== "");
+export function generateInvoicePdf(data: PdfInvoiceData): Promise<Buffer> {
+  return new Promise<Buffer>((resolve, reject) => {
+    const doc = new PDFDocument({ size: "A4", margin: 0, compress: true });
+    const chunks: Buffer[] = [];
+    doc.on("data", (c: Buffer) => chunks.push(c));
+    doc.on("end", () => resolve(Buffer.concat(chunks)));
+    doc.on("error", reject);
 
-  const summaryRows: { label: string; value: string }[] = [
-    { label: "Total Hours", value: `${fmtNum(totalHours)} hrs` },
-    { label: "Subtotal",    value: fmt(data.subtotal, data.currency) },
-  ];
-  if (data.adjustment !== 0) {
-    summaryRows.push({ label: "Adjustment", value: fmt(data.adjustment, data.currency) });
-  }
-  if (data.gstEnabled && data.gstAmount != null) {
-    summaryRows.push({ label: `GST (${data.gstRate}%)`, value: fmt(data.gstAmount, data.currency) });
-  }
+    // ── HEADER ────────────────────────────────────────────────────────────────
+    const HEADER_H = 96;
+    doc.rect(0, 0, PAGE_W, HEADER_H).fill(PURPLE);
 
-  const addressLines = data.company.address ? data.company.address.split("\n") : [];
+    // Logo circle
+    const CX = MARGIN + 22, CY = 48;
+    doc.circle(CX, CY, 22).fillOpacity(0.25).fill(WHITE).fillOpacity(1);
+    doc.font("Helvetica-Bold").fontSize(20).fill(WHITE)
+      .text("G", CX - 7, CY - 11);
 
-  return (
-    <Document>
-      <Page size="A4" style={styles.page}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.logoCircle}>
-            <Text style={styles.logoText}>G</Text>
-          </View>
-          <View style={styles.headerRight}>
-            <Text style={styles.companyName}>{data.company.name}</Text>
-            {addressLines.map((line, i) => (
-              <Text key={i} style={styles.companyMeta}>{line}</Text>
-            ))}
-            {data.company.email ? <Text style={styles.companyMeta}>{data.company.email}</Text> : null}
-            {data.company.gstNumber ? <Text style={styles.companyMeta}>GST: {data.company.gstNumber}</Text> : null}
-          </View>
-        </View>
+    // Company details (right-aligned)
+    const co = data.company;
+    doc.font("Helvetica-Bold").fontSize(13).fill(WHITE);
+    const coNameW = doc.widthOfString(co.name);
+    doc.text(co.name, PAGE_W - MARGIN - coNameW, 18);
 
-        {/* Body */}
-        <View style={styles.body}>
-          {/* Bill To + Invoice Meta */}
-          <View style={styles.metaRow}>
-            <View style={styles.billToBlock}>
-              <Text style={styles.sectionLabel}>Bill To</Text>
-              <Text style={styles.clientName}>{data.clientName}</Text>
-              {data.clientAddress ? (
-                <Text style={styles.clientAddress}>{data.clientAddress}</Text>
-              ) : null}
-            </View>
-            <View style={styles.metaBlock}>
-              <Text style={styles.invoiceTitle}>{data.invoiceNumber}</Text>
-              <View style={styles.metaGrid}>
-                {[
-                  ["Invoice Date", data.invoiceDate],
-                  ["Due Date",     data.dueDate],
-                  ["Terms",        data.paymentTerms],
-                  ["Currency",     data.currency],
-                ].map(([k, v]) => (
-                  <View key={k} style={styles.metaRow2}>
-                    <Text style={styles.metaKey}>{k}</Text>
-                    <Text style={styles.metaVal}>{v}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-          </View>
+    doc.font("Helvetica").fontSize(8).fillOpacity(0.8).fill(WHITE);
+    let hy = 35;
+    for (const line of co.address.split("\n")) {
+      if (!line.trim()) continue;
+      const lw = doc.widthOfString(line);
+      doc.text(line, PAGE_W - MARGIN - lw, hy);
+      hy += 11;
+    }
+    if (co.email) {
+      const ew = doc.widthOfString(co.email);
+      doc.text(co.email, PAGE_W - MARGIN - ew, hy);
+      hy += 11;
+    }
+    if (co.gstNumber) {
+      const gw = doc.widthOfString(`GST: ${co.gstNumber}`);
+      doc.text(`GST: ${co.gstNumber}`, PAGE_W - MARGIN - gw, hy);
+    }
+    doc.fillOpacity(1);
 
-          {/* Line Items */}
-          <View style={styles.table}>
-            <View style={styles.tableHeader}>
-              <Text style={[styles.tableHeaderText, styles.colDesc]}>Description</Text>
-              <Text style={[styles.tableHeaderText, styles.colHours]}>Hours</Text>
-              <Text style={[styles.tableHeaderText, styles.colRate]}>Rate</Text>
-              <Text style={[styles.tableHeaderText, styles.colAmount]}>Amount</Text>
-            </View>
-            {data.items.map((item, idx) => (
-              <View key={idx} style={[styles.tableRow, idx % 2 === 1 ? styles.tableRowAlt : {}]}>
-                <View style={styles.colDesc}>
-                  {item.dateLabel ? (
-                    <View style={styles.dateBadge}>
-                      <Text style={styles.dateBadgeText}>{item.dateLabel}</Text>
-                    </View>
-                  ) : null}
-                  <Text style={styles.descriptionText}>{item.description || "—"}</Text>
-                </View>
-                <Text style={[styles.cellNum, styles.colHours]}>{fmtNum(item.hours)}</Text>
-                <Text style={[styles.cellNum, styles.colRate]}>{fmt(item.rate, data.currency)}</Text>
-                <Text style={[styles.cellNum, styles.colAmount]}>{fmt(item.amount, data.currency)}</Text>
-              </View>
-            ))}
-          </View>
+    // ── BILL TO + META ────────────────────────────────────────────────────────
+    let y = HEADER_H + 24;
 
-          {/* Summary */}
-          <View style={styles.summaryContainer}>
-            <View style={styles.summaryBox}>
-              {summaryRows.map((row) => (
-                <View key={row.label} style={styles.summaryRow}>
-                  <Text style={styles.summaryLabel}>{row.label}</Text>
-                  <Text style={styles.summaryValue}>{row.value}</Text>
-                </View>
-              ))}
-              <View style={styles.divider} />
-              <View style={styles.summaryRow}>
-                <Text style={styles.totalLabel}>Total Due</Text>
-                <Text style={styles.totalValue}>{fmt(data.total, data.currency)}</Text>
-              </View>
-            </View>
-          </View>
+    // Bill To
+    doc.font("Helvetica-Bold").fontSize(7).fill(GREY)
+      .text("BILL TO", MARGIN, y, { characterSpacing: 0.8 });
+    y += 14;
 
-          {/* Payment Info */}
-          {payFields.length > 0 ? (
-            <View style={styles.paymentSection}>
-              <Text style={styles.sectionLabel}>Payment Information</Text>
-              <View style={styles.paymentGrid}>
-                {payFields.map((f) => (
-                  <View key={f.label} style={styles.paymentField}>
-                    <Text style={styles.paymentLabel}>{f.label}</Text>
-                    <Text style={styles.paymentValue}>{f.value}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-          ) : null}
-        </View>
+    doc.font("Helvetica-Bold").fontSize(14).fill(DARK)
+      .text(data.clientName, MARGIN, y);
+    y += 18;
 
-        {/* Footer */}
-        <View style={styles.footer}>
-          <View>
-            <Text style={styles.footerText}>Thank you for your business!</Text>
-            {data.company.email ? (
-              <Text style={styles.footerSub}>{data.company.email}</Text>
-            ) : null}
-          </View>
-          <Text style={styles.footerNote}>
-            {"Computer-generated invoice.\nGenerated on " + new Date().toLocaleDateString("en-IN")}
-          </Text>
-        </View>
-      </Page>
-    </Document>
-  );
-}
+    if (data.clientAddress) {
+      doc.font("Helvetica").fontSize(8).fill(SUBDUED)
+        .text(data.clientAddress, MARGIN, y, { width: 200, lineGap: 2 });
+      const addrH = doc.heightOfString(data.clientAddress, { width: 200, lineGap: 2 });
+      y += addrH + 6;
+    }
 
-export async function generateInvoicePdf(data: PdfInvoiceData): Promise<Buffer> {
-  return renderToBuffer(<InvoicePdf data={data} />);
+    // Invoice meta (right column, aligned to top of bill-to)
+    const metaTop = HEADER_H + 24;
+    const metaX = PAGE_W - MARGIN - 170;
+    const metaRows = [
+      ["Invoice Date", data.invoiceDate],
+      ["Due Date",     data.dueDate],
+      ["Terms",        data.paymentTerms],
+      ["Currency",     data.currency],
+    ];
+    // Invoice number
+    doc.font("Helvetica-Bold").fontSize(20).fill(PURPLE)
+      .text(data.invoiceNumber, metaX, metaTop, { width: 170, align: "right" });
+
+    let my = metaTop + 26;
+    for (const [k, v] of metaRows) {
+      doc.font("Helvetica").fontSize(7).fill(GREY)
+        .text(k.toUpperCase(), metaX, my, { width: 80, align: "right", characterSpacing: 0.4 });
+      doc.font("Helvetica-Bold").fontSize(8).fill(TEXT)
+        .text(v, metaX + 85, my, { width: 85, align: "right" });
+      my += 13;
+    }
+
+    // Advance y past whichever block is taller
+    y = Math.max(y, my + 10);
+
+    // ── LINE ITEMS TABLE ──────────────────────────────────────────────────────
+    const COL_H_X  = PAGE_W - MARGIN - 65 - 60 - 60;
+    const COL_R_X  = PAGE_W - MARGIN - 65 - 60;
+    const COL_A_X  = PAGE_W - MARGIN - 65;
+    const COL_W_H  = 60;
+    const COL_W_R  = 60;
+    const COL_W_A  = 65;
+    const COL_W_D  = COL_H_X - MARGIN;
+    const ROW_H    = 28;
+    const TH_H     = 20;
+
+    // Table header
+    doc.rect(MARGIN, y, BODY_W, TH_H).fill(PURPLE);
+    doc.font("Helvetica-Bold").fontSize(7).fill(WHITE).fillOpacity(0.9);
+    doc.text("DESCRIPTION", MARGIN + 8, y + 6, { width: COL_W_D - 8 });
+    doc.text("HOURS",   COL_H_X, y + 6, { width: COL_W_H, align: "right" });
+    doc.text("RATE",    COL_R_X, y + 6, { width: COL_W_R, align: "right" });
+    doc.text("AMOUNT",  COL_A_X, y + 6, { width: COL_W_A, align: "right" });
+    doc.fillOpacity(1);
+    y += TH_H;
+
+    for (let i = 0; i < data.items.length; i++) {
+      const item = data.items[i];
+      const isAlt = i % 2 === 1;
+
+      // Measure description height
+      let descText = item.description || "—";
+      const descH = doc.font("Helvetica").fontSize(8)
+        .heightOfString(descText, { width: COL_W_D - 12, lineGap: 2 });
+      const badgeH = item.dateLabel ? 14 : 0;
+      const rowH = Math.max(ROW_H, descH + badgeH + 10);
+
+      // Row background
+      if (isAlt) doc.rect(MARGIN, y, BODY_W, rowH).fill("#f5f5ff");
+      doc.rect(MARGIN, y + rowH - 1, BODY_W, 1).fill(LTGREY);
+
+      // Date badge
+      let descY = y + 6;
+      if (item.dateLabel) {
+        const badgeW = doc.font("Helvetica-Bold").fontSize(6)
+          .widthOfString(item.dateLabel) + 8;
+        doc.rect(MARGIN + 8, y + 5, badgeW, 10).fill(PURPLE);
+        doc.font("Helvetica-Bold").fontSize(6).fill(WHITE)
+          .text(item.dateLabel, MARGIN + 12, y + 7);
+        descY = y + 18;
+      }
+
+      // Description
+      doc.font("Helvetica").fontSize(8).fill(TEXT)
+        .text(descText, MARGIN + 8, descY, { width: COL_W_D - 12, lineGap: 2 });
+
+      // Numeric columns (vertically centered)
+      const numY = y + (rowH - 8) / 2;
+      doc.font("Helvetica").fontSize(8).fill(TEXT);
+      doc.text(fmtNum(item.hours), COL_H_X, numY, { width: COL_W_H, align: "right" });
+      doc.text(fmt(item.rate, data.currency), COL_R_X, numY, { width: COL_W_R, align: "right" });
+      doc.font("Helvetica-Bold").fill(DARK)
+        .text(fmt(item.amount, data.currency), COL_A_X, numY, { width: COL_W_A, align: "right" });
+
+      y += rowH;
+    }
+
+    y += 16;
+
+    // ── SUMMARY BOX ───────────────────────────────────────────────────────────
+    const totalHours = data.items.reduce((s, i) => s + i.hours, 0);
+    const summaryRows: [string, string][] = [
+      ["Total Hours", `${fmtNum(totalHours)} hrs`],
+      ["Subtotal",    fmt(data.subtotal, data.currency)],
+    ];
+    if (data.adjustment !== 0) {
+      summaryRows.push(["Adjustment", fmt(data.adjustment, data.currency)]);
+    }
+    if (data.gstEnabled && data.gstAmount != null) {
+      summaryRows.push([`GST (${data.gstRate}%)`, fmt(data.gstAmount, data.currency)]);
+    }
+
+    const BOX_W = 200;
+    const BOX_X = PAGE_W - MARGIN - BOX_W;
+    const ROW_H2 = 14;
+    const boxInnerH = summaryRows.length * ROW_H2 + 1 + 18; // rows + divider + total row
+    const BOX_H = boxInnerH + 20;
+
+    doc.roundedRect(BOX_X, y, BOX_W, BOX_H, 4).fill(DARK);
+
+    let by = y + 12;
+    for (const [label, value] of summaryRows) {
+      doc.font("Helvetica").fontSize(8).fill("rgba(255,255,255,0.65)")
+        .text(label, BOX_X + 12, by, { width: 90 });
+      doc.font("Helvetica").fontSize(8).fill(WHITE)
+        .text(value, BOX_X + 12, by, { width: BOX_W - 24, align: "right" });
+      by += ROW_H2;
+    }
+
+    // Divider
+    doc.moveTo(BOX_X + 12, by + 3).lineTo(BOX_X + BOX_W - 12, by + 3)
+      .strokeColor("rgba(255,255,255,0.2)").lineWidth(0.5).stroke();
+    by += 10;
+
+    // Total
+    doc.font("Helvetica-Bold").fontSize(11).fill(WHITE)
+      .text("Total Due", BOX_X + 12, by, { width: 90 });
+    doc.font("Helvetica-Bold").fontSize(11).fill("#a78bfa")
+      .text(fmt(data.total, data.currency), BOX_X + 12, by, { width: BOX_W - 24, align: "right" });
+
+    y += BOX_H + 20;
+
+    // ── PAYMENT INFO ──────────────────────────────────────────────────────────
+    const payFields: { label: string; value: string }[] = [
+      { label: "Account Name",  value: data.paymentInfo?.accountName ?? "" },
+      { label: "Bank Name",     value: data.paymentInfo?.bankName ?? "" },
+      { label: "Account No.",   value: data.paymentInfo?.accountNumber ?? "" },
+      { label: "IFSC Code",     value: data.paymentInfo?.ifscCode ?? "" },
+      { label: "SWIFT Code",    value: data.paymentInfo?.swiftCode ?? "" },
+      { label: "Branch",        value: data.paymentInfo?.branch ?? "" },
+      { label: "UPI ID",        value: data.paymentInfo?.upiId ?? "" },
+      { label: "PayPal / Other",value: data.paymentInfo?.paypalOther ?? "" },
+    ].filter((f) => f.value.trim() !== "");
+
+    if (payFields.length > 0) {
+      doc.font("Helvetica-Bold").fontSize(7).fill(GREY)
+        .text("PAYMENT INFORMATION", MARGIN, y, { characterSpacing: 0.8 });
+      y += 14;
+
+      const colW = BODY_W / 3;
+      let col = 0;
+      let rowStartY = y;
+
+      for (const f of payFields) {
+        const px = MARGIN + col * colW;
+        doc.font("Helvetica").fontSize(6).fill(GREY).fillOpacity(0.8)
+          .text(f.label.toUpperCase(), px, rowStartY, { characterSpacing: 0.4 });
+        doc.font("Helvetica-Bold").fontSize(8).fill(TEXT).fillOpacity(1)
+          .text(f.value, px, rowStartY + 10);
+        col++;
+        if (col === 3) {
+          col = 0;
+          rowStartY += 28;
+        }
+      }
+      y = rowStartY + (col > 0 ? 28 : 0) + 12;
+    }
+
+    // ── FOOTER ────────────────────────────────────────────────────────────────
+    const FOOTER_H = 40;
+    const footerY = PAGE_H - FOOTER_H;
+    doc.rect(0, footerY, PAGE_W, FOOTER_H).fill(DPURPLE);
+
+    doc.font("Helvetica-Bold").fontSize(10).fill(WHITE)
+      .text("Thank you for your business!", MARGIN, footerY + 14);
+
+    const noteStr = `Computer-generated invoice · ${new Date().toLocaleDateString("en-IN")}`;
+    const noteW = doc.font("Helvetica").fontSize(7).widthOfString(noteStr);
+    doc.fill("rgba(255,255,255,0.6)")
+      .text(noteStr, PAGE_W - MARGIN - noteW, footerY + 16);
+
+    doc.end();
+  });
 }

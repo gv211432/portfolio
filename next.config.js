@@ -40,12 +40,9 @@ const nextConfig = {
     '@graphql-yoga/plugin-content-type-parser',
     '@whatwg-node/server',
     '@whatwg-node/fetch',
-    // react-pdf ships its own React fork; externalising prevents the dual-React
-    // conflict that causes "Objects are not valid as a React child" at renderToBuffer.
-    '@react-pdf/renderer',
-    '@react-pdf/font',
-    '@react-pdf/layout',
-    '@react-pdf/reconciler',
+    // pdfkit loads font .afm files via relative paths — must NOT be bundled
+    // or those paths break inside .next/server/vendor-chunks/
+    'pdfkit',
   ],
 };
 
