@@ -672,6 +672,9 @@ model Invoice {
 
   pdfS3Key       String?
   pdfGeneratedAt DateTime?
+  currentVersion Int     @default(0)
+
+  isLocked Boolean @default(false)
 
   notes String? @db.Text
 
@@ -684,6 +687,7 @@ model Invoice {
   items        InvoiceItem[]
   emailLogs    InvoiceEmailLog[]
   signatureLog InvoiceSignatureLog?
+  versions     InvoiceVersion[]
 
   @@index([status, createdAt(sort: Desc)])
   @@index([invoiceNumber])
@@ -707,6 +711,20 @@ model InvoiceItem {
   sortOrder   Int     @default(0)
 
   @@index([invoiceId, sortOrder])
+}
+
+/// Immutable snapshot of each generated PDF — enables version history.
+model InvoiceVersion {
+  id          String   @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  version     Int
+  pdfS3Key    String
+  generatedAt DateTime @default(now())
+
+  @@unique([invoiceId, version])
+  @@index([invoiceId])
 }
 
 /// Email send history — Phase 2 SES integration scaffold.

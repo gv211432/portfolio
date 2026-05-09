@@ -40,6 +40,9 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   if (existing.status === "SIGNED") {
     return NextResponse.json({ error: "Signed invoices cannot be edited" }, { status: 400 });
   }
+  if (existing.isLocked) {
+    return NextResponse.json({ error: "Invoice is locked. Unlock it to make changes." }, { status: 400 });
+  }
 
   const body = await req.json();
   const {

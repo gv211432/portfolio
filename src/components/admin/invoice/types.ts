@@ -25,6 +25,8 @@ export interface InvoiceListItem {
   id: string;
   invoiceNumber: string;
   status: InvoiceStatus;
+  isLocked?: boolean;
+  currentVersion?: number;
   clientName: string;
   clientEmail?: string | null;
   invoiceDate: string;
@@ -38,7 +40,16 @@ export interface InvoiceListItem {
   _count?: { items: number };
 }
 
+export interface InvoiceVersion {
+  id: string;
+  version: number;
+  pdfS3Key: string;
+  generatedAt: string;
+}
+
 export interface InvoiceFull extends InvoiceListItem {
+  isLocked: boolean;
+  currentVersion: number;
   clientId?: string | null;
   clientAddress?: string | null;
   paymentTerms: string;

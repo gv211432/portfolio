@@ -22,12 +22,15 @@ function s3(): S3Client {
   return _client;
 }
 
-export function pdfS3Key(invoiceId: string): string {
-  return `${INVOICE_ENV.S3_PREFIX}${invoiceId}.pdf`;
+export function pdfS3Key(invoiceId: string, version?: number): string {
+  if (version !== undefined) {
+    return `${INVOICE_ENV.S3_PREFIX}${invoiceId}/v${version}.pdf`;
+  }
+  return `${INVOICE_ENV.S3_PREFIX}${invoiceId}/latest.pdf`;
 }
 
-export async function uploadPdf(invoiceId: string, buffer: Buffer): Promise<string> {
-  const key = pdfS3Key(invoiceId);
+export async function uploadPdf(invoiceId: string, buffer: Buffer, version?: number): Promise<string> {
+  const key = pdfS3Key(invoiceId, version);
   await s3().send(
     new PutObjectCommand({
       Bucket: INVOICE_ENV.S3_BUCKET,
@@ -60,14 +63,26 @@ export async function downloadPdf(invoiceId: string): Promise<Buffer> {
   return Buffer.concat(chunks);
 }
 
-export async function signedPdfUrl(invoiceId: string, expiresInSec = 900): Promise<string> {
+export async function signedPdfUrl(invoiceId: string, expiresInSec = 900, version?: number): Promise<string> {
   return getSignedUrl(
     s3(),
     new GetObjectCommand({
       Bucket: INVOICE_ENV.S3_BUCKET,
-      Key: pdfS3Key(invoiceId),
-      ResponseContentDisposition: `attachment; filename="invoice-${invoiceId}.pdf"`,
+      Key: pdfS3Key(invoiceId, version),
+      ResponseContentDisposition: `attachment; filename="invoice-${invoiceId}${version !== undefined ? `-v${version}` : ""}.pdf"`,
     }),
     { expiresIn: expiresInSec },
   );
+}
+
+export async function downloadPdfVersion(invoiceId: string, version: number): Promise<Buffer> {
+  const key = pdfS3Key(invoiceId, version);
+  const res = await s3().send(new GetObjectCommand({ Bucket: INVOICE_ENV.S3_BUCKET, Key: key }));
+  if (!res.Body) throw new Error(`[invoice-s3] empty body for ${key}`);
+  const { Readable } = await import("node:stream");
+  const chunks: Buffer[] = [];
+  for await (const chunk of res.Body as InstanceType<typeof Readable>) {
+    chunks.push(typeof chunk === "string" ? Buffer.from(chunk) : (chunk as Buffer));
+  }
+  return Buffer.concat(chunks);
 }

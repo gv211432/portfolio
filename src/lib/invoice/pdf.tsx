@@ -1,8 +1,11 @@
 /**
- * Server-side invoice PDF generation using PDFKit.
- * Pure Node.js — zero React dependency, zero bundling conflict.
+ * Server-side invoice PDF generation — PDFKit, zero React dependency.
+ * Design: purple gradient header, Cinzel Decorative headings, Helvetica body.
  */
 import PDFDocument from "pdfkit";
+import path from "node:path";
+import fs from "node:fs";
+import sharp from "sharp";
 
 export interface PdfLineItem {
   dateLabel: string;
@@ -50,40 +53,55 @@ export interface PdfInvoiceData {
   company: PdfCompany;
 }
 
-// ─── Design constants ─────────────────────────────────────────────────────────
+// ─── Design tokens ────────────────────────────────────────────────────────────
 const PURPLE  = "#667eea";
 const DPURPLE = "#764ba2";
 const DARK    = "#1a1a2e";
 const WHITE   = "#ffffff";
 const GREY    = "#888888";
-const LTGREY  = "#f0f0f0";
+const LTGREY  = "#eeeeee";
 const TEXT    = "#333333";
-const SUBDUED = "#555555";
+const SUBDUED = "#666666";
+const ACCENT  = "#a78bfa";
 
 const PAGE_W  = 595.28;
 const PAGE_H  = 841.89;
 const MARGIN  = 36;
 const BODY_W  = PAGE_W - MARGIN * 2;
 
-function fmt(amount: number, currency: string): string {
+// Font paths (Cinzel Decorative — downloaded to public/fonts)
+const FONTS_DIR   = path.join(process.cwd(), "public", "fonts");
+const CINZEL_REG  = path.join(FONTS_DIR, "CinzelDecorative-Regular.ttf");
+const CINZEL_BOLD = path.join(FONTS_DIR, "CinzelDecorative-Bold.ttf");
+const LOGO_PATH   = path.join(process.cwd(), "public", "img", "logo", "gaurav-dot-one-transparent-gray.webp");
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function fmt(n: number, currency: string): string {
   try {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency,
-      minimumFractionDigits: 2,
-    }).format(amount);
+    return new Intl.NumberFormat("en-US", { style: "currency", currency, minimumFractionDigits: 2 }).format(n);
   } catch {
-    return `${currency} ${amount.toFixed(2)}`;
+    return `${currency} ${n.toFixed(2)}`;
   }
 }
 
-function fmtNum(n: number): string {
-  return n % 1 === 0 ? String(n) : n.toFixed(2);
+function fmtNum(n: number): string { return n % 1 === 0 ? String(n) : n.toFixed(2); }
+
+/** Convert WebP logo → PNG buffer for pdfkit (which doesn't support WebP). */
+async function logoBuffer(): Promise<Buffer | null> {
+  try {
+    if (!fs.existsSync(LOGO_PATH)) return null;
+    return await sharp(LOGO_PATH).png().toBuffer();
+  } catch { return null; }
 }
 
-// ─── Main generator ───────────────────────────────────────────────────────────
+function cinzelAvailable(): boolean {
+  return fs.existsSync(CINZEL_REG) && fs.existsSync(CINZEL_BOLD);
+}
 
-export function generateInvoicePdf(data: PdfInvoiceData): Promise<Buffer> {
+// ─── PDF builder ─────────────────────────────────────────────────────────────
+export async function generateInvoicePdf(data: PdfInvoiceData): Promise<Buffer> {
+  const [logo, hasCinzel] = await Promise.all([logoBuffer(), Promise.resolve(cinzelAvailable())]);
+
   return new Promise<Buffer>((resolve, reject) => {
     const doc = new PDFDocument({ size: "A4", margin: 0, compress: true });
     const chunks: Buffer[] = [];
@@ -91,240 +109,250 @@ export function generateInvoicePdf(data: PdfInvoiceData): Promise<Buffer> {
     doc.on("end", () => resolve(Buffer.concat(chunks)));
     doc.on("error", reject);
 
+    if (hasCinzel) {
+      doc.registerFont("CinzelReg",  CINZEL_REG);
+      doc.registerFont("CinzelBold", CINZEL_BOLD);
+    }
+
+    const cinzel  = hasCinzel ? "CinzelReg"  : "Helvetica";
+    const cinzelB = hasCinzel ? "CinzelBold" : "Helvetica-Bold";
+
     // ── HEADER ────────────────────────────────────────────────────────────────
-    const HEADER_H = 96;
+    const HEADER_H = 100;
+
+    // Gradient simulation: two overlapping rectangles
     doc.rect(0, 0, PAGE_W, HEADER_H).fill(PURPLE);
+    doc.rect(PAGE_W * 0.6, 0, PAGE_W * 0.4, HEADER_H).fillOpacity(0.35).fill(DPURPLE).fillOpacity(1);
 
-    // Logo circle
-    const CX = MARGIN + 22, CY = 48;
-    doc.circle(CX, CY, 22).fillOpacity(0.25).fill(WHITE).fillOpacity(1);
-    doc.font("Helvetica-Bold").fontSize(20).fill(WHITE)
-      .text("G", CX - 7, CY - 11);
+    // Logo
+    const LOGO_X = MARGIN, LOGO_Y = 22, LOGO_SIZE = 56;
+    if (logo) {
+      // White circle background
+      doc.circle(LOGO_X + LOGO_SIZE / 2, LOGO_Y + LOGO_SIZE / 2, LOGO_SIZE / 2 + 2)
+        .fillOpacity(0.25).fill(WHITE).fillOpacity(1);
+      doc.image(logo, LOGO_X, LOGO_Y, { width: LOGO_SIZE, height: LOGO_SIZE });
+    } else {
+      doc.circle(LOGO_X + 28, LOGO_Y + 28, 28).fillOpacity(0.25).fill(WHITE).fillOpacity(1);
+      doc.font("Helvetica-Bold").fontSize(22).fill(WHITE).text("G", LOGO_X + 18, LOGO_Y + 18);
+    }
 
-    // Company details (right-aligned)
+    // Company name (Cinzel Decorative — the premium touch)
     const co = data.company;
-    doc.font("Helvetica-Bold").fontSize(13).fill(WHITE);
-    const coNameW = doc.widthOfString(co.name);
-    doc.text(co.name, PAGE_W - MARGIN - coNameW, 18);
+    doc.font(cinzelB).fontSize(12).fill(WHITE);
+    const nameLines = co.name.length > 32
+      ? [co.name.slice(0, co.name.lastIndexOf(" ", 32)), co.name.slice(co.name.lastIndexOf(" ", 32) + 1)]
+      : [co.name];
 
-    doc.font("Helvetica").fontSize(8).fillOpacity(0.8).fill(WHITE);
-    let hy = 35;
+    let nameY = nameLines.length === 2 ? 20 : 28;
+    for (const line of nameLines) {
+      const lw = doc.widthOfString(line);
+      doc.text(line, PAGE_W - MARGIN - lw, nameY);
+      nameY += 17;
+    }
+
+    // Company meta (address, email, GST)
+    doc.font("Helvetica").fontSize(7.5).fillOpacity(0.82).fill(WHITE);
+    let hy = nameY + 3;
     for (const line of co.address.split("\n")) {
       if (!line.trim()) continue;
       const lw = doc.widthOfString(line);
       doc.text(line, PAGE_W - MARGIN - lw, hy);
-      hy += 11;
+      hy += 10.5;
     }
     if (co.email) {
       const ew = doc.widthOfString(co.email);
-      doc.text(co.email, PAGE_W - MARGIN - ew, hy);
-      hy += 11;
+      doc.text(co.email, PAGE_W - MARGIN - ew, hy); hy += 10.5;
     }
     if (co.gstNumber) {
-      const gw = doc.widthOfString(`GST: ${co.gstNumber}`);
-      doc.text(`GST: ${co.gstNumber}`, PAGE_W - MARGIN - gw, hy);
+      const gstr = `GST: ${co.gstNumber}`;
+      const gw = doc.widthOfString(gstr);
+      doc.text(gstr, PAGE_W - MARGIN - gw, hy);
     }
     doc.fillOpacity(1);
 
-    // ── BILL TO + META ────────────────────────────────────────────────────────
-    let y = HEADER_H + 24;
+    // ── BILL TO + INVOICE META ────────────────────────────────────────────────
+    let y = HEADER_H + 26;
 
-    // Bill To
-    doc.font("Helvetica-Bold").fontSize(7).fill(GREY)
-      .text("BILL TO", MARGIN, y, { characterSpacing: 0.8 });
-    y += 14;
+    doc.font("Helvetica-Bold").fontSize(6.5).fill(GREY)
+      .text("BILL TO", MARGIN, y, { characterSpacing: 1.2 });
+    y += 13;
 
-    doc.font("Helvetica-Bold").fontSize(14).fill(DARK)
-      .text(data.clientName, MARGIN, y);
-    y += 18;
+    doc.font(cinzelB).fontSize(15).fill(DARK).text(data.clientName, MARGIN, y);
+    y += 19;
 
     if (data.clientAddress) {
       doc.font("Helvetica").fontSize(8).fill(SUBDUED)
-        .text(data.clientAddress, MARGIN, y, { width: 200, lineGap: 2 });
-      const addrH = doc.heightOfString(data.clientAddress, { width: 200, lineGap: 2 });
-      y += addrH + 6;
+        .text(data.clientAddress, MARGIN, y, { width: 210, lineGap: 2 });
+      y += doc.heightOfString(data.clientAddress, { width: 210, lineGap: 2 }) + 8;
     }
 
-    // Invoice meta (right column, aligned to top of bill-to)
-    const metaTop = HEADER_H + 24;
-    const metaX = PAGE_W - MARGIN - 170;
-    const metaRows = [
+    // Meta block — right side, aligned to bill-to top
+    const metaTop = HEADER_H + 26;
+    const metaBlockW = 175;
+    const metaX = PAGE_W - MARGIN - metaBlockW;
+
+    // Invoice number (Cinzel — makes it feel like a proper document)
+    doc.font(cinzel).fontSize(22).fill(PURPLE)
+      .text(data.invoiceNumber, metaX, metaTop, { width: metaBlockW, align: "right" });
+
+    const metaRows: [string, string][] = [
       ["Invoice Date", data.invoiceDate],
       ["Due Date",     data.dueDate],
       ["Terms",        data.paymentTerms],
       ["Currency",     data.currency],
     ];
-    // Invoice number
-    doc.font("Helvetica-Bold").fontSize(20).fill(PURPLE)
-      .text(data.invoiceNumber, metaX, metaTop, { width: 170, align: "right" });
-
-    let my = metaTop + 26;
+    let my = metaTop + 30;
     for (const [k, v] of metaRows) {
       doc.font("Helvetica").fontSize(7).fill(GREY)
-        .text(k.toUpperCase(), metaX, my, { width: 80, align: "right", characterSpacing: 0.4 });
+        .text(k.toUpperCase(), metaX, my, { width: 85, align: "right", characterSpacing: 0.4 });
       doc.font("Helvetica-Bold").fontSize(8).fill(TEXT)
-        .text(v, metaX + 85, my, { width: 85, align: "right" });
+        .text(v, metaX + 88, my, { width: metaBlockW - 88, align: "right" });
       my += 13;
     }
 
-    // Advance y past whichever block is taller
     y = Math.max(y, my + 10);
 
+    // ── THIN ACCENT LINE ──────────────────────────────────────────────────────
+    doc.moveTo(MARGIN, y).lineTo(PAGE_W - MARGIN, y).lineWidth(0.5).strokeColor(LTGREY).stroke();
+    y += 14;
+
     // ── LINE ITEMS TABLE ──────────────────────────────────────────────────────
-    const COL_H_X  = PAGE_W - MARGIN - 65 - 60 - 60;
-    const COL_R_X  = PAGE_W - MARGIN - 65 - 60;
-    const COL_A_X  = PAGE_W - MARGIN - 65;
-    const COL_W_H  = 60;
-    const COL_W_R  = 60;
-    const COL_W_A  = 65;
+    const COL_A_X  = PAGE_W - MARGIN - 70;
+    const COL_R_X  = COL_A_X - 62;
+    const COL_H_X  = COL_R_X - 62;
     const COL_W_D  = COL_H_X - MARGIN;
-    const ROW_H    = 28;
     const TH_H     = 20;
 
     // Table header
     doc.rect(MARGIN, y, BODY_W, TH_H).fill(PURPLE);
     doc.font("Helvetica-Bold").fontSize(7).fill(WHITE).fillOpacity(0.9);
-    doc.text("DESCRIPTION", MARGIN + 8, y + 6, { width: COL_W_D - 8 });
-    doc.text("HOURS",   COL_H_X, y + 6, { width: COL_W_H, align: "right" });
-    doc.text("RATE",    COL_R_X, y + 6, { width: COL_W_R, align: "right" });
-    doc.text("AMOUNT",  COL_A_X, y + 6, { width: COL_W_A, align: "right" });
+    doc.text("DESCRIPTION", MARGIN + 8, y + 7, { width: COL_W_D });
+    doc.text("HOURS",  COL_H_X, y + 7, { width: 55, align: "right" });
+    doc.text("RATE",   COL_R_X, y + 7, { width: 55, align: "right" });
+    doc.text("AMOUNT", COL_A_X, y + 7, { width: 70, align: "right" });
     doc.fillOpacity(1);
     y += TH_H;
 
     for (let i = 0; i < data.items.length; i++) {
       const item = data.items[i];
-      const isAlt = i % 2 === 1;
-
-      // Measure description height
-      let descText = item.description || "—";
-      const descH = doc.font("Helvetica").fontSize(8)
+      const descText = item.description || "—";
+      const badgeH   = item.dateLabel ? 14 : 0;
+      const descH    = doc.font("Helvetica").fontSize(8)
         .heightOfString(descText, { width: COL_W_D - 12, lineGap: 2 });
-      const badgeH = item.dateLabel ? 14 : 0;
-      const rowH = Math.max(ROW_H, descH + badgeH + 10);
+      const rowH = Math.max(30, descH + badgeH + 12);
 
-      // Row background
-      if (isAlt) doc.rect(MARGIN, y, BODY_W, rowH).fill("#f5f5ff");
-      doc.rect(MARGIN, y + rowH - 1, BODY_W, 1).fill(LTGREY);
+      if (i % 2 === 1) doc.rect(MARGIN, y, BODY_W, rowH).fill("#f7f7ff");
+      doc.rect(MARGIN, y + rowH - 1, BODY_W, 0.5).fill(LTGREY);
 
-      // Date badge
-      let descY = y + 6;
+      let descY = y + 7;
       if (item.dateLabel) {
-        const badgeW = doc.font("Helvetica-Bold").fontSize(6)
-          .widthOfString(item.dateLabel) + 8;
-        doc.rect(MARGIN + 8, y + 5, badgeW, 10).fill(PURPLE);
-        doc.font("Helvetica-Bold").fontSize(6).fill(WHITE)
-          .text(item.dateLabel, MARGIN + 12, y + 7);
-        descY = y + 18;
+        const bw = doc.font("Helvetica-Bold").fontSize(6).widthOfString(item.dateLabel) + 8;
+        doc.rect(MARGIN + 8, y + 6, bw, 10).fill(PURPLE);
+        doc.font("Helvetica-Bold").fontSize(6).fill(WHITE).text(item.dateLabel, MARGIN + 12, y + 8);
+        descY = y + 20;
       }
 
-      // Description
       doc.font("Helvetica").fontSize(8).fill(TEXT)
         .text(descText, MARGIN + 8, descY, { width: COL_W_D - 12, lineGap: 2 });
 
-      // Numeric columns (vertically centered)
-      const numY = y + (rowH - 8) / 2;
-      doc.font("Helvetica").fontSize(8).fill(TEXT);
-      doc.text(fmtNum(item.hours), COL_H_X, numY, { width: COL_W_H, align: "right" });
-      doc.text(fmt(item.rate, data.currency), COL_R_X, numY, { width: COL_W_R, align: "right" });
+      const numY = y + (rowH - 9) / 2;
+      doc.font("Helvetica").fontSize(8).fill(SUBDUED);
+      doc.text(fmtNum(item.hours), COL_H_X, numY, { width: 55, align: "right" });
+      doc.text(fmt(item.rate, data.currency), COL_R_X, numY, { width: 55, align: "right" });
       doc.font("Helvetica-Bold").fill(DARK)
-        .text(fmt(item.amount, data.currency), COL_A_X, numY, { width: COL_W_A, align: "right" });
+        .text(fmt(item.amount, data.currency), COL_A_X, numY, { width: 70, align: "right" });
 
       y += rowH;
     }
-
-    y += 16;
+    y += 18;
 
     // ── SUMMARY BOX ───────────────────────────────────────────────────────────
     const totalHours = data.items.reduce((s, i) => s + i.hours, 0);
-    const summaryRows: [string, string][] = [
+    const rows: [string, string][] = [
       ["Total Hours", `${fmtNum(totalHours)} hrs`],
       ["Subtotal",    fmt(data.subtotal, data.currency)],
     ];
-    if (data.adjustment !== 0) {
-      summaryRows.push(["Adjustment", fmt(data.adjustment, data.currency)]);
-    }
-    if (data.gstEnabled && data.gstAmount != null) {
-      summaryRows.push([`GST (${data.gstRate}%)`, fmt(data.gstAmount, data.currency)]);
-    }
+    if (data.adjustment !== 0) rows.push(["Adjustment", fmt(data.adjustment, data.currency)]);
+    if (data.gstEnabled && data.gstAmount != null)
+      rows.push([`GST (${data.gstRate}%)`, fmt(data.gstAmount, data.currency)]);
 
-    const BOX_W = 200;
+    const BOX_W = 210;
     const BOX_X = PAGE_W - MARGIN - BOX_W;
-    const ROW_H2 = 14;
-    const boxInnerH = summaryRows.length * ROW_H2 + 1 + 18; // rows + divider + total row
-    const BOX_H = boxInnerH + 20;
-
-    doc.roundedRect(BOX_X, y, BOX_W, BOX_H, 4).fill(DARK);
+    const BOX_H = rows.length * 15 + 32;
+    doc.roundedRect(BOX_X, y, BOX_W, BOX_H, 5).fill(DARK);
 
     let by = y + 12;
-    for (const [label, value] of summaryRows) {
-      doc.font("Helvetica").fontSize(8).fill("rgba(255,255,255,0.65)")
-        .text(label, BOX_X + 12, by, { width: 90 });
+    for (const [lbl, val] of rows) {
+      doc.font("Helvetica").fontSize(8).fill("rgba(255,255,255,0.6)")
+        .text(lbl, BOX_X + 12, by, { width: 95 });
       doc.font("Helvetica").fontSize(8).fill(WHITE)
-        .text(value, BOX_X + 12, by, { width: BOX_W - 24, align: "right" });
-      by += ROW_H2;
+        .text(val, BOX_X + 12, by, { width: BOX_W - 24, align: "right" });
+      by += 15;
     }
-
     // Divider
     doc.moveTo(BOX_X + 12, by + 3).lineTo(BOX_X + BOX_W - 12, by + 3)
-      .strokeColor("rgba(255,255,255,0.2)").lineWidth(0.5).stroke();
+      .lineWidth(0.5).strokeColor("rgba(255,255,255,0.2)").stroke();
     by += 10;
-
-    // Total
-    doc.font("Helvetica-Bold").fontSize(11).fill(WHITE)
-      .text("Total Due", BOX_X + 12, by, { width: 90 });
-    doc.font("Helvetica-Bold").fontSize(11).fill("#a78bfa")
+    // Total (Cinzel for the grand total line)
+    doc.font(cinzelB).fontSize(10).fill(WHITE)
+      .text("Total Due", BOX_X + 12, by, { width: 95 });
+    doc.font(cinzelB).fontSize(10).fill(ACCENT)
       .text(fmt(data.total, data.currency), BOX_X + 12, by, { width: BOX_W - 24, align: "right" });
 
     y += BOX_H + 20;
 
     // ── PAYMENT INFO ──────────────────────────────────────────────────────────
-    const payFields: { label: string; value: string }[] = [
-      { label: "Account Name",  value: data.paymentInfo?.accountName ?? "" },
-      { label: "Bank Name",     value: data.paymentInfo?.bankName ?? "" },
-      { label: "Account No.",   value: data.paymentInfo?.accountNumber ?? "" },
-      { label: "IFSC Code",     value: data.paymentInfo?.ifscCode ?? "" },
-      { label: "SWIFT Code",    value: data.paymentInfo?.swiftCode ?? "" },
-      { label: "Branch",        value: data.paymentInfo?.branch ?? "" },
-      { label: "UPI ID",        value: data.paymentInfo?.upiId ?? "" },
-      { label: "PayPal / Other",value: data.paymentInfo?.paypalOther ?? "" },
-    ].filter((f) => f.value.trim() !== "");
+    const payFields = [
+      ["Account Name",   data.paymentInfo?.accountName],
+      ["Bank Name",      data.paymentInfo?.bankName],
+      ["Account No.",    data.paymentInfo?.accountNumber],
+      ["IFSC Code",      data.paymentInfo?.ifscCode],
+      ["SWIFT Code",     data.paymentInfo?.swiftCode],
+      ["Branch",         data.paymentInfo?.branch],
+      ["UPI ID",         data.paymentInfo?.upiId],
+      ["PayPal / Other", data.paymentInfo?.paypalOther],
+    ].filter(([, v]) => v?.trim()) as [string, string][];
 
     if (payFields.length > 0) {
-      doc.font("Helvetica-Bold").fontSize(7).fill(GREY)
-        .text("PAYMENT INFORMATION", MARGIN, y, { characterSpacing: 0.8 });
+      doc.font("Helvetica-Bold").fontSize(6.5).fill(GREY)
+        .text("PAYMENT INFORMATION", MARGIN, y, { characterSpacing: 1 });
       y += 14;
 
+      // Draw a light box
       const colW = BODY_W / 3;
-      let col = 0;
-      let rowStartY = y;
+      const payRows = Math.ceil(payFields.length / 3);
+      const payBoxH = payRows * 28 + 10;
+      doc.rect(MARGIN, y, BODY_W, payBoxH).fill("#fafafa");
+      doc.rect(MARGIN, y, BODY_W, 0.5).fill(LTGREY);
+      doc.rect(MARGIN, y + payBoxH, BODY_W, 0.5).fill(LTGREY);
 
-      for (const f of payFields) {
-        const px = MARGIN + col * colW;
+      let col = 0, py = y + 8;
+      for (const [lbl, val] of payFields) {
+        const px = MARGIN + col * colW + 8;
         doc.font("Helvetica").fontSize(6).fill(GREY).fillOpacity(0.8)
-          .text(f.label.toUpperCase(), px, rowStartY, { characterSpacing: 0.4 });
+          .text(lbl.toUpperCase(), px, py, { characterSpacing: 0.4 });
         doc.font("Helvetica-Bold").fontSize(8).fill(TEXT).fillOpacity(1)
-          .text(f.value, px, rowStartY + 10);
+          .text(val, px, py + 9, { width: colW - 16 });
         col++;
-        if (col === 3) {
-          col = 0;
-          rowStartY += 28;
-        }
+        if (col === 3) { col = 0; py += 28; }
       }
-      y = rowStartY + (col > 0 ? 28 : 0) + 12;
+      y += payBoxH + 16;
     }
 
     // ── FOOTER ────────────────────────────────────────────────────────────────
-    const FOOTER_H = 40;
-    const footerY = PAGE_H - FOOTER_H;
+    const FOOTER_H = 44;
+    const footerY  = PAGE_H - FOOTER_H;
     doc.rect(0, footerY, PAGE_W, FOOTER_H).fill(DPURPLE);
+    // Subtle left accent
+    doc.rect(0, footerY, 4, FOOTER_H).fill(PURPLE);
 
-    doc.font("Helvetica-Bold").fontSize(10).fill(WHITE)
-      .text("Thank you for your business!", MARGIN, footerY + 14);
+    doc.font(cinzel).fontSize(10).fill(WHITE)
+      .text("Thank you for your business!", MARGIN + 8, footerY + 16);
 
-    const noteStr = `Computer-generated invoice · ${new Date().toLocaleDateString("en-IN")}`;
-    const noteW = doc.font("Helvetica").fontSize(7).widthOfString(noteStr);
-    doc.fill("rgba(255,255,255,0.6)")
-      .text(noteStr, PAGE_W - MARGIN - noteW, footerY + 16);
+    const note = `Computer-generated invoice  ·  ${new Date().toLocaleDateString("en-IN")}`;
+    const nw   = doc.font("Helvetica").fontSize(7).widthOfString(note);
+    doc.fill("rgba(255,255,255,0.55)")
+      .text(note, PAGE_W - MARGIN - nw, footerY + 18);
 
     doc.end();
   });

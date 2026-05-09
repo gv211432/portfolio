@@ -57,7 +57,8 @@ export default function InvoiceEditor({ invoiceId, onSaved, onClose }: Props) {
   // from overwriting the profile already set by the loaded invoice.
   const invoiceLoadedRef = useRef(false);
 
-  const isReadOnly = status === "SIGNED" || status === "VOID";
+  const [isLockedState, setIsLockedState] = useState(false);
+  const isReadOnly = status === "SIGNED" || status === "VOID" || isLockedState;
 
   // Load existing invoice data or fetch next invoice number for new invoices
   useEffect(() => {
@@ -92,6 +93,7 @@ export default function InvoiceEditor({ invoiceId, onSaved, onClose }: Props) {
           setPaymentProfileId(invoice.paymentProfileId ?? null);
           setNotes(invoice.notes ?? "");
           setStatus(invoice.status);
+          setIsLockedState(invoice.isLocked ?? false);
           if (invoice.pdfS3Key) setPdfUrl("has-pdf");
           invoiceLoadedRef.current = true;
         })
@@ -290,6 +292,12 @@ export default function InvoiceEditor({ invoiceId, onSaved, onClose }: Props) {
         <span className={`ml-1 px-2 py-0.5 rounded-full text-xs font-medium text-white ${status === "DRAFT" ? "bg-slate-500" : status === "FINALIZED" ? "bg-blue-600" : "bg-green-600"}`}>
           {status}
         </span>
+        {isLockedState && (
+          <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400">
+            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" /></svg>
+            Locked — go to Invoice Detail to unlock
+          </span>
+        )}
 
         {/* Mobile preview toggle */}
         <button
