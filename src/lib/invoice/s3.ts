@@ -4,6 +4,7 @@ import {
   DeleteObjectCommand,
   GetObjectCommand,
 } from "@aws-sdk/client-s3";
+import { Readable } from "node:stream";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { INVOICE_ENV } from "./env";
 
@@ -45,6 +46,18 @@ export async function deletePdf(invoiceId: string): Promise<void> {
       Key: pdfS3Key(invoiceId),
     }),
   );
+}
+
+export async function downloadPdf(invoiceId: string): Promise<Buffer> {
+  const res = await s3().send(
+    new GetObjectCommand({ Bucket: INVOICE_ENV.S3_BUCKET, Key: pdfS3Key(invoiceId) }),
+  );
+  if (!res.Body) throw new Error(`[invoice-s3] empty body for ${invoiceId}`);
+  const chunks: Buffer[] = [];
+  for await (const chunk of res.Body as Readable) {
+    chunks.push(typeof chunk === "string" ? Buffer.from(chunk) : (chunk as Buffer));
+  }
+  return Buffer.concat(chunks);
 }
 
 export async function signedPdfUrl(invoiceId: string, expiresInSec = 900): Promise<string> {
