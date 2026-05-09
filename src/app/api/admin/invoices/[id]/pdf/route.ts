@@ -95,27 +95,44 @@ export async function POST(req: NextRequest, { params }: Params) {
 
   const buffer = await generateInvoicePdf(pdfData);
 
-  // Bump version
-  const nextVersion = invoice.currentVersion + 1;
-  const s3Key = await uploadPdf(id, buffer, nextVersion);
+  // Version bump only when invoice data changed since last PDF generation.
+  // Compare invoice.updatedAt against the last version's generatedAt.
+  const lastVersion = await prisma.invoiceVersion.findFirst({
+    where: { invoiceId: id },
+    orderBy: { version: "desc" },
+  });
 
-  // Persist version record + update invoice atomically
-  const [, updated] = await prisma.$transaction([
-    prisma.invoiceVersion.create({
-      data: { invoiceId: id, version: nextVersion, pdfS3Key: s3Key },
-    }),
-    prisma.invoice.update({
+  const dataChanged = !lastVersion || invoice.updatedAt > lastVersion.generatedAt;
+  const nextVersion = dataChanged ? invoice.currentVersion + 1 : invoice.currentVersion;
+  const s3Key       = await uploadPdf(id, buffer, nextVersion);
+
+  // Atomically update: create a version record only when data changed,
+  // always update the invoice's latest S3 key and snapshot.
+  const now = new Date();
+  const updated = await prisma.$transaction(async (tx) => {
+    if (dataChanged) {
+      await tx.invoiceVersion.create({
+        data: { invoiceId: id, version: nextVersion, pdfS3Key: s3Key },
+      });
+    } else {
+      // Overwrite the S3 key on the existing version row (same version number)
+      await tx.invoiceVersion.updateMany({
+        where: { invoiceId: id, version: nextVersion },
+        data: { pdfS3Key: s3Key, generatedAt: now },
+      });
+    }
+    return tx.invoice.update({
       where: { id },
       data: {
         pdfS3Key:            s3Key,
-        pdfGeneratedAt:      new Date(),
+        pdfGeneratedAt:      now,
         currentVersion:      nextVersion,
         status:              "FINALIZED",
         paymentInfoSnapshot: paymentInfo as object,
         companySnapshot:     pdfCompany as object,
       },
-    }),
-  ]);
+    });
+  });
 
   const url = await signedPdfUrl(id, 900, nextVersion);
   return NextResponse.json({ url, expiresIn: 900, version: nextVersion, invoice: updated });
