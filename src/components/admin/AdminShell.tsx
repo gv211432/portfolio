@@ -13,8 +13,9 @@ import StaffSection from "./StaffSection";
 import PolicySection from "./PolicySection";
 import ActivitySection from "./ActivitySection";
 import MailboxSection from "./MailboxSection";
+import InvoiceSection from "./InvoiceSection";
 
-type Section = "dashboard" | "contacts" | "careers" | "chats" | "database" | "ngo" | "notifications" | "staff" | "mailbox" | "policy" | "activity";
+type Section = "dashboard" | "contacts" | "careers" | "chats" | "database" | "ngo" | "notifications" | "staff" | "mailbox" | "policy" | "activity" | "invoice";
 
 const NAV: { id: Section; label: string; icon: React.ReactNode }[] = [
   {
@@ -104,6 +105,15 @@ const NAV: { id: Section; label: string; icon: React.ReactNode }[] = [
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+      </svg>
+    ),
+  },
+  {
+    id: "invoice",
+    label: "Invoice",
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
       </svg>
     ),
   },
@@ -201,7 +211,7 @@ export default function AdminShell() {
   useEffect(() => {
     const sp = new URLSearchParams(window.location.search);
     const tab = sp.get("tab") as Section | null;
-    if (tab && ["dashboard", "contacts", "careers", "chats", "database", "ngo", "notifications", "staff", "mailbox", "policy", "activity"].includes(tab)) {
+    if (tab && ["dashboard", "contacts", "careers", "chats", "database", "ngo", "notifications", "staff", "mailbox", "policy", "activity", "invoice"].includes(tab)) {
       setActiveState(tab);
     }
   }, []);
@@ -305,20 +315,26 @@ export default function AdminShell() {
           </div>
         </header>
 
-        {/* Content */}
-        <main className="flex-1 p-4 sm:p-6 overflow-y-auto min-h-0">
-          {active === "dashboard" && <Dashboard />}
-          {active === "contacts" && <ContactsSection />}
-          {active === "careers" && <CareersSection />}
-          {active === "chats" && <ChatsSection />}
-          {active === "ngo" && <NgoSection />}
-          {active === "notifications" && <NotificationsSection />}
-          {active === "staff" && <StaffSection />}
-          {active === "mailbox" && <MailboxSection />}
-          {active === "policy" && <PolicySection />}
-          {active === "activity" && <ActivitySection />}
-          {active === "database" && <DatabaseSection />}
-        </main>
+        {/* Content — invoice manages its own layout/scroll; others get default padding */}
+        {active === "invoice" ? (
+          <main className="flex-1 overflow-hidden min-h-0">
+            <InvoiceSection />
+          </main>
+        ) : (
+          <main className="flex-1 p-4 sm:p-6 overflow-y-auto min-h-0">
+            {active === "dashboard" && <Dashboard />}
+            {active === "contacts" && <ContactsSection />}
+            {active === "careers" && <CareersSection />}
+            {active === "chats" && <ChatsSection />}
+            {active === "ngo" && <NgoSection />}
+            {active === "notifications" && <NotificationsSection />}
+            {active === "staff" && <StaffSection />}
+            {active === "mailbox" && <MailboxSection />}
+            {active === "policy" && <PolicySection />}
+            {active === "activity" && <ActivitySection />}
+            {active === "database" && <DatabaseSection />}
+          </main>
+        )}
       </div>
     </div>
   );
