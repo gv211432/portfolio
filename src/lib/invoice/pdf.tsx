@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Document,
   Page,
@@ -6,24 +5,19 @@ import {
   View,
   StyleSheet,
   renderToBuffer,
-  Font,
 } from "@react-pdf/renderer";
 
-// Register fonts (Helvetica built-ins as fallback; custom fonts can be added later)
-Font.register({
-  family: "Helvetica",
-  fonts: [
-    { src: "Helvetica", fontWeight: "normal" },
-    { src: "Helvetica-Bold", fontWeight: "bold" },
-  ],
-});
+// Built-in PDF fonts — no Font.register needed.
+// Use "Helvetica" for normal and "Helvetica-Bold" for bold weight.
+const BOLD = "Helvetica-Bold";
+const NORMAL = "Helvetica";
 
 const PURPLE_START = "#667eea";
 const PURPLE_END = "#764ba2";
 
 const styles = StyleSheet.create({
   page: {
-    fontFamily: "Helvetica",
+    fontFamily: NORMAL,
     fontSize: 9,
     color: "#333",
     backgroundColor: "#fff",
@@ -50,7 +44,7 @@ const styles = StyleSheet.create({
   logoText: {
     color: "#fff",
     fontSize: 20,
-    fontWeight: "bold",
+    fontFamily: BOLD,
   },
   headerRight: {
     alignItems: "flex-end",
@@ -58,7 +52,7 @@ const styles = StyleSheet.create({
   companyName: {
     color: "#fff",
     fontSize: 14,
-    fontWeight: "bold",
+    fontFamily: BOLD,
     letterSpacing: 0.5,
   },
   companyMeta: {
@@ -71,6 +65,7 @@ const styles = StyleSheet.create({
   body: {
     paddingHorizontal: 32,
     paddingVertical: 24,
+    flexGrow: 1,
   },
   // ── Bill To + Meta row ──────────────────────────────────────────────────────
   metaRow: {
@@ -83,7 +78,7 @@ const styles = StyleSheet.create({
   },
   sectionLabel: {
     fontSize: 7,
-    fontWeight: "bold",
+    fontFamily: BOLD,
     color: "#888",
     textTransform: "uppercase",
     letterSpacing: 0.8,
@@ -91,7 +86,7 @@ const styles = StyleSheet.create({
   },
   clientName: {
     fontSize: 13,
-    fontWeight: "bold",
+    fontFamily: BOLD,
     color: "#1a1a2e",
     marginBottom: 3,
   },
@@ -106,7 +101,7 @@ const styles = StyleSheet.create({
   },
   invoiceTitle: {
     fontSize: 20,
-    fontWeight: "bold",
+    fontFamily: BOLD,
     color: PURPLE_START,
     marginBottom: 8,
   },
@@ -129,13 +124,11 @@ const styles = StyleSheet.create({
   metaVal: {
     fontSize: 8,
     color: "#333",
-    fontWeight: "bold",
+    fontFamily: BOLD,
   },
   // ── Work Table ──────────────────────────────────────────────────────────────
   table: {
     marginBottom: 20,
-    borderRadius: 6,
-    overflow: "hidden",
   },
   tableHeader: {
     flexDirection: "row",
@@ -146,7 +139,7 @@ const styles = StyleSheet.create({
   tableHeaderText: {
     color: "#fff",
     fontSize: 7,
-    fontWeight: "bold",
+    fontFamily: BOLD,
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
@@ -175,7 +168,7 @@ const styles = StyleSheet.create({
   dateBadgeText: {
     color: "#fff",
     fontSize: 6,
-    fontWeight: "bold",
+    fontFamily: BOLD,
   },
   descriptionText: {
     fontSize: 8,
@@ -215,17 +208,18 @@ const styles = StyleSheet.create({
   divider: {
     borderTopWidth: 1,
     borderTopColor: "rgba(255,255,255,0.2)",
-    marginVertical: 8,
+    marginTop: 8,
+    marginBottom: 8,
   },
   totalLabel: {
     fontSize: 10,
     color: "#fff",
-    fontWeight: "bold",
+    fontFamily: BOLD,
   },
   totalValue: {
     fontSize: 10,
     color: "#a78bfa",
-    fontWeight: "bold",
+    fontFamily: BOLD,
   },
   // ── Payment Info ────────────────────────────────────────────────────────────
   paymentSection: {
@@ -234,7 +228,6 @@ const styles = StyleSheet.create({
   paymentGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 0,
   },
   paymentField: {
     width: "33.33%",
@@ -251,7 +244,7 @@ const styles = StyleSheet.create({
   paymentValue: {
     fontSize: 8,
     color: "#333",
-    fontWeight: "bold",
+    fontFamily: BOLD,
   },
   // ── Footer ──────────────────────────────────────────────────────────────────
   footer: {
@@ -265,7 +258,7 @@ const styles = StyleSheet.create({
   footerText: {
     color: "#fff",
     fontSize: 9,
-    fontWeight: "bold",
+    fontFamily: BOLD,
   },
   footerSub: {
     color: "rgba(255,255,255,0.7)",
@@ -276,11 +269,6 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.6)",
     fontSize: 7,
     textAlign: "right",
-  },
-  gstRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 6,
   },
 });
 
@@ -343,22 +331,35 @@ function fmt(amount: number, currency: string): string {
 }
 
 function fmtNum(n: number): string {
-  return n % 1 === 0 ? n.toFixed(0) : n.toFixed(2);
+  return n % 1 === 0 ? String(n) : n.toFixed(2);
 }
 
 function InvoicePdf({ data }: { data: PdfInvoiceData }) {
   const totalHours = data.items.reduce((s, i) => s + i.hours, 0);
 
-  const payFields: { label: string; value: string | null | undefined }[] = [
-    { label: "Account Name", value: data.paymentInfo?.accountName },
-    { label: "Bank Name", value: data.paymentInfo?.bankName },
-    { label: "Account No.", value: data.paymentInfo?.accountNumber },
-    { label: "IFSC Code", value: data.paymentInfo?.ifscCode },
-    { label: "SWIFT Code", value: data.paymentInfo?.swiftCode },
-    { label: "Branch", value: data.paymentInfo?.branch },
-    { label: "UPI ID", value: data.paymentInfo?.upiId },
-    { label: "PayPal / Other", value: data.paymentInfo?.paypalOther },
-  ].filter((f) => f.value);
+  const payFields: { label: string; value: string }[] = [
+    { label: "Account Name", value: data.paymentInfo?.accountName ?? "" },
+    { label: "Bank Name",    value: data.paymentInfo?.bankName ?? "" },
+    { label: "Account No.", value: data.paymentInfo?.accountNumber ?? "" },
+    { label: "IFSC Code",   value: data.paymentInfo?.ifscCode ?? "" },
+    { label: "SWIFT Code",  value: data.paymentInfo?.swiftCode ?? "" },
+    { label: "Branch",      value: data.paymentInfo?.branch ?? "" },
+    { label: "UPI ID",      value: data.paymentInfo?.upiId ?? "" },
+    { label: "PayPal/Other", value: data.paymentInfo?.paypalOther ?? "" },
+  ].filter((f) => f.value.trim() !== "");
+
+  const summaryRows: { label: string; value: string }[] = [
+    { label: "Total Hours", value: `${fmtNum(totalHours)} hrs` },
+    { label: "Subtotal",    value: fmt(data.subtotal, data.currency) },
+  ];
+  if (data.adjustment !== 0) {
+    summaryRows.push({ label: "Adjustment", value: fmt(data.adjustment, data.currency) });
+  }
+  if (data.gstEnabled && data.gstAmount != null) {
+    summaryRows.push({ label: `GST (${data.gstRate}%)`, value: fmt(data.gstAmount, data.currency) });
+  }
+
+  const addressLines = data.company.address ? data.company.address.split("\n") : [];
 
   return (
     <Document>
@@ -370,33 +371,33 @@ function InvoicePdf({ data }: { data: PdfInvoiceData }) {
           </View>
           <View style={styles.headerRight}>
             <Text style={styles.companyName}>{data.company.name}</Text>
-            {data.company.address.split("\n").map((line, i) => (
+            {addressLines.map((line, i) => (
               <Text key={i} style={styles.companyMeta}>{line}</Text>
             ))}
-            {data.company.email && <Text style={styles.companyMeta}>{data.company.email}</Text>}
-            {data.company.gstNumber && <Text style={styles.companyMeta}>GST: {data.company.gstNumber}</Text>}
+            {data.company.email ? <Text style={styles.companyMeta}>{data.company.email}</Text> : null}
+            {data.company.gstNumber ? <Text style={styles.companyMeta}>GST: {data.company.gstNumber}</Text> : null}
           </View>
         </View>
 
         {/* Body */}
         <View style={styles.body}>
-          {/* Bill To + Meta */}
+          {/* Bill To + Invoice Meta */}
           <View style={styles.metaRow}>
             <View style={styles.billToBlock}>
               <Text style={styles.sectionLabel}>Bill To</Text>
               <Text style={styles.clientName}>{data.clientName}</Text>
-              {data.clientAddress && (
+              {data.clientAddress ? (
                 <Text style={styles.clientAddress}>{data.clientAddress}</Text>
-              )}
+              ) : null}
             </View>
             <View style={styles.metaBlock}>
               <Text style={styles.invoiceTitle}>{data.invoiceNumber}</Text>
               <View style={styles.metaGrid}>
                 {[
                   ["Invoice Date", data.invoiceDate],
-                  ["Due Date", data.dueDate],
-                  ["Payment Terms", data.paymentTerms],
-                  ["Currency", data.currency],
+                  ["Due Date",     data.dueDate],
+                  ["Terms",        data.paymentTerms],
+                  ["Currency",     data.currency],
                 ].map(([k, v]) => (
                   <View key={k} style={styles.metaRow2}>
                     <Text style={styles.metaKey}>{k}</Text>
@@ -407,7 +408,7 @@ function InvoicePdf({ data }: { data: PdfInvoiceData }) {
             </View>
           </View>
 
-          {/* Line Items Table */}
+          {/* Line Items */}
           <View style={styles.table}>
             <View style={styles.tableHeader}>
               <Text style={[styles.tableHeaderText, styles.colDesc]}>Description</Text>
@@ -423,7 +424,7 @@ function InvoicePdf({ data }: { data: PdfInvoiceData }) {
                       <Text style={styles.dateBadgeText}>{item.dateLabel}</Text>
                     </View>
                   ) : null}
-                  <Text style={styles.descriptionText}>{item.description}</Text>
+                  <Text style={styles.descriptionText}>{item.description || "—"}</Text>
                 </View>
                 <Text style={[styles.cellNum, styles.colHours]}>{fmtNum(item.hours)}</Text>
                 <Text style={[styles.cellNum, styles.colRate]}>{fmt(item.rate, data.currency)}</Text>
@@ -435,26 +436,12 @@ function InvoicePdf({ data }: { data: PdfInvoiceData }) {
           {/* Summary */}
           <View style={styles.summaryContainer}>
             <View style={styles.summaryBox}>
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Total Hours</Text>
-                <Text style={styles.summaryValue}>{fmtNum(totalHours)} hrs</Text>
-              </View>
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Subtotal</Text>
-                <Text style={styles.summaryValue}>{fmt(data.subtotal, data.currency)}</Text>
-              </View>
-              {data.adjustment !== 0 && (
-                <View style={styles.summaryRow}>
-                  <Text style={styles.summaryLabel}>Adjustment</Text>
-                  <Text style={styles.summaryValue}>{fmt(data.adjustment, data.currency)}</Text>
+              {summaryRows.map((row) => (
+                <View key={row.label} style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>{row.label}</Text>
+                  <Text style={styles.summaryValue}>{row.value}</Text>
                 </View>
-              )}
-              {data.gstEnabled && data.gstAmount != null && (
-                <View style={styles.summaryRow}>
-                  <Text style={styles.summaryLabel}>GST ({data.gstRate}%)</Text>
-                  <Text style={styles.summaryValue}>{fmt(data.gstAmount, data.currency)}</Text>
-                </View>
-              )}
+              ))}
               <View style={styles.divider} />
               <View style={styles.summaryRow}>
                 <Text style={styles.totalLabel}>Total Due</Text>
@@ -464,7 +451,7 @@ function InvoicePdf({ data }: { data: PdfInvoiceData }) {
           </View>
 
           {/* Payment Info */}
-          {payFields.length > 0 && (
+          {payFields.length > 0 ? (
             <View style={styles.paymentSection}>
               <Text style={styles.sectionLabel}>Payment Information</Text>
               <View style={styles.paymentGrid}>
@@ -476,20 +463,19 @@ function InvoicePdf({ data }: { data: PdfInvoiceData }) {
                 ))}
               </View>
             </View>
-          )}
+          ) : null}
         </View>
 
         {/* Footer */}
         <View style={styles.footer}>
           <View>
             <Text style={styles.footerText}>Thank you for your business!</Text>
-            {data.company.email && (
+            {data.company.email ? (
               <Text style={styles.footerSub}>{data.company.email}</Text>
-            )}
+            ) : null}
           </View>
           <Text style={styles.footerNote}>
-            This is a computer-generated invoice.{"\n"}
-            Generated on {new Date().toLocaleDateString("en-IN")}
+            {"Computer-generated invoice.\nGenerated on " + new Date().toLocaleDateString("en-IN")}
           </Text>
         </View>
       </Page>

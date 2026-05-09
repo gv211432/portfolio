@@ -234,9 +234,13 @@ export default function InvoiceEditor({ invoiceId, onSaved, onClose }: Props) {
     const id = saveData.invoice.id;
 
     const pdfRes = await fetch(`/api/admin/invoices/${id}/pdf`, { method: "POST" });
-    const pdfData = await pdfRes.json();
     setGeneratingPdf(false);
-    if (!pdfRes.ok) { setError(pdfData.error ?? "PDF generation failed"); return; }
+    if (!pdfRes.ok) {
+      const errData = await pdfRes.json().catch(() => ({ error: `Server error ${pdfRes.status}` }));
+      setError(errData.error ?? "PDF generation failed");
+      return;
+    }
+    const pdfData = await pdfRes.json();
     setPdfUrl(pdfData.url);
     window.open(pdfData.url, "_blank");
     onSaved(pdfData.invoice);
