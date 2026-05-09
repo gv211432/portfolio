@@ -75,6 +75,7 @@
     "db:studio": "bunx prisma studio",
     "db:seed-admin": "bun prisma/seed-admin.ts",
     "db:seed-company": "bun prisma/seed-company.ts",
+    "db:seed-invoice": "bun prisma/seed-invoice.ts",
     "lint": "bun x next lint",
     "lambda:deploy": "bash lambda/scripts/deploy.sh"
   },
