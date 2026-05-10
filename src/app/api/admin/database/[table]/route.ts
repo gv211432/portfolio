@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAdmin } from "@/lib/adminAuth";
-import { TABLE_CONFIGS } from "@/lib/adminDb";
+import { TABLE_CONFIG_MAP } from "@/lib/adminDb";
 
 type Params = { params: Promise<{ table: string }> };
 
@@ -10,7 +10,7 @@ export async function GET(request: NextRequest, { params }: Params) {
   if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { table } = await params;
-  const config = TABLE_CONFIGS.find((t) => t.name === table);
+  const config = TABLE_CONFIG_MAP[table];
   if (!config) return NextResponse.json({ error: "Unknown table" }, { status: 404 });
 
   const { searchParams } = new URL(request.url);

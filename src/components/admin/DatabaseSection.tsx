@@ -9,6 +9,7 @@ interface TableMeta {
   name: string;
   label: string;
   description: string;
+  group: string;
   count: number;
 }
 
@@ -133,40 +134,58 @@ function TableList({
   selected: string;
   onSelect: (name: string) => void;
 }) {
+  // Build ordered group map preserving insertion order from TABLE_CONFIGS
+  const grouped: Record<string, TableMeta[]> = {};
+  for (const t of tables) {
+    if (!grouped[t.group]) grouped[t.group] = [];
+    grouped[t.group].push(t);
+  }
+
   return (
     <div className="flex flex-col h-full">
-      <div className="px-4 py-3 border-b border-gray-100 dark:border-slate-700">
+      <div className="px-4 py-3 border-b border-gray-100 dark:border-slate-700 flex items-center justify-between">
         <p className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide">
           Tables
         </p>
+        <span className="text-xs text-gray-400 dark:text-slate-500">{tables.length}</span>
       </div>
-      <nav className="flex-1 overflow-y-auto p-2 space-y-0.5">
-        {tables.map((t) => (
-          <button
-            key={t.name}
-            onClick={() => onSelect(t.name)}
-            className={`w-full text-left px-3 py-2.5 rounded-xl transition group ${
-              selected === t.name
-                ? "bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-700"
-                : "hover:bg-gray-50 dark:hover:bg-slate-700/40"
-            }`}
-          >
-            <div className="flex items-center justify-between gap-2">
-              <span className={`text-sm font-medium truncate ${
-                selected === t.name ? "text-indigo-700 dark:text-indigo-300" : "text-gray-800 dark:text-slate-200"
-              }`}>
-                {t.label}
-              </span>
-              <span className={`text-xs font-mono shrink-0 ${
-                selected === t.name ? "text-indigo-500 dark:text-indigo-400" : "text-gray-400 dark:text-slate-500"
-              }`}>
-                {t.count.toLocaleString()}
-              </span>
+      <nav className="flex-1 overflow-y-auto py-2">
+        {Object.entries(grouped).map(([group, groupTables]) => (
+          <div key={group} className="mb-1">
+            {/* Group header */}
+            <div className="px-4 py-1.5">
+              <p className="text-xs font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-widest">
+                {group}
+              </p>
             </div>
-            <p className="text-xs text-gray-400 dark:text-slate-500 truncate mt-0.5">
-              {t.description}
-            </p>
-          </button>
+            {/* Tables in this group */}
+            <div className="px-2 space-y-0.5">
+              {groupTables.map((t) => (
+                <button
+                  key={t.name}
+                  onClick={() => onSelect(t.name)}
+                  className={`w-full text-left px-3 py-2 rounded-lg transition ${
+                    selected === t.name
+                      ? "bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-700"
+                      : "hover:bg-gray-50 dark:hover:bg-slate-700/40"
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className={`text-sm font-medium truncate ${
+                      selected === t.name ? "text-indigo-700 dark:text-indigo-300" : "text-gray-800 dark:text-slate-200"
+                    }`}>
+                      {t.label}
+                    </span>
+                    <span className={`text-xs font-mono shrink-0 ${
+                      selected === t.name ? "text-indigo-500 dark:text-indigo-400" : "text-gray-400 dark:text-slate-500"
+                    }`}>
+                      {t.count.toLocaleString()}
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
         ))}
       </nav>
     </div>

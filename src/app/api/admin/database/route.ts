@@ -13,6 +13,7 @@ export async function GET(request: NextRequest) {
       name: t.name,
       label: t.label,
       description: t.description,
+      group: t.group,
       count: await (prisma as Record<string, any>)[t.modelKey].count(),
     }))
   );

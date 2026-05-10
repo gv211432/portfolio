@@ -1,7 +1,9 @@
 /**
  * Central config for the admin database viewer.
  * Defines every table: Prisma model key, display hints, security exclusions, and search fields.
- * This is the single place to update when the schema changes.
+ *
+ * HOW TO EXTEND: when you add a new Prisma model, add a TableConfig entry here.
+ * The DB viewer picks it up automatically — no other changes needed.
  */
 
 export interface TableConfig {
@@ -13,29 +15,34 @@ export interface TableConfig {
   label: string;
   /** One-line description shown in the sidebar */
   description: string;
-  /** Fields NEVER sent to the browser (security) */
+  /** Fields NEVER sent to the browser (security / encryption) */
   excludeFields: string[];
   /** Fields shown as columns in the table view (in order) */
   tableColumns: string[];
-  /** Fields that support Prisma orderBy */
+  /** Fields that support Prisma orderBy (scalar, non-JSON) */
   sortableFields: string[];
   /** Text fields used for the search OR clause */
   searchableFields: string[];
   /** Default sort field */
   defaultSort: string;
+  /** Sidebar group label */
+  group: string;
 }
 
 export const TABLE_CONFIGS: TableConfig[] = [
+
+  // ── Public-facing forms ────────────────────────────────────────────────────
   {
     name: "ContactSubmission",
     modelKey: "contactSubmission",
     label: "Contact Submissions",
     description: "Inbound project enquiries from the contact form",
     excludeFields: [],
-    tableColumns: ["name", "email", "budget", "status", "createdAt"],
+    tableColumns: ["name", "email", "phone", "budget", "status", "createdAt"],
     sortableFields: ["createdAt", "updatedAt", "name", "email", "status", "budget"],
     searchableFields: ["name", "email", "phone", "message"],
     defaultSort: "createdAt",
+    group: "Public",
   },
   {
     name: "JobApplication",
@@ -47,7 +54,34 @@ export const TABLE_CONFIGS: TableConfig[] = [
     sortableFields: ["createdAt", "updatedAt", "legalName", "email", "status", "jobTitle"],
     searchableFields: ["legalName", "email", "jobTitle", "countryOfOrigin", "experience"],
     defaultSort: "createdAt",
+    group: "Public",
   },
+  {
+    name: "NgoApplication",
+    modelKey: "ngoApplication",
+    label: "NGO Applications",
+    description: "Free website applications from NGOs",
+    excludeFields: [],
+    tableColumns: ["organizationName", "email", "subdomain", "status", "createdAt"],
+    sortableFields: ["createdAt", "updatedAt", "organizationName", "email", "status", "subdomain"],
+    searchableFields: ["organizationName", "email", "phone", "subdomain", "description"],
+    defaultSort: "createdAt",
+    group: "Public",
+  },
+  {
+    name: "NotificationLog",
+    modelKey: "notificationLog",
+    label: "Notification Logs",
+    description: "All outbound email and Telegram notifications sent by the system",
+    excludeFields: [],
+    tableColumns: ["channel", "status", "toEmail", "subject", "refType", "createdAt"],
+    sortableFields: ["createdAt", "channel", "status", "toEmail", "refType"],
+    searchableFields: ["toEmail", "toName", "subject", "refType", "refId"],
+    defaultSort: "createdAt",
+    group: "Public",
+  },
+
+  // ── AI Chat ────────────────────────────────────────────────────────────────
   {
     name: "ChatThread",
     modelKey: "chatThread",
@@ -58,6 +92,7 @@ export const TABLE_CONFIGS: TableConfig[] = [
     sortableFields: ["createdAt", "updatedAt", "ipAddress"],
     searchableFields: ["token", "ipAddress"],
     defaultSort: "createdAt",
+    group: "AI Chat",
   },
   {
     name: "ChatMessage",
@@ -69,6 +104,7 @@ export const TABLE_CONFIGS: TableConfig[] = [
     sortableFields: ["createdAt", "role"],
     searchableFields: ["content", "role"],
     defaultSort: "createdAt",
+    group: "AI Chat",
   },
   {
     name: "ChatLead",
@@ -76,32 +112,380 @@ export const TABLE_CONFIGS: TableConfig[] = [
     label: "Chat Leads",
     description: "Visitor leads captured by the AI chatbot",
     excludeFields: [],
-    tableColumns: ["name", "email", "budget", "notified", "createdAt"],
+    tableColumns: ["name", "email", "telegramHandle", "budget", "notified", "createdAt"],
     sortableFields: ["createdAt", "name", "email", "notified"],
     searchableFields: ["name", "email", "telegramHandle", "projectBrief", "budget"],
     defaultSort: "createdAt",
+    group: "AI Chat",
   },
   {
     name: "ChatKVStore",
     modelKey: "chatKVStore",
-    label: "KV Store",
+    label: "Agent KV Store",
     description: "Persistent key-value memory for the AI agent",
     excludeFields: [],
     tableColumns: ["key", "value", "updatedAt"],
     sortableFields: ["createdAt", "updatedAt", "key"],
     searchableFields: ["key", "value"],
     defaultSort: "updatedAt",
+    group: "AI Chat",
   },
+
+  // ── Admin / RBAC ───────────────────────────────────────────────────────────
   {
     name: "AdminUser",
     modelKey: "adminUser",
     label: "Admin Users",
-    description: "Dashboard administrators",
-    // passwordHash is NEVER sent to the client
-    excludeFields: ["passwordHash"],
-    tableColumns: ["username", "createdAt", "lastLoginAt"],
-    sortableFields: ["createdAt", "updatedAt", "username"],
-    searchableFields: ["username"],
+    description: "Dashboard administrators and their login state",
+    excludeFields: ["passwordHash", "totpSecret", "recoveryCodes"],
+    tableColumns: ["username", "displayName", "isActive", "totpEnabled", "lastLoginAt", "createdAt"],
+    sortableFields: ["createdAt", "updatedAt", "username", "isActive", "totpEnabled", "lastLoginAt"],
+    searchableFields: ["username", "displayName"],
     defaultSort: "createdAt",
+    group: "Admin",
+  },
+  {
+    name: "AdminRole",
+    modelKey: "adminRole",
+    label: "Admin Roles",
+    description: "RBAC roles and their system-lock status",
+    excludeFields: [],
+    tableColumns: ["name", "description", "color", "isSystem", "createdAt"],
+    sortableFields: ["createdAt", "updatedAt", "name", "isSystem"],
+    searchableFields: ["name", "description"],
+    defaultSort: "createdAt",
+    group: "Admin",
+  },
+  {
+    name: "AdminAction",
+    modelKey: "adminAction",
+    label: "Admin Actions",
+    description: "All registered API actions and their enabled/disabled state",
+    excludeFields: [],
+    tableColumns: ["id", "method", "section", "label", "isEnabled", "isSystem"],
+    sortableFields: ["createdAt", "updatedAt", "method", "section", "isEnabled", "isSystem"],
+    searchableFields: ["id", "label", "path", "section"],
+    defaultSort: "section",
+    group: "Admin",
+  },
+  {
+    name: "AdminRolePermission",
+    modelKey: "adminRolePermission",
+    label: "Role Permissions",
+    description: "Junction: which actions are granted to which roles",
+    excludeFields: [],
+    tableColumns: ["roleId", "actionId"],
+    sortableFields: ["roleId", "actionId"],
+    searchableFields: ["roleId", "actionId"],
+    defaultSort: "roleId",
+    group: "Admin",
+  },
+  {
+    name: "AdminUserRole",
+    modelKey: "adminUserRole",
+    label: "User Role Assignments",
+    description: "Junction: which roles each admin user holds",
+    excludeFields: [],
+    tableColumns: ["userId", "roleId", "assignedBy", "assignedAt"],
+    sortableFields: ["assignedAt", "userId", "roleId"],
+    searchableFields: ["userId", "roleId", "assignedBy"],
+    defaultSort: "assignedAt",
+    group: "Admin",
+  },
+  {
+    name: "AdminActivityLog",
+    modelKey: "adminActivityLog",
+    label: "Admin Activity Log",
+    description: "RBAC audit trail: logins, role changes, permission updates",
+    excludeFields: [],
+    tableColumns: ["adminId", "event", "ipAddress", "createdAt"],
+    sortableFields: ["createdAt", "event", "adminId", "ipAddress"],
+    searchableFields: ["adminId", "event", "ipAddress"],
+    defaultSort: "createdAt",
+    group: "Admin",
+  },
+
+  // ── Staff & Mail Platform ──────────────────────────────────────────────────
+  {
+    name: "Staff",
+    modelKey: "staff",
+    label: "Staff Members",
+    description: "Staff accounts for the internal mail platform",
+    excludeFields: ["passwordHash", "allowedDomainsOverride"],
+    tableColumns: ["firstName", "lastName", "employeeCode", "role", "status", "lastLoginAt", "createdAt"],
+    sortableFields: ["createdAt", "updatedAt", "firstName", "lastName", "status", "lastLoginAt", "employeeCode"],
+    searchableFields: ["firstName", "lastName", "employeeCode", "recoveryEmail", "phone"],
+    defaultSort: "createdAt",
+    group: "Staff & Mail",
+  },
+  {
+    name: "StaffEmailAddress",
+    modelKey: "staffEmailAddress",
+    label: "Staff Email Addresses",
+    description: "Email address mappings for each staff member",
+    excludeFields: [],
+    tableColumns: ["email", "staffId", "isPrimary", "createdAt"],
+    sortableFields: ["createdAt", "email", "isPrimary"],
+    searchableFields: ["email", "staffId"],
+    defaultSort: "createdAt",
+    group: "Staff & Mail",
+  },
+  {
+    name: "StaffTwoFactor",
+    modelKey: "staffTwoFactor",
+    label: "Staff 2FA Config",
+    description: "Two-factor authentication methods per staff member",
+    excludeFields: ["totpSecret", "pendingOtpHash"],
+    tableColumns: ["staffId", "method", "enabled", "otpTargetVerified", "updatedAt"],
+    sortableFields: ["createdAt", "updatedAt", "method", "enabled"],
+    searchableFields: ["staffId", "method"],
+    defaultSort: "createdAt",
+    group: "Staff & Mail",
+  },
+  {
+    name: "StaffSession",
+    modelKey: "staffSession",
+    label: "Staff Sessions",
+    description: "Active and revoked staff login sessions",
+    excludeFields: ["tokenHash"],
+    tableColumns: ["staffId", "stage", "ipAddress", "createdAt", "expiresAt", "revokedAt"],
+    sortableFields: ["createdAt", "expiresAt", "revokedAt", "staffId", "stage"],
+    searchableFields: ["staffId", "ipAddress", "userAgent"],
+    defaultSort: "createdAt",
+    group: "Staff & Mail",
+  },
+  {
+    name: "GlobalPolicy",
+    modelKey: "globalPolicy",
+    label: "Global Mail Policy",
+    description: "Outbound email domain allowlist — single-row configuration table",
+    excludeFields: [],
+    tableColumns: ["id", "updatedBy", "updatedAt"],
+    sortableFields: ["updatedAt"],
+    searchableFields: ["updatedBy"],
+    defaultSort: "updatedAt",
+    group: "Staff & Mail",
+  },
+  {
+    name: "Email",
+    modelKey: "email",
+    label: "Emails",
+    description: "All emails (inbound and outbound) across all staff mailboxes",
+    excludeFields: ["bodyHtml", "bodyText", "referencesJson"],
+    tableColumns: ["staffId", "fromEmail", "subject", "folder", "direction", "isRead", "createdAt"],
+    sortableFields: ["createdAt", "updatedAt", "folder", "direction", "isRead", "isStarred", "fromEmail"],
+    searchableFields: ["fromEmail", "fromName", "subject", "snippet"],
+    defaultSort: "createdAt",
+    group: "Staff & Mail",
+  },
+  {
+    name: "EmailThread",
+    modelKey: "emailThread",
+    label: "Email Threads",
+    description: "Conversation threads grouped by subject and references",
+    excludeFields: [],
+    tableColumns: ["subjectKey", "rootMessageId", "lastMessageAt", "createdAt"],
+    sortableFields: ["createdAt", "updatedAt", "lastMessageAt"],
+    searchableFields: ["subjectKey", "rootMessageId"],
+    defaultSort: "lastMessageAt",
+    group: "Staff & Mail",
+  },
+  {
+    name: "EmailAttachment",
+    modelKey: "emailAttachment",
+    label: "Email Attachments",
+    description: "Attachment metadata for all emails (files stored in S3)",
+    excludeFields: [],
+    tableColumns: ["emailId", "filename", "contentType", "sizeBytes", "createdAt"],
+    sortableFields: ["createdAt", "filename", "contentType", "sizeBytes"],
+    searchableFields: ["filename", "contentType", "emailId"],
+    defaultSort: "createdAt",
+    group: "Staff & Mail",
+  },
+  {
+    name: "EmailLabel",
+    modelKey: "emailLabel",
+    label: "Email Labels",
+    description: "Per-staff custom labels (Gmail-style tags)",
+    excludeFields: [],
+    tableColumns: ["staffId", "name", "color", "createdAt"],
+    sortableFields: ["createdAt", "name", "staffId"],
+    searchableFields: ["name", "staffId"],
+    defaultSort: "createdAt",
+    group: "Staff & Mail",
+  },
+  {
+    name: "EmailLabelOnEmail",
+    modelKey: "emailLabelOnEmail",
+    label: "Email Label Assignments",
+    description: "Junction: which labels are applied to which emails",
+    excludeFields: [],
+    tableColumns: ["emailId", "labelId"],
+    sortableFields: ["emailId", "labelId"],
+    searchableFields: ["emailId", "labelId"],
+    defaultSort: "emailId",
+    group: "Staff & Mail",
+  },
+  {
+    name: "EmailDraft",
+    modelKey: "emailDraft",
+    label: "Email Drafts",
+    description: "Unsent draft emails per staff member",
+    excludeFields: ["bodyHtml", "bodyText"],
+    tableColumns: ["staffId", "subject", "replyToEmailId", "createdAt", "updatedAt"],
+    sortableFields: ["createdAt", "updatedAt", "staffId"],
+    searchableFields: ["staffId", "subject"],
+    defaultSort: "updatedAt",
+    group: "Staff & Mail",
+  },
+  {
+    name: "OutboxEmail",
+    modelKey: "outboxEmail",
+    label: "Outbox — Blocked Emails",
+    description: "Emails rejected by outbound policy, awaiting admin review",
+    excludeFields: ["bodyHtml", "bodyText"],
+    tableColumns: ["staffId", "fromEmail", "subject", "status", "reason", "reviewedBy", "createdAt"],
+    sortableFields: ["createdAt", "status", "staffId", "fromEmail"],
+    searchableFields: ["fromEmail", "subject", "reason", "staffId"],
+    defaultSort: "createdAt",
+    group: "Staff & Mail",
+  },
+
+  // ── Audit ──────────────────────────────────────────────────────────────────
+  {
+    name: "ActivityLog",
+    modelKey: "activityLog",
+    label: "Activity Log",
+    description: "Full audit trail: admin and staff actions, logins, policy changes",
+    excludeFields: [],
+    tableColumns: ["actorType", "actorLabel", "action", "targetType", "ipAddress", "createdAt"],
+    sortableFields: ["createdAt", "actorType", "actorId", "action", "targetType"],
+    searchableFields: ["actorLabel", "actorId", "action", "targetType", "targetId", "ipAddress"],
+    defaultSort: "createdAt",
+    group: "Audit",
+  },
+
+  // ── Invoice Module ─────────────────────────────────────────────────────────
+  {
+    name: "Invoice",
+    modelKey: "invoice",
+    label: "Invoices",
+    description: "All invoices with status, totals and lock state",
+    excludeFields: ["companySnapshot", "paymentInfoSnapshot"],
+    tableColumns: ["invoiceNumber", "clientName", "clientEmail", "status", "currency", "total", "isLocked", "createdAt"],
+    sortableFields: ["createdAt", "updatedAt", "invoiceNumber", "clientName", "status", "currency", "total", "isLocked", "invoiceDate", "dueDate"],
+    searchableFields: ["invoiceNumber", "clientName", "clientEmail"],
+    defaultSort: "createdAt",
+    group: "Invoice",
+  },
+  {
+    name: "InvoiceItem",
+    modelKey: "invoiceItem",
+    label: "Invoice Line Items",
+    description: "Line items belonging to each invoice",
+    excludeFields: [],
+    tableColumns: ["invoiceId", "description", "hours", "rate", "amount", "sortOrder"],
+    sortableFields: ["invoiceId", "sortOrder", "amount"],
+    searchableFields: ["invoiceId", "description", "dateLabel"],
+    defaultSort: "sortOrder",
+    group: "Invoice",
+  },
+  {
+    name: "InvoiceClient",
+    modelKey: "invoiceClient",
+    label: "Invoice Clients",
+    description: "Saved client profiles for invoice autocomplete",
+    excludeFields: [],
+    tableColumns: ["name", "email", "phone", "defaultCurrency", "isActive", "createdAt"],
+    sortableFields: ["createdAt", "updatedAt", "name", "email", "isActive", "defaultCurrency"],
+    searchableFields: ["name", "email", "phone"],
+    defaultSort: "createdAt",
+    group: "Invoice",
+  },
+  {
+    name: "InvoicePaymentProfile",
+    modelKey: "invoicePaymentProfile",
+    label: "Payment Profiles",
+    description: "Saved bank/payment profiles (encrypted fields excluded)",
+    excludeFields: ["accountNameEnc", "bankNameEnc", "accountNumberEnc", "ifscCodeEnc", "swiftCodeEnc", "upiIdEnc", "paypalOtherEnc"],
+    tableColumns: ["label", "currency", "isDefault", "branch", "createdAt"],
+    sortableFields: ["createdAt", "updatedAt", "label", "currency", "isDefault"],
+    searchableFields: ["label", "currency", "branch"],
+    defaultSort: "createdAt",
+    group: "Invoice",
+  },
+  {
+    name: "InvoiceCompanyProfile",
+    modelKey: "invoiceCompanyProfile",
+    label: "Company Profile",
+    description: "Singleton company/sender profile used on generated invoices",
+    excludeFields: [],
+    tableColumns: ["id", "name", "email", "phone", "gstNumber", "updatedAt"],
+    sortableFields: ["updatedAt"],
+    searchableFields: ["name", "email", "gstNumber", "panNumber"],
+    defaultSort: "updatedAt",
+    group: "Invoice",
+  },
+  {
+    name: "InvoiceSequence",
+    modelKey: "invoiceSequence",
+    label: "Invoice Sequences",
+    description: "Fiscal-year invoice number counters",
+    excludeFields: [],
+    tableColumns: ["fiscalYear", "lastSeq", "updatedAt"],
+    sortableFields: ["fiscalYear", "lastSeq", "updatedAt"],
+    searchableFields: ["fiscalYear"],
+    defaultSort: "fiscalYear",
+    group: "Invoice",
+  },
+  {
+    name: "InvoiceVersion",
+    modelKey: "invoiceVersion",
+    label: "Invoice PDF Versions",
+    description: "Immutable PDF version history per invoice",
+    excludeFields: [],
+    tableColumns: ["invoiceId", "version", "pdfS3Key", "generatedAt"],
+    sortableFields: ["generatedAt", "version", "invoiceId"],
+    searchableFields: ["invoiceId", "pdfS3Key"],
+    defaultSort: "generatedAt",
+    group: "Invoice",
+  },
+  {
+    name: "InvoiceEmailLog",
+    modelKey: "invoiceEmailLog",
+    label: "Invoice Email Logs",
+    description: "Email send history for each invoice",
+    excludeFields: [],
+    tableColumns: ["invoiceId", "toEmail", "subject", "status", "sentAt", "createdAt"],
+    sortableFields: ["createdAt", "sentAt", "status", "toEmail"],
+    searchableFields: ["invoiceId", "toEmail", "subject"],
+    defaultSort: "createdAt",
+    group: "Invoice",
+  },
+  {
+    name: "InvoiceSignatureLog",
+    modelKey: "invoiceSignatureLog",
+    label: "Invoice Signature Logs",
+    description: "Leegality eSign status and webhook history per invoice",
+    excludeFields: ["webhookPayload"],
+    tableColumns: ["invoiceId", "leegalityDocId", "status", "initiatedAt", "completedAt"],
+    sortableFields: ["initiatedAt", "completedAt", "status"],
+    searchableFields: ["invoiceId", "leegalityDocId"],
+    defaultSort: "initiatedAt",
+    group: "Invoice",
   },
 ];
+
+/** Fast lookup by URL-safe name */
+export const TABLE_CONFIG_MAP: Record<string, TableConfig> =
+  Object.fromEntries(TABLE_CONFIGS.map((c) => [c.name, c]));
+
+/** All tables grouped by their sidebar group, in definition order */
+export function getTablesByGroup(): Record<string, TableConfig[]> {
+  const map: Record<string, TableConfig[]> = {};
+  for (const cfg of TABLE_CONFIGS) {
+    if (!map[cfg.group]) map[cfg.group] = [];
+    map[cfg.group].push(cfg);
+  }
+  return map;
+}
