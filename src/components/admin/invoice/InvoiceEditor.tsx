@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { InvoiceFull, LineItem, PaymentProfile, InvoiceClient, CompanyProfile, CURRENCIES, fmtMoney } from "./types";
 
-const InvoicePreview = dynamic(() => import("./InvoicePreview"), { ssr: false });
+const LivePdfPreview = dynamic(() => import("./LivePdfPreview"), { ssr: false });
 
 interface Props {
   invoiceId?: string; // undefined = create mode
@@ -217,6 +217,50 @@ export default function InvoiceEditor({ invoiceId, onSaved, onClose, onLoaded }:
   const subtotal = items.reduce((s, i) => s + Number(i.hours) * Number(i.rate), 0);
   const gstAmt = gstEnabled && gstRate ? (subtotal * gstRate) / 100 : 0;
   const total = subtotal + adjustment + gstAmt;
+
+  const previewData = useMemo(() => ({
+    invoiceNumber,
+    invoiceDate,
+    dueDate,
+    paymentTerms,
+    currency,
+    clientName,
+    clientAddress,
+    items: items.map((i, idx) => ({
+      dateLabel:   i.dateLabel,
+      description: i.description,
+      hours:       Number(i.hours),
+      rate:        Number(i.rate),
+      amount:      Number(i.hours) * Number(i.rate),
+      flat:        itemModes[idx] === "flat",
+    })),
+    subtotal,
+    adjustment,
+    total,
+    gstEnabled,
+    gstRate:   gstEnabled ? gstRate : null,
+    gstAmount: gstEnabled ? gstAmt  : null,
+    paymentInfo: paymentInfo ? {
+      accountName:   paymentInfo.accountName,
+      bankName:      paymentInfo.bankName,
+      accountNumber: paymentInfo.accountNumber,
+      ifscCode:      paymentInfo.ifscCode,
+      swiftCode:     paymentInfo.swiftCode,
+      branch:        paymentInfo.branch,
+      upiId:         paymentInfo.upiId,
+      paypalOther:   paymentInfo.paypalOther,
+    } : null,
+    company: {
+      name:      company?.name      ?? "Gaurav Dot One",
+      address:   company?.address   ?? "",
+      email:     company?.email     ?? null,
+      phone:     company?.phone     ?? null,
+      gstNumber: company?.gstNumber ?? null,
+    },
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [invoiceNumber, invoiceDate, dueDate, paymentTerms, currency, clientName, clientAddress,
+       JSON.stringify(items), JSON.stringify(itemModes), subtotal, adjustment, total,
+       gstEnabled, gstRate, gstAmt, JSON.stringify(paymentInfo), JSON.stringify(company)]);
 
   async function save() {
     if (!clientName.trim()) { setError("Client name is required"); return; }
@@ -643,21 +687,7 @@ export default function InvoiceEditor({ invoiceId, onSaved, onClose, onLoaded }:
         {/* Preview */}
         <div className={`flex-1 overflow-y-auto p-4 bg-gray-100 dark:bg-slate-950 ${showPreview ? "block" : "hidden md:block"}`}>
           <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Live Preview</p>
-          <InvoicePreview
-            invoiceNumber={invoiceNumber}
-            invoiceDate={invoiceDate}
-            dueDate={dueDate}
-            paymentTerms={paymentTerms}
-            currency={currency}
-            clientName={clientName}
-            clientAddress={clientAddress}
-            items={items}
-            adjustment={adjustment}
-            gstEnabled={gstEnabled}
-            gstRate={gstRate}
-            paymentInfo={paymentInfo ?? undefined}
-            company={company ? { name: company.name, address: company.address, email: company.email, gstNumber: company.gstNumber } : undefined}
-          />
+          <LivePdfPreview data={previewData} />
         </div>
       </div>
     </div>
