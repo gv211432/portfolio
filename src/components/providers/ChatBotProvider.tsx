@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { CopilotPopup, useChatContext } from "@copilotkit/react-ui";
 import { FloatingActionBar, CookieConsent } from "@/components/ui";
 import { useChatOpenStore } from "@/Atoms/globalAtoms";
@@ -32,6 +33,9 @@ export default function ChatBotProvider() {
   const { setIsChatOpen } = useChatOpenStore();
   const [chatToken, setChatToken] = useState<string>("");
   const [isChat, setIsChat] = useState(false);
+  const pathname = usePathname();
+
+  if (pathname?.startsWith("/admin")) return null;
 
   // Detect chat subdomain — suppress FAB/popup on full-page chat UI
   useEffect(() => {

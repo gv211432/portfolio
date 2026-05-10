@@ -801,10 +801,13 @@ model Invoice {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  paidAmount   Decimal @default(0) @db.Decimal(12, 2)
+
   items        InvoiceItem[]
   emailLogs    InvoiceEmailLog[]
   signatureLog InvoiceSignatureLog?
   versions     InvoiceVersion[]
+  payments     InvoicePayment[]
 
   @@index([status, createdAt(sort: Desc)])
   @@index([invoiceNumber])
@@ -892,7 +895,21 @@ enum InvoiceStatus {
   SENT
   PENDING_SIGNATURE
   SIGNED
+  PARTLY_PAID
+  PAID
   VOID
+}
+
+model InvoicePayment {
+  id        String   @id @default(cuid())
+  invoiceId String
+  invoice   Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  amount    Decimal  @db.Decimal(12, 2)
+  paidDate  DateTime
+  notes     String?  @db.Text
+  createdAt DateTime @default(now())
+
+  @@index([invoiceId, paidDate(sort: Desc)])
 }
 
 enum InvoiceSignStatus {

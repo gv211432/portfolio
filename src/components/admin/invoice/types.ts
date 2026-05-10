@@ -1,4 +1,4 @@
-export type InvoiceStatus = "DRAFT" | "FINALIZED" | "SENT" | "PENDING_SIGNATURE" | "SIGNED" | "VOID";
+export type InvoiceStatus = "DRAFT" | "FINALIZED" | "SENT" | "PENDING_SIGNATURE" | "SIGNED" | "PARTLY_PAID" | "PAID" | "VOID";
 
 export interface LineItem {
   id?: string;
@@ -48,6 +48,14 @@ export interface InvoiceVersion {
   generatedAt: string;
 }
 
+export interface InvoicePayment {
+  id: string;
+  amount: string | number;
+  paidDate: string;
+  notes?: string | null;
+  createdAt: string;
+}
+
 export interface InvoiceFull extends InvoiceListItem {
   isLocked: boolean;
   currentVersion: number;
@@ -64,9 +72,11 @@ export interface InvoiceFull extends InvoiceListItem {
   paymentInfoSnapshot?: PaymentInfo | null;
   companySnapshot?: Record<string, string> | null;
   notes?: string | null;
+  paidAmount?: string | number;
   items: LineItem[];
   emailLogs: EmailLog[];
   signatureLog?: SignatureLog | null;
+  payments?: InvoicePayment[];
 }
 
 export interface EmailLog {
@@ -134,6 +144,8 @@ export const STATUS_META: Record<InvoiceStatus, { label: string; color: string }
   SENT:              { label: "Sent",              color: "bg-indigo-600" },
   PENDING_SIGNATURE: { label: "Awaiting Signature", color: "bg-yellow-500" },
   SIGNED:            { label: "Signed",            color: "bg-green-600" },
+  PARTLY_PAID:       { label: "Partly Paid",       color: "bg-orange-500" },
+  PAID:              { label: "Paid",              color: "bg-emerald-600" },
   VOID:              { label: "Void",              color: "bg-red-600" },
 };
 

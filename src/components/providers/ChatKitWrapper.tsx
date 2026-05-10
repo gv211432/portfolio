@@ -1,24 +1,28 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { CopilotKit } from "@copilotkit/react-core";
 import { getOrCreateChatToken } from "@/utils/chatToken";
 
-/**
- * Wraps the app with CopilotKit, injecting the browser's persistent chat token
- * as an `x-chat-token` header so the backend can associate messages with a thread.
- * Token is stored in IndexedDB (gaurav_chat DB) and generated on first visit.
- */
 export default function ChatKitWrapper({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const [token, setToken] = useState<string>("");
+  const pathname = usePathname();
+
+  // Don't activate CopilotKit on admin routes — it would poll /api/copilotkit
+  // continuously even when the chat popup is hidden via CSS.
+  const isAdmin = pathname?.startsWith("/admin") ?? false;
 
   useEffect(() => {
+    if (isAdmin) return;
     getOrCreateChatToken().then(setToken);
-  }, []);
+  }, [isAdmin]);
+
+  if (isAdmin) return <>{children}</>;
 
   return (
     <CopilotKit

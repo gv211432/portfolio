@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { InvoiceFull, InvoiceVersion, EmailLog, SignatureLog, STATUS_META, fmtMoney, fmtDate } from "./types";
+import InvoicePaymentPanel from "./InvoicePaymentPanel";
 
 interface Props {
   invoiceId: string;
@@ -260,13 +261,17 @@ export default function InvoiceDetail({ invoiceId, onEdit, onClose, onDeleted, o
   const [showEmail, setShowEmail]   = useState(false);
   const [activeTab, setActiveTab]   = useState<"details" | "payment" | "history">("details");
 
-  useEffect(() => {
-    setLoading(true);
+  const loadInvoice = useCallback(() => {
     fetch(`/api/admin/invoices/${invoiceId}`)
       .then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then(({ invoice }) => { setInvoice(invoice); setLoading(false); onLoaded?.(invoice); })
       .catch((e) => { setError(e.message); setLoading(false); });
   }, [invoiceId]);
+
+  useEffect(() => {
+    setLoading(true);
+    loadInvoice();
+  }, [loadInvoice]);
 
   async function downloadPdf() {
     if (!invoice?.pdfS3Key) return;
@@ -536,10 +541,25 @@ export default function InvoiceDetail({ invoiceId, onEdit, onClose, onDeleted, o
           </div>
 
           {/* Payment tab */}
-          <div className={`${activeTab === "payment" ? "block" : "hidden sm:block"} mb-4`}>
+          <div className={`${activeTab === "payment" ? "block" : "hidden sm:block"} mb-4 space-y-4`}>
+            {/* Payment tracking */}
+            <div className="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-700 p-4">
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Payment Tracking</p>
+              <InvoicePaymentPanel
+                invoiceId={invoiceId}
+                currency={invoice.currency}
+                total={total}
+                paidAmount={Number(invoice.paidAmount ?? 0)}
+                payments={invoice.payments ?? []}
+                readOnly={invoice.status === "VOID"}
+                onChanged={loadInvoice}
+              />
+            </div>
+
+            {/* Bank / payment info snapshot */}
             {invoice.paymentInfoSnapshot && (
               <div className="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-700 p-4">
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Payment Information</p>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Bank Details</p>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {Object.entries(invoice.paymentInfoSnapshot).filter(([, v]) => v).map(([k, v]) => (
                     <div key={k}>
@@ -550,7 +570,8 @@ export default function InvoiceDetail({ invoiceId, onEdit, onClose, onDeleted, o
                 </div>
               </div>
             )}
-            <div className="mt-4">
+
+            <div>
               <SignPanel invoiceId={invoiceId} invoiceStatus={invoice.status} hasPdf={hasPdf} />
             </div>
           </div>

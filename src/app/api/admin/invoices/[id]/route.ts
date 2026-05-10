@@ -22,6 +22,7 @@ export async function GET(req: NextRequest, { params }: Params) {
       emailLogs: { orderBy: { createdAt: "desc" } },
       signatureLog: true,
       paymentProfile: { select: { id: true, label: true, currency: true } },
+      payments: { orderBy: { paidDate: "desc" } },
     },
   });
 

@@ -17,7 +17,7 @@ import InvoiceSection from "./InvoiceSection";
 import RbacSection from "./RbacSection";
 import Breadcrumb from "./shared/Breadcrumb";
 import AdminProfileDrawer from "./AdminProfileDrawer";
-import { useBreadcrumbStore } from "@/Atoms/globalAtoms";
+import { useBreadcrumbStore, useDarkModeStore } from "@/Atoms/globalAtoms";
 
 type Section = "dashboard" | "contacts" | "careers" | "chats" | "database" | "ngo" | "notifications" | "staff" | "mailbox" | "policy" | "activity" | "invoice" | "rbac";
 
@@ -151,6 +151,8 @@ function Sidebar({
   collapsed,
   onToggleCollapse,
   allowedSections,
+  darkMode,
+  onToggleDark,
 }: {
   active: Section;
   setActive: (s: Section) => void;
@@ -160,7 +162,9 @@ function Sidebar({
   onClose?: () => void;
   collapsed: boolean;
   onToggleCollapse: () => void;
-  allowedSections: string[] | null; // null = still loading (show all)
+  allowedSections: string[] | null;
+  darkMode: boolean;
+  onToggleDark: () => void;
 }) {
   return (
     <div className="flex flex-col h-full bg-slate-900 text-white overflow-hidden">
@@ -254,6 +258,21 @@ function Sidebar({
               {username.charAt(0).toUpperCase()}
             </button>
             <button
+              onClick={onToggleDark}
+              title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+            >
+              {darkMode ? (
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M12 7a5 5 0 100 10A5 5 0 0012 7z" />
+                </svg>
+              ) : (
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+              )}
+            </button>
+            <button
               onClick={onLogout}
               title="Sign out"
               className="p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-slate-800 transition"
@@ -276,6 +295,21 @@ function Sidebar({
             <button onClick={onOpenProfile} className="flex-1 min-w-0 text-left hover:opacity-80 transition">
               <p className="text-sm font-medium text-white truncate">{username}</p>
               <p className="text-xs text-slate-500">Profile & Security</p>
+            </button>
+            <button
+              onClick={onToggleDark}
+              title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition shrink-0"
+            >
+              {darkMode ? (
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M12 7a5 5 0 100 10A5 5 0 0012 7z" />
+                </svg>
+              ) : (
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+              )}
             </button>
             <button
               onClick={onLogout}
@@ -315,6 +349,7 @@ export default function AdminShell() {
   const [collapsed, setCollapsed] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const { crumbs, setCrumbs } = useBreadcrumbStore();
+  const { darkMode, toggleDarkMode } = useDarkModeStore();
 
   // Persist collapse state in localStorage
   useEffect(() => {
@@ -434,6 +469,8 @@ export default function AdminShell() {
           collapsed={collapsed}
           onToggleCollapse={toggleCollapse}
           allowedSections={allowedSections}
+          darkMode={darkMode}
+          onToggleDark={toggleDarkMode}
         />
       </aside>
 

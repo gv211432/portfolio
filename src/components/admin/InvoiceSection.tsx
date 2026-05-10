@@ -6,14 +6,16 @@ import InvoiceList from "./invoice/InvoiceList";
 import InvoiceEditor from "./invoice/InvoiceEditor";
 import InvoiceDetail from "./invoice/InvoiceDetail";
 import InvoiceSettings from "./invoice/InvoiceSettings";
+import InvoiceTrends from "./invoice/InvoiceTrends";
 import { InvoiceFull } from "./invoice/types";
 import { useBreadcrumbStore } from "@/Atoms/globalAtoms";
 
-type MainView = "list" | "new" | "edit" | "detail" | "settings";
+type MainView = "list" | "new" | "edit" | "detail" | "settings" | "trends";
 
 const TABS = [
-  { id: "list", label: "Invoices" },
-  { id: "new", label: "+ New" },
+  { id: "list",     label: "Invoices" },
+  { id: "new",      label: "+ New" },
+  { id: "trends",   label: "Trends" },
   { id: "settings", label: "Settings" },
 ] as const;
 
@@ -22,7 +24,7 @@ export default function InvoiceSection() {
   const [invoiceLabel, setInvoiceLabel] = useState("");
   const { setCrumbs } = useBreadcrumbStore();
 
-  const currentView = (["list", "new", "edit", "detail", "settings"].includes(params.invoiceView)
+  const currentView = (["list", "new", "edit", "detail", "settings", "trends"].includes(params.invoiceView)
     ? params.invoiceView
     : "list") as MainView;
   const selectedId = params.invoiceId;
@@ -67,6 +69,11 @@ export default function InvoiceSection() {
         { label: "Invoice", onClick: backToList },
         { label: "Settings" },
       ]);
+    } else if (currentView === "trends") {
+      setCrumbs([
+        { label: "Invoice", onClick: backToList },
+        { label: "Trends" },
+      ]);
     } else if (currentView === "detail") {
       setCrumbs([
         { label: "Invoice", onClick: backToList },
@@ -82,7 +89,7 @@ export default function InvoiceSection() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentView, invoiceLabel]);
 
-  const showTabs = currentView === "list" || currentView === "new" || currentView === "settings";
+  const showTabs = currentView === "list" || currentView === "new" || currentView === "settings" || currentView === "trends";
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
@@ -91,10 +98,7 @@ export default function InvoiceSection() {
         <div className="flex items-center px-4 py-2.5 border-b border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900">
           <div className="inline-flex rounded-lg bg-slate-100 dark:bg-slate-800 p-1">
             {TABS.map((t) => {
-              const isActive =
-                (t.id === "list" && currentView === "list") ||
-                (t.id === "new" && currentView === "new") ||
-                (t.id === "settings" && currentView === "settings");
+              const isActive = t.id === currentView || (t.id === "list" && currentView === "list");
               return (
                 <button
                   key={t.id}
@@ -149,6 +153,9 @@ export default function InvoiceSection() {
         )}
         {currentView === "settings" && (
           <InvoiceSettings />
+        )}
+        {currentView === "trends" && (
+          <InvoiceTrends />
         )}
       </div>
     </div>
