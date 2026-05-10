@@ -13,7 +13,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { timingSafeEqual } from "node:crypto";
+import { createHmac, timingSafeEqual } from "node:crypto";
 import prisma from "@/lib/prisma";
 import { MAIL_ENV } from "@/lib/mail/env";
 import { htmlToText, makeSnippet } from "@/lib/mail/text";
@@ -46,12 +46,15 @@ interface InboundPayload {
   attachments?: InboundAttachment[];
 }
 
-function safeKeyEqual(a: string, b: string): boolean {
-  const bufA = Buffer.from(a, "utf8");
-  const bufB = Buffer.from(b, "utf8");
-  if (bufA.length !== bufB.length) return false;
-  return timingSafeEqual(bufA, bufB);
+// Hash both sides to a fixed-length digest so timingSafeEqual always operates
+// on equal-length buffers and no string-length information leaks.
+function safeKeyEqual(provided: string, expected: string): boolean {
+  const k = Buffer.from("webhook-key-compare", "utf8");
+  const h1 = createHmac("sha256", k).update(provided).digest();
+  const h2 = createHmac("sha256", k).update(expected).digest();
+  return timingSafeEqual(h1, h2);
 }
+
 
 export async function POST(req: NextRequest) {
   const providedKey = req.headers.get("x-api-key") ?? "";

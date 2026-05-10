@@ -16,6 +16,10 @@ import speakeasy from "speakeasy";
 import { verifySetupToken, signEmailSetupToken } from "@/lib/adminAuth";
 import { randomBytes } from "crypto";
 
+// In-memory brute-force guard: max 5 wrong codes per adminId within the 10-min setup window
+const setupAttempts = new Map<string, { count: number; resetAt: number }>();
+const MAX_SETUP_ATTEMPTS = 5;
+
 function generateRecoveryCodes(count = 8): string[] {
   return Array.from({ length: count }, () => {
     const bytes = randomBytes(6);
@@ -41,6 +45,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid or expired setup token" }, { status: 401 });
     }
 
+    // Check attempt limit
+    const now = Date.now();
+    const entry = setupAttempts.get(adminId);
+    if (entry && entry.count >= MAX_SETUP_ATTEMPTS && entry.resetAt > now) {
+      return NextResponse.json(
+        { error: "Too many failed attempts. Please restart the TOTP setup flow." },
+        { status: 429 }
+      );
+    }
+
     const admin = await prisma.adminUser.findUnique({ where: { id: adminId } });
     if (!admin || !admin.totpSecret) {
       return NextResponse.json(
@@ -52,11 +66,16 @@ export async function POST(request: NextRequest) {
     const code  = String(totpCode).trim().replace(/\s/g, "");
     const valid = speakeasy.totp.verify({ secret: admin.totpSecret, encoding: "base32", token: code, window: 1 });
     if (!valid) {
+      const cur = setupAttempts.get(adminId) ?? { count: 0, resetAt: now + 10 * 60 * 1000 };
+      setupAttempts.set(adminId, { count: cur.count + 1, resetAt: cur.resetAt });
       return NextResponse.json(
         { error: "Invalid authenticator code. Please try again." },
         { status: 400 }
       );
     }
+
+    // Clear attempt counter on success
+    setupAttempts.delete(adminId);
 
     // Generate recovery codes
     const plainCodes = generateRecoveryCodes(8);

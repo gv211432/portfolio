@@ -9,9 +9,14 @@ import {
   setAdminCookie,
   clearAdminCookie,
   requireAdmin,
+  revokeAdminToken,
+  ADMIN_COOKIE,
 } from "@/lib/adminAuth";
 
 type RecoveryCode = { hash: string; used: boolean };
+
+const MAX_ATTEMPTS  = 3;
+const LOCKOUT_MS    = 15 * 60 * 1000; // 15 minutes
 
 /** POST /api/admin/auth — login (username + password + TOTP always expected) */
 export async function POST(request: NextRequest) {
@@ -26,6 +31,17 @@ export async function POST(request: NextRequest) {
     }
 
     const admin = await prisma.adminUser.findUnique({ where: { username } });
+
+    // Check lockout before doing any crypto
+    if (admin?.lockedUntil && admin.lockedUntil > new Date()) {
+      const remainingMs = admin.lockedUntil.getTime() - Date.now();
+      const mins = Math.ceil(remainingMs / 60000);
+      return NextResponse.json(
+        { success: false, message: `Account locked. Try again in ${mins} minute${mins !== 1 ? "s" : ""}.` },
+        { status: 429 }
+      );
+    }
+
     // Timing-safe: always hash-compare even if user not found
     const dummyHash = "$2b$10$dummyhashfordummycomparison.dummy";
     const passwordValid = admin
@@ -33,6 +49,17 @@ export async function POST(request: NextRequest) {
       : await bcrypt.compare(password, dummyHash).then(() => false);
 
     if (!admin || !passwordValid) {
+      // Increment attempt counter; lock after MAX_ATTEMPTS
+      if (admin) {
+        const attempts = (admin.loginAttempts ?? 0) + 1;
+        await prisma.adminUser.update({
+          where: { id: admin.id },
+          data: {
+            loginAttempts: attempts,
+            lockedUntil: attempts >= MAX_ATTEMPTS ? new Date(Date.now() + LOCKOUT_MS) : null,
+          },
+        });
+      }
       return NextResponse.json(
         { success: false, message: "Invalid credentials" },
         { status: 401 }
@@ -108,9 +135,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Successful login — reset lockout counter
     await prisma.adminUser.update({
       where: { id: admin.id },
-      data: { lastLoginAt: new Date() },
+      data: { lastLoginAt: new Date(), loginAttempts: 0, lockedUntil: null },
     });
 
     const token = await signAdminToken({ id: admin.id, username: admin.username });
@@ -122,8 +150,10 @@ export async function POST(request: NextRequest) {
   }
 }
 
-/** DELETE /api/admin/auth — logout */
-export async function DELETE() {
+/** DELETE /api/admin/auth — logout (revokes jti so token can't be replayed) */
+export async function DELETE(request: NextRequest) {
+  const token = request.cookies.get(ADMIN_COOKIE)?.value;
+  if (token) await revokeAdminToken(token);
   const response = NextResponse.json({ success: true });
   return clearAdminCookie(response);
 }

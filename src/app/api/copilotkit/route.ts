@@ -8,6 +8,27 @@ import { PortfolioAgent } from "@/lib/agent/CopilotAgent";
 import { collectClientInfo } from "@/utils/clientInfo";
 import { ACTIVE_MODEL } from "@/lib/agent/models";
 
+// Per-IP rate limiter: max 20 requests per 60-second window
+const ipWindows = new Map<string, { count: number; resetAt: number }>();
+const IP_LIMIT    = 20;
+const IP_WINDOW   = 60_000; // 1 minute
+
+// Per-session (x-chat-token) rate limiter: max 30 requests per 60-second window
+const sessionWindows = new Map<string, { count: number; resetAt: number }>();
+const SESSION_LIMIT  = 30;
+
+function checkRateLimit(key: string, store: Map<string, { count: number; resetAt: number }>, limit: number): boolean {
+  const now = Date.now();
+  const entry = store.get(key);
+  if (!entry || entry.resetAt <= now) {
+    store.set(key, { count: 1, resetAt: now + IP_WINDOW });
+    return true; // allowed
+  }
+  if (entry.count >= limit) return false; // blocked
+  entry.count++;
+  return true; // allowed
+}
+
 /**
  * Per-request CopilotKit handler.
  * A fresh PortfolioAgent (and CopilotRuntime) is created per request
@@ -21,7 +42,22 @@ import { ACTIVE_MODEL } from "@/lib/agent/models";
  */
 async function handleRequest(req: NextRequest) {
   const visitorCtx = collectClientInfo(req);
-  const chatToken = req.headers.get("x-chat-token") ?? undefined;
+  const chatToken  = req.headers.get("x-chat-token") ?? undefined;
+
+  // Per-IP rate limit
+  const ip = (req.headers.get("x-forwarded-for") ?? req.headers.get("x-real-ip") ?? "unknown").split(",")[0].trim();
+  if (!checkRateLimit(ip, ipWindows, IP_LIMIT)) {
+    return new Response(JSON.stringify({ error: "Rate limit exceeded. Try again in a minute." }), {
+      status: 429, headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  // Per-session rate limit (if token present)
+  if (chatToken && !checkRateLimit(chatToken, sessionWindows, SESSION_LIMIT)) {
+    return new Response(JSON.stringify({ error: "Session rate limit exceeded. Try again in a minute." }), {
+      status: 429, headers: { "Content-Type": "application/json" },
+    });
+  }
 
   const runtime = new CopilotRuntime({
     agents: {

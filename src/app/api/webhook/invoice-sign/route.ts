@@ -19,13 +19,11 @@ export async function POST(req: NextRequest) {
 
   const { documentId, mac } = payload as { documentId?: string; mac?: string };
 
-  if (!documentId) {
-    return NextResponse.json({ error: "Missing documentId" }, { status: 400 });
+  if (!documentId || !mac) {
+    return NextResponse.json({ error: "Missing documentId or mac" }, { status: 400 });
   }
 
-  // Validate HMAC when mac is present. Leegality may omit it on test pings.
-  if (mac && !verifyLeegalityWebhook(documentId, mac)) {
-    console.warn(`[invoice-sign webhook] HMAC mismatch for documentId=${documentId}`);
+  if (!verifyLeegalityWebhook(documentId, mac)) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
   }
 

@@ -231,12 +231,49 @@ function stripHtml(html: string): string {
     .trim();
 }
 
+// SSRF blocklist — rejects requests to private/internal networks and cloud metadata endpoints.
+const SSRF_BLOCKED_HOSTNAMES = new Set([
+  "localhost", "metadata.google.internal", "169.254.169.254",
+  "100.100.100.200", // Alibaba metadata
+  "instance-data", "169.254.170.2", // AWS ECS metadata
+]);
+
+function isSsrfBlocked(rawUrl: string): boolean {
+  let parsed: URL;
+  try { parsed = new URL(rawUrl); } catch { return true; }
+
+  if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return true;
+
+  const host = parsed.hostname.toLowerCase();
+  if (SSRF_BLOCKED_HOSTNAMES.has(host)) return true;
+
+  // Block private / loopback / link-local IP ranges
+  const ipv4 = host.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (ipv4) {
+    const [, a, b] = ipv4.map(Number);
+    if (a === 10) return true;                             // 10.0.0.0/8
+    if (a === 127) return true;                            // 127.0.0.0/8
+    if (a === 169 && b === 254) return true;               // 169.254.0.0/16 link-local
+    if (a === 172 && b >= 16 && b <= 31) return true;      // 172.16.0.0/12
+    if (a === 192 && b === 168) return true;               // 192.168.0.0/16
+    if (a === 0) return true;                              // 0.0.0.0/8
+    if (a === 100 && b >= 64 && b <= 127) return true;     // 100.64.0.0/10 (CGNAT)
+  }
+
+  // Block IPv6 loopback / link-local
+  if (host === "::1" || host.startsWith("fe80:") || host.startsWith("[::1]") || host.startsWith("[fe80")) return true;
+
+  return false;
+}
+
 export const fetchUrlTool = tool(
   async ({ url }) => {
+    if (isSsrfBlocked(url)) return "Error: URL is not allowed (private/internal network blocked)";
     try {
       const res = await fetch(url, {
         signal: AbortSignal.timeout(8000),
         headers: { "User-Agent": "Mozilla/5.0 (compatible; PortfolioBot/1.0)" },
+        redirect: "follow",
       });
       if (!res.ok) return `Error: HTTP ${res.status} from ${url}`;
       const contentType = res.headers.get("content-type") || "";

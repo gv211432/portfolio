@@ -15,7 +15,7 @@ import { deleteObject } from "@/lib/mail/s3";
 const TRASH_RETENTION_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 export async function GET(req: NextRequest) {
-  const secret = req.headers.get("x-cron-secret") ?? req.nextUrl.searchParams.get("secret");
+  const secret = req.headers.get("x-cron-secret");
   if (!process.env.CRON_SECRET || secret !== process.env.CRON_SECRET) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

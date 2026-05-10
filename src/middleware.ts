@@ -30,9 +30,6 @@ export default function middleware(req: NextRequest) {
     return NextResponse.redirect(`https://${hostname}${url.pathname}${url.search}`, 301);
   }
 
-  // Debug logging - check terminal for output
-  console.log(`[Middleware] hostname: ${hostname}, pathname: ${url.pathname}`);
-
   // Handle localhost development
   // me.localhost:3000 -> subdomain = 'me'
   // localhost:3000 -> subdomain = null (root)
@@ -74,11 +71,8 @@ export default function middleware(req: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 
-  console.log(`[Middleware] subdomain detected: ${subdomain}`);
-
   // Root domain - serve from /(root)
   if (!subdomain) {
-    console.log(`[Middleware] No subdomain, serving root page`);
     return NextResponse.next();
   }
 
@@ -88,14 +82,12 @@ export default function middleware(req: NextRequest) {
     if (!url.pathname.startsWith(`/${mailSubdomain}`)) {
       url.pathname = url.pathname === '/' ? `/${mailSubdomain}` : `/${mailSubdomain}${url.pathname}`;
     }
-    console.log(`[Middleware] Rewriting ${mailSubdomain} → ${url.pathname}`);
     return NextResponse.rewrite(url);
   }
 
   // Valid subdomains - rewrite to /domains/[subdomain]/...
   if (SUBDOMAIN_CONFIG.valid.includes(subdomain as typeof SUBDOMAIN_CONFIG.valid[number])) {
     url.pathname = `/domains/${subdomain}${url.pathname}`;
-    console.log(`[Middleware] Rewriting to: ${url.pathname}`);
     return NextResponse.rewrite(url);
   }
 

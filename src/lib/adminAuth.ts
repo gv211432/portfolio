@@ -8,22 +8,28 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
+import { randomUUID } from "crypto";
+import prisma from "@/lib/prisma";
 
 export const ADMIN_COOKIE = "admin_session";
 
-const secret = new TextEncoder().encode(
-  process.env.ADMIN_JWT_SECRET ?? "change-me-in-production-use-32-char-secret!"
-);
+if (!process.env.ADMIN_JWT_SECRET) {
+  throw new Error("ADMIN_JWT_SECRET env var is not set");
+}
+const secret = new TextEncoder().encode(process.env.ADMIN_JWT_SECRET);
 
 export interface AdminPayload {
   id: string;
   username: string;
+  jti: string;
 }
 
-export async function signAdminToken(payload: AdminPayload): Promise<string> {
-  return new SignJWT({ id: payload.id, username: payload.username })
+export async function signAdminToken(payload: { id: string; username: string }): Promise<string> {
+  const jti = randomUUID();
+  return new SignJWT({ id: payload.id, username: payload.username, jti })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
+    .setJti(jti)
     .setExpirationTime("8h")
     .sign(secret);
 }
@@ -31,12 +37,42 @@ export async function signAdminToken(payload: AdminPayload): Promise<string> {
 export async function verifyAdminToken(token: string): Promise<AdminPayload | null> {
   try {
     const { payload } = await jwtVerify(token, secret);
+    const jti = payload.jti as string;
+    if (!jti) return null;
+
+    // Check revocation list (clean up expired entries as a side-effect)
+    const now = new Date();
+    const revoked = await prisma.adminRevokedToken.findUnique({ where: { jti } });
+    if (revoked) return null;
+
+    // Opportunistic cleanup of expired revocations (best-effort)
+    prisma.adminRevokedToken.deleteMany({ where: { expiresAt: { lt: now } } }).catch(() => null);
+
     return {
-      id: payload.id as string,
+      id:       payload.id as string,
       username: payload.username as string,
+      jti,
     };
   } catch {
     return null;
+  }
+}
+
+/** Revokes the jti embedded in a token so it cannot be used again. */
+export async function revokeAdminToken(token: string): Promise<void> {
+  try {
+    const { payload } = await jwtVerify(token, secret);
+    const jti = payload.jti as string;
+    const exp = payload.exp ? new Date(payload.exp * 1000) : new Date(Date.now() + 8 * 3600 * 1000);
+    if (jti) {
+      await prisma.adminRevokedToken.upsert({
+        where:  { jti },
+        create: { jti, expiresAt: exp },
+        update: {},
+      });
+    }
+  } catch {
+    // Token may already be invalid — ignore
   }
 }
 

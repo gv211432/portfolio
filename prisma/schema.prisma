@@ -222,9 +222,23 @@ model AdminUser {
   pendingEmailOtpAttempts Int      @default(0)
   lastOtpSentAt          DateTime?
 
+  // Login rate-limiting
+  loginAttempts Int       @default(0)
+  lockedUntil   DateTime?
+
   // RBAC
   roles        AdminUserRole[]
   activityLogs AdminActivityLog[]
+}
+
+// Revoked admin JWT tokens (jti-based session revocation on logout / password change)
+model AdminRevokedToken {
+  id        String   @id @default(cuid())
+  jti       String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([expiresAt])
 }
 
 // ── RBAC ─────────────────────────────────────────────────────────────────────
