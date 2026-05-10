@@ -505,8 +505,8 @@ export default function InvoiceDetail({ invoiceId, onEdit, onClose, onDeleted, o
                           {item.dateLabel && <span className="inline-block text-white text-[9px] font-bold rounded px-1.5 py-0.5 mb-1" style={{ background: "#667eea" }}>{item.dateLabel}</span>}
                           <p className="text-xs text-gray-700 dark:text-slate-300 whitespace-pre-line">{item.description}</p>
                         </td>
-                        <td className="px-4 py-3 text-xs text-gray-500 dark:text-slate-400 text-right whitespace-nowrap">{Number(item.hours)}</td>
-                        <td className="px-4 py-3 text-xs text-gray-500 dark:text-slate-400 text-right whitespace-nowrap">{fmtMoney(item.rate, invoice.currency)}</td>
+                        <td className="px-4 py-3 text-xs text-gray-500 dark:text-slate-400 text-right whitespace-nowrap">{item.flat ? "—" : Number(item.hours)}</td>
+                        <td className="px-4 py-3 text-xs text-gray-500 dark:text-slate-400 text-right whitespace-nowrap">{item.flat ? "—" : fmtMoney(item.rate, invoice.currency)}</td>
                         <td className="px-4 py-3 text-xs font-semibold text-gray-800 dark:text-white text-right whitespace-nowrap">{fmtMoney(item.amount, invoice.currency)}</td>
                       </tr>
                     ))}
