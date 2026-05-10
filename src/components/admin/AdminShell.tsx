@@ -14,6 +14,8 @@ import PolicySection from "./PolicySection";
 import ActivitySection from "./ActivitySection";
 import MailboxSection from "./MailboxSection";
 import InvoiceSection from "./InvoiceSection";
+import Breadcrumb from "./shared/Breadcrumb";
+import { useBreadcrumbStore } from "@/Atoms/globalAtoms";
 
 type Section = "dashboard" | "contacts" | "careers" | "chats" | "database" | "ngo" | "notifications" | "staff" | "mailbox" | "policy" | "activity" | "invoice";
 
@@ -290,6 +292,7 @@ export default function AdminShell() {
   const [active, setActiveState] = useState<Section>("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const { crumbs, setCrumbs } = useBreadcrumbStore();
 
   // Persist collapse state in localStorage
   useEffect(() => {
@@ -319,7 +322,17 @@ export default function AdminShell() {
     const qs = tab === "dashboard" ? "" : `?tab=${tab}`;
     window.history.replaceState(null, "", `${window.location.pathname}${qs}`);
     setActiveState(tab);
+    // Reset breadcrumb to just the section root on every tab switch
+    const label = NAV.find((n) => n.id === tab)?.label ?? tab;
+    setCrumbs([{ label }]);
   }
+
+  // Initialise breadcrumb on first render
+  useEffect(() => {
+    const label = NAV.find((n) => n.id === active)?.label ?? active;
+    setCrumbs([{ label }]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Check existing session
   useEffect(() => {
@@ -398,15 +411,31 @@ export default function AdminShell() {
             </svg>
           </button>
 
-          <div className="flex items-center gap-2">
-            {NAV.find((n) => n.id === active)?.icon && (
-              <span className="text-gray-400 dark:text-slate-500">
-                {NAV.find((n) => n.id === active)?.icon}
-              </span>
+          {/* Section title + breadcrumb sub-trail */}
+          <div className="flex flex-col min-w-0">
+            <div className="flex items-center gap-2">
+              {NAV.find((n) => n.id === active)?.icon && (
+                <span className="text-gray-400 dark:text-slate-500 shrink-0">
+                  {NAV.find((n) => n.id === active)?.icon}
+                </span>
+              )}
+              <h1 className="text-base font-semibold text-gray-900 dark:text-white whitespace-nowrap">
+                {NAV.find((n) => n.id === active)?.label}
+              </h1>
+              {/* Desktop: sub-crumbs inline */}
+              {crumbs.length > 1 && (
+                <div className="hidden sm:flex items-center gap-1 min-w-0">
+                  <span className="text-gray-300 dark:text-slate-600 select-none">›</span>
+                  <Breadcrumb items={crumbs.slice(1)} size="sm" />
+                </div>
+              )}
+            </div>
+            {/* Mobile: sub-crumbs below title */}
+            {crumbs.length > 1 && (
+              <div className="sm:hidden pl-7">
+                <Breadcrumb items={crumbs.slice(1)} size="xs" />
+              </div>
             )}
-            <h1 className="text-base font-semibold text-gray-900 dark:text-white">
-              {NAV.find((n) => n.id === active)?.label}
-            </h1>
           </div>
 
           <div className="ml-auto flex items-center gap-3">

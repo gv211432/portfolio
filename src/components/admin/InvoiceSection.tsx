@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useUrlState } from "@/hooks/useUrlState";
 import InvoiceList from "./invoice/InvoiceList";
 import InvoiceEditor from "./invoice/InvoiceEditor";
 import InvoiceDetail from "./invoice/InvoiceDetail";
 import InvoiceSettings from "./invoice/InvoiceSettings";
 import { InvoiceFull } from "./invoice/types";
+import { useBreadcrumbStore } from "@/Atoms/globalAtoms";
 
 type MainView = "list" | "new" | "edit" | "detail" | "settings";
 
@@ -18,6 +19,8 @@ const TABS = [
 
 export default function InvoiceSection() {
   const [params, setParams] = useUrlState({ invoiceView: "list", invoiceId: "" });
+  const [invoiceLabel, setInvoiceLabel] = useState("");
+  const { setCrumbs } = useBreadcrumbStore();
 
   const currentView = (["list", "new", "edit", "detail", "settings"].includes(params.invoiceView)
     ? params.invoiceView
@@ -29,6 +32,7 @@ export default function InvoiceSection() {
   }
 
   function openNew() {
+    setInvoiceLabel("");
     setParams({ invoiceId: "", invoiceView: "new" });
   }
 
@@ -37,12 +41,46 @@ export default function InvoiceSection() {
   }
 
   function backToList() {
+    setInvoiceLabel("");
     setParams({ invoiceView: "list", invoiceId: "" });
+  }
+
+  function backToDetail() {
+    setParams({ invoiceView: "detail" });
   }
 
   function handleSaved(invoice: InvoiceFull) {
     setParams({ invoiceId: invoice.id, invoiceView: "detail" });
   }
+
+  // Sync breadcrumbs whenever view or invoice label changes
+  useEffect(() => {
+    if (currentView === "list") {
+      setCrumbs([{ label: "Invoice" }]);
+    } else if (currentView === "new") {
+      setCrumbs([
+        { label: "Invoice", onClick: backToList },
+        { label: "New Invoice" },
+      ]);
+    } else if (currentView === "settings") {
+      setCrumbs([
+        { label: "Invoice", onClick: backToList },
+        { label: "Settings" },
+      ]);
+    } else if (currentView === "detail") {
+      setCrumbs([
+        { label: "Invoice", onClick: backToList },
+        { label: invoiceLabel || "…" },
+      ]);
+    } else if (currentView === "edit") {
+      setCrumbs([
+        { label: "Invoice", onClick: backToList },
+        { label: invoiceLabel || "…", onClick: backToDetail },
+        { label: "Edit" },
+      ]);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentView, invoiceLabel]);
 
   const showTabs = currentView === "list" || currentView === "new" || currentView === "settings";
 
@@ -86,6 +124,7 @@ export default function InvoiceSection() {
             key="new"
             onSaved={handleSaved}
             onClose={backToList}
+            onLoaded={(num) => setInvoiceLabel(num)}
           />
         )}
         {currentView === "edit" && selectedId && (
@@ -93,7 +132,8 @@ export default function InvoiceSection() {
             key={selectedId}
             invoiceId={selectedId}
             onSaved={handleSaved}
-            onClose={() => { setParams({ invoiceView: "detail" }); }}
+            onClose={backToDetail}
+            onLoaded={(num) => setInvoiceLabel(num)}
           />
         )}
         {currentView === "detail" && selectedId && (
@@ -102,6 +142,7 @@ export default function InvoiceSection() {
             onEdit={() => openEdit(selectedId)}
             onClose={backToList}
             onDeleted={backToList}
+            onLoaded={(inv) => setInvoiceLabel(inv.invoiceNumber)}
           />
         )}
         {currentView === "settings" && (

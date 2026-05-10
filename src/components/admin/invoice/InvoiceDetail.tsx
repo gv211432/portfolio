@@ -8,6 +8,7 @@ interface Props {
   onEdit: () => void;
   onClose: () => void;
   onDeleted: () => void;
+  onLoaded?: (invoice: InvoiceFull) => void;
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -249,7 +250,7 @@ function VersionDropdown({ invoiceId, currentVersion, onDownloadMain }: {
 }
 
 // ─── Main Detail ──────────────────────────────────────────────────────────────
-export default function InvoiceDetail({ invoiceId, onEdit, onClose, onDeleted }: Props) {
+export default function InvoiceDetail({ invoiceId, onEdit, onClose, onDeleted, onLoaded }: Props) {
   const [invoice, setInvoice]       = useState<InvoiceFull | null>(null);
   const [loading, setLoading]       = useState(true);
   const [pdfLoading, setPdfLoading] = useState(false);
@@ -263,7 +264,7 @@ export default function InvoiceDetail({ invoiceId, onEdit, onClose, onDeleted }:
     setLoading(true);
     fetch(`/api/admin/invoices/${invoiceId}`)
       .then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-      .then(({ invoice }) => { setInvoice(invoice); setLoading(false); })
+      .then(({ invoice }) => { setInvoice(invoice); setLoading(false); onLoaded?.(invoice); })
       .catch((e) => { setError(e.message); setLoading(false); });
   }, [invoiceId]);
 

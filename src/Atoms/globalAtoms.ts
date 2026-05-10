@@ -2,6 +2,21 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { cookieStorage } from "@/utils/cookies";
 
+export interface BreadcrumbItem {
+  label: string;
+  onClick?: () => void;
+}
+
+interface BreadcrumbState {
+  crumbs: BreadcrumbItem[];
+  setCrumbs: (crumbs: BreadcrumbItem[]) => void;
+}
+
+export const useBreadcrumbStore = create<BreadcrumbState>()((set) => ({
+  crumbs: [],
+  setCrumbs: (crumbs) => set({ crumbs }),
+}));
+
 interface ChatOpenState {
   isChatOpen: boolean;
   setIsChatOpen: (value: boolean) => void;

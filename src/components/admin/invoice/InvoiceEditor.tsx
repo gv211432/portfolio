@@ -10,6 +10,7 @@ interface Props {
   invoiceId?: string; // undefined = create mode
   onSaved: (invoice: InvoiceFull) => void;
   onClose: () => void;
+  onLoaded?: (invoiceNumber: string) => void;
 }
 
 const EMPTY_ITEM = (): LineItem => ({
@@ -19,7 +20,7 @@ const EMPTY_ITEM = (): LineItem => ({
 const TODAY = new Date().toISOString().slice(0, 10);
 const DUE_DATE = new Date(Date.now() + 15 * 86400000).toISOString().slice(0, 10);
 
-export default function InvoiceEditor({ invoiceId, onSaved, onClose }: Props) {
+export default function InvoiceEditor({ invoiceId, onSaved, onClose, onLoaded }: Props) {
   // Form state
   const [clientName, setClientName] = useState("");
   const [clientAddress, setClientAddress] = useState("");
@@ -77,6 +78,7 @@ export default function InvoiceEditor({ invoiceId, onSaved, onClose }: Props) {
           setClientAddress(invoice.clientAddress ?? "");
           setClientEmail(invoice.clientEmail ?? "");
           setInvoiceNumber(invoice.invoiceNumber);
+          onLoaded?.(invoice.invoiceNumber);
           setInvoiceDate(invoice.invoiceDate.slice(0, 10));
           setDueDate(invoice.dueDate.slice(0, 10));
           setPaymentTerms(invoice.paymentTerms);
@@ -105,7 +107,7 @@ export default function InvoiceEditor({ invoiceId, onSaved, onClose }: Props) {
       invoiceLoadedRef.current = true;
       fetch("/api/admin/invoices/next-number")
         .then((r) => r.json())
-        .then(({ invoiceNumber }) => setInvoiceNumber(invoiceNumber))
+        .then(({ invoiceNumber }) => { setInvoiceNumber(invoiceNumber); onLoaded?.(invoiceNumber); })
         .catch(() => {/* non-critical — user can edit the number */});
     }
   }, [invoiceId]);
