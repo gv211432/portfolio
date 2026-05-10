@@ -8,11 +8,11 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { requireAdmin } from "@/lib/adminAuth";
+import { requirePermission } from "@/lib/admin/permissions";
 
 export async function GET(req: NextRequest) {
-  const admin = await requireAdmin(req);
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const perm = await requirePermission(req, "activity.list");
+  if (!perm.ok) return perm.response;
 
   const sp = new URL(req.url).searchParams;
   const page = Math.max(1, parseInt(sp.get("page") ?? "1"));

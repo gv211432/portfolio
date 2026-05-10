@@ -8,7 +8,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { requireAdmin } from "@/lib/adminAuth";
+import { requirePermission } from "@/lib/admin/permissions";
 import { Prisma } from "@prisma/client";
 import { logActivity, Activity } from "@/lib/mail/activity";
 
@@ -24,8 +24,8 @@ function normalize(list: unknown): string[] | null {
 }
 
 export async function PUT(req: NextRequest, ctx: Ctx) {
-  const admin = await requireAdmin(req);
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const perm = await requirePermission(req, "staff.policy.update");
+  if (!perm.ok) return perm.response;
   const { id } = await ctx.params;
 
   const body = await req.json();
@@ -44,8 +44,8 @@ export async function PUT(req: NextRequest, ctx: Ctx) {
 
   await logActivity({
     actorType: "ADMIN",
-    actorId: admin.id,
-    actorLabel: admin.username,
+    actorId: perm.user.id,
+    actorLabel: perm.user.username,
     action: Activity.AdminPolicyStaffUpdate,
     targetType: "Staff",
     targetId: id,

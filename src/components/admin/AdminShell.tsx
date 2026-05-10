@@ -150,6 +150,7 @@ function Sidebar({
   onClose,
   collapsed,
   onToggleCollapse,
+  allowedSections,
 }: {
   active: Section;
   setActive: (s: Section) => void;
@@ -159,6 +160,7 @@ function Sidebar({
   onClose?: () => void;
   collapsed: boolean;
   onToggleCollapse: () => void;
+  allowedSections: string[] | null; // null = still loading (show all)
 }) {
   return (
     <div className="flex flex-col h-full bg-slate-900 text-white overflow-hidden">
@@ -221,7 +223,7 @@ function Sidebar({
 
       {/* Nav */}
       <nav className={`flex-1 py-3 space-y-0.5 overflow-y-auto overflow-x-hidden ${collapsed ? "px-2" : "px-3"}`}>
-        {NAV.map((item) => (
+        {NAV.filter((item) => !allowedSections || allowedSections.includes(item.id)).map((item) => (
           <button
             key={item.id}
             onClick={() => { setActive(item.id); onClose?.(); }}
@@ -307,6 +309,7 @@ function Sidebar({
 export default function AdminShell() {
   const [authed, setAuthed] = useState<boolean | null>(null); // null = checking
   const [username, setUsername] = useState("");
+  const [allowedSections, setAllowedSections] = useState<string[] | null>(null);
   const [active, setActiveState] = useState<Section>("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
@@ -353,16 +356,31 @@ export default function AdminShell() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Check existing session
+  // Check existing session + fetch permissions
   useEffect(() => {
     fetch("/api/admin/auth")
       .then((r) => {
         if (r.ok) return r.json();
         return { authenticated: false };
       })
-      .then((d) => {
+      .then(async (d) => {
         setAuthed(d.authenticated);
-        if (d.authenticated) setUsername(d.username);
+        if (!d.authenticated) return;
+        setUsername(d.username);
+        // Fetch allowed sections for this user
+        const me = await fetch("/api/admin/me").then((r) => r.json()).catch(() => null);
+        if (me?.allowedSections) {
+          setAllowedSections(me.allowedSections as string[]);
+          // If the current URL tab is blocked, redirect to first allowed section
+          const sp = new URLSearchParams(window.location.search);
+          const tab = sp.get("tab");
+          if (tab && !me.allowedSections.includes(tab)) {
+            const first = (me.allowedSections as string[])[0] ?? "dashboard";
+            setActiveState(first as Section);
+            const qs = first === "dashboard" ? "" : `?tab=${first}`;
+            window.history.replaceState(null, "", `${window.location.pathname}${qs}`);
+          }
+        }
       })
       .catch(() => setAuthed(false));
   }, []);
@@ -415,6 +433,7 @@ export default function AdminShell() {
           onClose={() => setSidebarOpen(false)}
           collapsed={collapsed}
           onToggleCollapse={toggleCollapse}
+          allowedSections={allowedSections}
         />
       </aside>
 
@@ -466,8 +485,31 @@ export default function AdminShell() {
           </div>
         </header>
 
-        {/* Content — invoice + rbac manage their own layout/scroll; others get default padding */}
-        {active === "invoice" ? (
+        {/* Content — gate by allowedSections; invoice + rbac manage their own scroll */}
+        {allowedSections && !allowedSections.includes(active) ? (
+          /* In-app 404 — shown when user pastes a URL they don't have access to */
+          <main className="flex-1 flex flex-col items-center justify-center p-8 min-h-0">
+            <div className="text-center max-w-sm">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                <svg className="w-8 h-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                </svg>
+              </div>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">Not Found</h2>
+              <p className="text-sm text-gray-500 dark:text-slate-400">
+                This section doesn&apos;t exist or you don&apos;t have permission to access it.
+              </p>
+              {allowedSections.length > 0 && (
+                <button
+                  onClick={() => setActive(allowedSections[0] as Section)}
+                  className="mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition"
+                >
+                  Go to Dashboard
+                </button>
+              )}
+            </div>
+          </main>
+        ) : active === "invoice" ? (
           <main className="flex-1 overflow-hidden min-h-0">
             <InvoiceSection />
           </main>

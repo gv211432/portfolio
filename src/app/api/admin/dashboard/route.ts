@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { requireAdmin } from "@/lib/adminAuth";
+import { requirePermission } from "@/lib/admin/permissions";
 
 export async function GET(request: NextRequest) {
-  const admin = await requireAdmin(request);
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const perm = await requirePermission(request, "dashboard.stats");
+  if (!perm.ok) return perm.response;
 
   const now = new Date();
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);

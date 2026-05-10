@@ -6,14 +6,14 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { requireAdmin } from "@/lib/adminAuth";
+import { requirePermission } from "@/lib/admin/permissions";
 import { logActivity, Activity } from "@/lib/mail/activity";
 
 interface Ctx { params: Promise<{ id: string }> }
 
 export async function GET(req: NextRequest, ctx: Ctx) {
-  const admin = await requireAdmin(req);
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const perm = await requirePermission(req, "staff.read");
+  if (!perm.ok) return perm.response;
   const { id } = await ctx.params;
 
   const staff = await prisma.staff.findUnique({
@@ -38,8 +38,8 @@ export async function GET(req: NextRequest, ctx: Ctx) {
 }
 
 export async function PATCH(req: NextRequest, ctx: Ctx) {
-  const admin = await requireAdmin(req);
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const perm = await requirePermission(req, "staff.update");
+  if (!perm.ok) return perm.response;
   const { id } = await ctx.params;
 
   const body = await req.json();
@@ -70,8 +70,8 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
 
   await logActivity({
     actorType: "ADMIN",
-    actorId: admin.id,
-    actorLabel: admin.username,
+    actorId: perm.user.id,
+    actorLabel: perm.user.username,
     action: Activity.AdminStaffUpdate,
     targetType: "Staff",
     targetId: id,
@@ -83,8 +83,8 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
 }
 
 export async function DELETE(req: NextRequest, ctx: Ctx) {
-  const admin = await requireAdmin(req);
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const perm = await requirePermission(req, "staff.delete");
+  if (!perm.ok) return perm.response;
   const { id } = await ctx.params;
 
   await prisma.staff.update({ where: { id }, data: { status: "OFFBOARDED" } });
@@ -95,8 +95,8 @@ export async function DELETE(req: NextRequest, ctx: Ctx) {
 
   await logActivity({
     actorType: "ADMIN",
-    actorId: admin.id,
-    actorLabel: admin.username,
+    actorId: perm.user.id,
+    actorLabel: perm.user.username,
     action: Activity.AdminStaffSuspend,
     targetType: "Staff",
     targetId: id,

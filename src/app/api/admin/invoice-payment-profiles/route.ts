@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { requireAdmin } from "@/lib/adminAuth";
+import { requirePermission } from "@/lib/admin/permissions";
 import { encryptOpt, decryptOpt } from "@/lib/invoice/encryption";
 
 function decryptProfile(p: Awaited<ReturnType<typeof prisma.invoicePaymentProfile.findMany>>[number]) {
@@ -23,8 +23,8 @@ function decryptProfile(p: Awaited<ReturnType<typeof prisma.invoicePaymentProfil
 }
 
 export async function GET(req: NextRequest) {
-  const admin = await requireAdmin(req);
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const perm = await requirePermission(req, "invoice_payment.list");
+  if (!perm.ok) return perm.response;
 
   const profiles = await prisma.invoicePaymentProfile.findMany({
     orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
@@ -34,8 +34,8 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const admin = await requireAdmin(req);
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const perm = await requirePermission(req, "invoice_payment.create");
+  if (!perm.ok) return perm.response;
 
   const body = await req.json();
   const {

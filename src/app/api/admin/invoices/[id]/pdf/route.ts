@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { requireAdmin } from "@/lib/adminAuth";
+import { requirePermission } from "@/lib/admin/permissions";
 import { generateInvoicePdf } from "@/lib/invoice/pdf";
 import { uploadPdf, signedPdfUrl } from "@/lib/invoice/s3";
 import { decryptOpt } from "@/lib/invoice/encryption";
@@ -10,8 +10,8 @@ type Params = { params: Promise<{ id: string }> };
 
 /** GET — returns a short-lived pre-signed download URL for the latest PDF. */
 export async function GET(req: NextRequest, { params }: Params) {
-  const admin = await requireAdmin(req);
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const perm = await requirePermission(req, "invoice.pdf.download");
+  if (!perm.ok) return perm.response;
 
   const { id } = await params;
   const invoice = await prisma.invoice.findUnique({ where: { id } });
@@ -24,8 +24,8 @@ export async function GET(req: NextRequest, { params }: Params) {
 
 /** POST — generate PDF, upload versioned copy to S3, finalize invoice. */
 export async function POST(req: NextRequest, { params }: Params) {
-  const admin = await requireAdmin(req);
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const perm = await requirePermission(req, "invoice.pdf.generate");
+  if (!perm.ok) return perm.response;
 
   const { id } = await params;
 

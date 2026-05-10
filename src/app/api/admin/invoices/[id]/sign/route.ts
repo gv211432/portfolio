@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { requireAdmin } from "@/lib/adminAuth";
+import { requirePermission } from "@/lib/admin/permissions";
 import { downloadPdf } from "@/lib/invoice/s3";
 import { initiateLeegalitySign } from "@/lib/invoice/leegality";
 
@@ -8,8 +8,8 @@ type Params = { params: Promise<{ id: string }> };
 
 /** GET — return current signature status */
 export async function GET(req: NextRequest, { params }: Params) {
-  const admin = await requireAdmin(req);
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const perm = await requirePermission(req, "invoice.sign.status");
+  if (!perm.ok) return perm.response;
 
   const { id } = await params;
   const log = await prisma.invoiceSignatureLog.findUnique({ where: { invoiceId: id } });
@@ -28,8 +28,8 @@ export async function GET(req: NextRequest, { params }: Params) {
 
 /** POST — initiate Leegality eSign for this invoice */
 export async function POST(req: NextRequest, { params }: Params) {
-  const admin = await requireAdmin(req);
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const perm = await requirePermission(req, "invoice.sign.initiate");
+  if (!perm.ok) return perm.response;
 
   const { id } = await params;
 

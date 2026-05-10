@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { requireAdmin } from "@/lib/adminAuth";
+import { requirePermission } from "@/lib/admin/permissions";
 
 export async function GET(request: NextRequest) {
-  const admin = await requireAdmin(request);
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const perm = await requirePermission(request, "chats.list");
+  if (!perm.ok) return perm.response;
 
   const { searchParams } = new URL(request.url);
   const page = Math.max(1, parseInt(searchParams.get("page") ?? "1"));
@@ -76,8 +76,8 @@ export async function GET(request: NextRequest) {
 
 /** DELETE /api/admin/chats — bulk delete old threads */
 export async function DELETE(request: NextRequest) {
-  const admin = await requireAdmin(request);
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const perm = await requirePermission(request, "chats.delete");
+  if (!perm.ok) return perm.response;
 
   const { searchParams } = new URL(request.url);
   const olderThanDays = parseInt(searchParams.get("olderThanDays") ?? "30");

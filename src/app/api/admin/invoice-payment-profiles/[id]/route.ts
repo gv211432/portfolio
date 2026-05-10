@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { requireAdmin } from "@/lib/adminAuth";
+import { requirePermission } from "@/lib/admin/permissions";
 import { encryptOpt, decryptOpt } from "@/lib/invoice/encryption";
 
 type Params = { params: Promise<{ id: string }> };
@@ -25,8 +25,8 @@ function decryptProfile(p: Awaited<ReturnType<typeof prisma.invoicePaymentProfil
 }
 
 export async function PATCH(req: NextRequest, { params }: Params) {
-  const admin = await requireAdmin(req);
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const perm = await requirePermission(req, "invoice_payment.update");
+  if (!perm.ok) return perm.response;
 
   const { id } = await params;
   const body = await req.json();
@@ -63,8 +63,8 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 }
 
 export async function DELETE(req: NextRequest, { params }: Params) {
-  const admin = await requireAdmin(req);
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const perm = await requirePermission(req, "invoice_payment.delete");
+  if (!perm.ok) return perm.response;
 
   const { id } = await params;
   const existing = await prisma.invoicePaymentProfile.findUnique({ where: { id } });

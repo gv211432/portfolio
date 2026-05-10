@@ -8,7 +8,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { requireAdmin } from "@/lib/adminAuth";
+import { requirePermission } from "@/lib/admin/permissions";
 import { sendViaSes, type MailAddress } from "@/lib/mail/ses";
 import { makeSnippet } from "@/lib/mail/text";
 import { assignThread } from "@/lib/mail/threading";
@@ -17,8 +17,8 @@ import { logActivity, Activity } from "@/lib/mail/activity";
 interface Ctx { params: Promise<{ id: string }> }
 
 export async function GET(req: NextRequest, ctx: Ctx) {
-  const admin = await requireAdmin(req);
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const perm = await requirePermission(req, "mailbox.read");
+  if (!perm.ok) return perm.response;
   const { id } = await ctx.params;
   const item = await prisma.outboxEmail.findUnique({
     where: { id },
@@ -29,8 +29,8 @@ export async function GET(req: NextRequest, ctx: Ctx) {
 }
 
 export async function POST(req: NextRequest, ctx: Ctx) {
-  const admin = await requireAdmin(req);
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const perm = await requirePermission(req, "mailbox.send");
+  if (!perm.ok) return perm.response;
   const { id } = await ctx.params;
   const body = await req.json();
   const action = body.action as string;
@@ -47,12 +47,12 @@ export async function POST(req: NextRequest, ctx: Ctx) {
   if (action === "reject") {
     await prisma.outboxEmail.update({
       where: { id },
-      data: { status: "DISCARDED", reviewedBy: admin.id, reviewedAt: new Date() },
+      data: { status: "DISCARDED", reviewedBy: perm.user.id, reviewedAt: new Date() },
     });
     await logActivity({
       actorType: "ADMIN",
-      actorId: admin.id,
-      actorLabel: admin.username,
+      actorId: perm.user.id,
+      actorLabel: perm.user.username,
       action: Activity.AdminOutboxDiscard,
       targetType: "OutboxEmail",
       targetId: id,
@@ -119,12 +119,12 @@ export async function POST(req: NextRequest, ctx: Ctx) {
 
     await prisma.outboxEmail.update({
       where: { id },
-      data: { status: "RELEASED", reviewedBy: admin.id, reviewedAt: now },
+      data: { status: "RELEASED", reviewedBy: perm.user.id, reviewedAt: now },
     });
     await logActivity({
       actorType: "ADMIN",
-      actorId: admin.id,
-      actorLabel: admin.username,
+      actorId: perm.user.id,
+      actorLabel: perm.user.username,
       action: Activity.AdminOutboxRelease,
       targetType: "OutboxEmail",
       targetId: id,
@@ -138,14 +138,14 @@ export async function POST(req: NextRequest, ctx: Ctx) {
 }
 
 export async function DELETE(req: NextRequest, ctx: Ctx) {
-  const admin = await requireAdmin(req);
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const perm = await requirePermission(req, "mailbox.delete");
+  if (!perm.ok) return perm.response;
   const { id } = await ctx.params;
   await prisma.outboxEmail.delete({ where: { id } });
   await logActivity({
     actorType: "ADMIN",
-    actorId: admin.id,
-    actorLabel: admin.username,
+    actorId: perm.user.id,
+    actorLabel: perm.user.username,
     action: Activity.AdminOutboxDiscard,
     targetType: "OutboxEmail",
     targetId: id,

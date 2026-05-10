@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { requireAdmin } from "@/lib/adminAuth";
+import { requirePermission } from "@/lib/admin/permissions";
 import { downloadPdf, signedPdfUrl } from "@/lib/invoice/s3";
 import { generateInvoicePdf } from "@/lib/invoice/pdf";
 import { decryptOpt } from "@/lib/invoice/encryption";
@@ -78,8 +78,8 @@ function buildEmailHtml(opts: {
 }
 
 export async function POST(req: NextRequest, { params }: Params) {
-  const admin = await requireAdmin(req);
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const perm = await requirePermission(req, "invoice.email.send");
+  if (!perm.ok) return perm.response;
 
   const { id } = await params;
   const body = await req.json();
@@ -241,8 +241,8 @@ export async function POST(req: NextRequest, { params }: Params) {
 
 /** GET — return email log for this invoice */
 export async function GET(req: NextRequest, { params }: Params) {
-  const admin = await requireAdmin(req);
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const perm = await requirePermission(req, "invoice.email.logs");
+  if (!perm.ok) return perm.response;
 
   const { id } = await params;
   const logs = await prisma.invoiceEmailLog.findMany({

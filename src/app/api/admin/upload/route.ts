@@ -7,7 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/adminAuth";
+import { requirePermission } from "@/lib/admin/permissions";
 import { putObject, signedAttachmentUrl } from "@/lib/mail/s3";
 import { MAIL_ENV } from "@/lib/mail/env";
 
@@ -15,8 +15,8 @@ const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/gif", "image/webp", "image/svg+xml"]);
 
 export async function POST(req: NextRequest) {
-  const admin = await requireAdmin(req);
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const perm = await requirePermission(req, "upload.staff_image");
+  if (!perm.ok) return perm.response;
 
   const form = await req.formData();
   const file = form.get("file") as File | null;

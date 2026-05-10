@@ -8,7 +8,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { requireAdmin } from "@/lib/adminAuth";
+import { requirePermission } from "@/lib/admin/permissions";
 import { hashPassword } from "@/lib/mail/staffAuth";
 import { generateFriendlyPassword } from "@/lib/mail/text";
 import { sendStaffCredentials } from "@/lib/mail/systemMail";
@@ -17,8 +17,8 @@ import { logActivity, Activity } from "@/lib/mail/activity";
 interface Ctx { params: Promise<{ id: string }> }
 
 export async function POST(req: NextRequest, ctx: Ctx) {
-  const admin = await requireAdmin(req);
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const perm = await requirePermission(req, "staff.reset_password");
+  if (!perm.ok) return perm.response;
   const { id } = await ctx.params;
 
   const { sendEmail = true } = (await req.json().catch(() => ({}))) as { sendEmail?: boolean };
@@ -42,8 +42,8 @@ export async function POST(req: NextRequest, ctx: Ctx) {
 
   await logActivity({
     actorType: "ADMIN",
-    actorId: admin.id,
-    actorLabel: admin.username,
+    actorId: perm.user.id,
+    actorLabel: perm.user.username,
     action: Activity.AdminStaffPasswordReset,
     targetType: "Staff",
     targetId: id,

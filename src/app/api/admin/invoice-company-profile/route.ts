@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { requireAdmin } from "@/lib/adminAuth";
+import { requirePermission } from "@/lib/admin/permissions";
 
 export async function GET(req: NextRequest) {
-  const admin = await requireAdmin(req);
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const perm = await requirePermission(req, "invoice_company.read");
+  if (!perm.ok) return perm.response;
 
   const profile = await prisma.invoiceCompanyProfile.findUnique({
     where: { id: "default" },
@@ -14,8 +14,8 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
-  const admin = await requireAdmin(req);
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const perm = await requirePermission(req, "invoice_company.update");
+  if (!perm.ok) return perm.response;
 
   const body = await req.json();
   const { name, address, email, phone, website, gstNumber, panNumber, logoS3Key } = body;

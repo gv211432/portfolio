@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { requireAdmin } from "@/lib/adminAuth";
+import { requirePermission } from "@/lib/admin/permissions";
 import { deletePdf } from "@/lib/invoice/s3";
 import { Decimal } from "@prisma/client/runtime/library";
 
@@ -11,8 +11,8 @@ function safeDecimal(v: unknown): Decimal {
 }
 
 export async function GET(req: NextRequest, { params }: Params) {
-  const admin = await requireAdmin(req);
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const perm = await requirePermission(req, "invoice.read");
+  if (!perm.ok) return perm.response;
 
   const { id } = await params;
   const invoice = await prisma.invoice.findUnique({
@@ -30,8 +30,8 @@ export async function GET(req: NextRequest, { params }: Params) {
 }
 
 export async function PATCH(req: NextRequest, { params }: Params) {
-  const admin = await requireAdmin(req);
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const perm = await requirePermission(req, "invoice.update");
+  if (!perm.ok) return perm.response;
 
   const { id } = await params;
   const existing = await prisma.invoice.findUnique({ where: { id }, include: { items: true } });
@@ -127,8 +127,8 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 }
 
 export async function DELETE(req: NextRequest, { params }: Params) {
-  const admin = await requireAdmin(req);
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const perm = await requirePermission(req, "invoice.delete");
+  if (!perm.ok) return perm.response;
 
   const { id } = await params;
   const existing = await prisma.invoice.findUnique({ where: { id } });

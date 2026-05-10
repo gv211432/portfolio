@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { requireAdmin } from "@/lib/adminAuth";
+import { requirePermission } from "@/lib/admin/permissions";
 
 type Params = { params: Promise<{ id: string }> };
 
 export async function GET(request: NextRequest, { params }: Params) {
-  const admin = await requireAdmin(request);
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const perm = await requirePermission(request, "ngo.read");
+  if (!perm.ok) return perm.response;
 
   const { id } = await params;
   const application = await prisma.ngoApplication.findUnique({ where: { id } });
@@ -16,8 +16,8 @@ export async function GET(request: NextRequest, { params }: Params) {
 }
 
 export async function PATCH(request: NextRequest, { params }: Params) {
-  const admin = await requireAdmin(request);
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const perm = await requirePermission(request, "ngo.update");
+  if (!perm.ok) return perm.response;
 
   const { id } = await params;
   const body = await request.json();
@@ -35,8 +35,8 @@ export async function PATCH(request: NextRequest, { params }: Params) {
 }
 
 export async function DELETE(request: NextRequest, { params }: Params) {
-  const admin = await requireAdmin(request);
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const perm = await requirePermission(request, "ngo.delete");
+  if (!perm.ok) return perm.response;
 
   const { id } = await params;
   await prisma.ngoApplication.delete({ where: { id } });

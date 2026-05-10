@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { requireAdmin } from "@/lib/adminAuth";
+import { requirePermission } from "@/lib/admin/permissions";
 import { hashPassword } from "@/lib/mail/staffAuth";
 import { generateFriendlyPassword, isValidEmail } from "@/lib/mail/text";
 import { sendStaffCredentials } from "@/lib/mail/systemMail";
@@ -15,8 +15,8 @@ import { logActivity, Activity } from "@/lib/mail/activity";
 import { MAIL_ENV } from "@/lib/mail/env";
 
 export async function GET(req: NextRequest) {
-  const admin = await requireAdmin(req);
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const perm = await requirePermission(req, "staff.list");
+  if (!perm.ok) return perm.response;
 
   const { searchParams } = new URL(req.url);
   const page = Math.max(1, parseInt(searchParams.get("page") ?? "1"));
@@ -74,8 +74,8 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const admin = await requireAdmin(req);
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const perm = await requirePermission(req, "staff.create");
+  if (!perm.ok) return perm.response;
 
   try {
     const body = await req.json();
@@ -145,8 +145,8 @@ export async function POST(req: NextRequest) {
 
     await logActivity({
       actorType: "ADMIN",
-      actorId: admin.id,
-      actorLabel: admin.username,
+      actorId: perm.user.id,
+      actorLabel: perm.user.username,
       action: Activity.AdminStaffCreate,
       targetType: "Staff",
       targetId: created.id,
