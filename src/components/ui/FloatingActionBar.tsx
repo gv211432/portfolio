@@ -32,19 +32,10 @@ export default function FloatingActionBar() {
 
   const [showScrollTop, setShowScrollTop] = useState(false);
 
-  const [isVertical, setIsVertical] = useState(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("fab-vertical") === "true";
-    }
-    return false;
-  });
-
-  const [isHidden, setIsHidden] = useState(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("fab-hidden") === "true";
-    }
-    return false;
-  });
+  // Always false on first render so SSR and client hydration match.
+  // Real values are restored from localStorage in the effect below.
+  const [isVertical, setIsVertical] = useState(false);
+  const [isHidden, setIsHidden]     = useState(false);
 
   const [isHomePage, setIsHomePage] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -61,13 +52,14 @@ export default function FloatingActionBar() {
     return () => window.removeEventListener("resize", check);
   }, []);
 
+  // Restore persisted preferences after mount (client-only, safe from hydration mismatch)
   useEffect(() => {
-    localStorage.setItem("fab-vertical", String(isVertical));
-  }, [isVertical]);
+    setIsVertical(localStorage.getItem("fab-vertical") === "true");
+    setIsHidden(localStorage.getItem("fab-hidden") === "true");
+  }, []);
 
-  useEffect(() => {
-    localStorage.setItem("fab-hidden", String(isHidden));
-  }, [isHidden]);
+  useEffect(() => { localStorage.setItem("fab-vertical", String(isVertical)); }, [isVertical]);
+  useEffect(() => { localStorage.setItem("fab-hidden",   String(isHidden));   }, [isHidden]);
 
   useEffect(() => {
     const container = document.querySelector("[data-scroll-container]");
