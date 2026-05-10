@@ -135,33 +135,38 @@ You'll be asked to change your password and set up 2FA on first login.`;
 }
 
 /** Email-OTP challenge (2FA setup verification OR login 2FA). */
+type OtpPurpose = "setup" | "login" | "password_reset" | "totp_reset";
+
+const OTP_META: Record<OtpPurpose, { title: string; body: string; subject: (code: string) => string }> = {
+  setup:          { title: "Verify your email for 2FA",  body: "Enter this code to finish enabling email-based two-factor authentication.", subject: () => "Verify your email for 2FA" },
+  login:          { title: "Your sign-in code",          body: "Enter this code to complete sign-in.",                                     subject: (c) => `Your code: ${c}` },
+  password_reset: { title: "Password reset verification", body: "Enter this code along with your authenticator code to reset your password.", subject: (c) => `Password reset code: ${c}` },
+  totp_reset:     { title: "Authenticator reset verification", body: "Enter this code along with your current password to reset your authenticator app.", subject: (c) => `Authenticator reset code: ${c}` },
+};
+
 export async function sendOtpCode(args: {
   to: string;
   toName?: string;
   code: string;
-  purpose: "setup" | "login";
+  purpose: OtpPurpose;
   staffId: string;
 }): Promise<void> {
-  const title = args.purpose === "setup" ? "Verify your email for 2FA" : "Your sign-in code";
+  const meta = OTP_META[args.purpose];
   const html = wrap(`
-    <h2 style="margin:0 0 16px;font-size:22px;color:#111827;">${title}</h2>
-    <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">
-      ${args.purpose === "setup"
-        ? "Enter this code to finish enabling email-based two-factor authentication."
-        : "Enter this code to complete sign-in."}
-    </p>
+    <h2 style="margin:0 0 16px;font-size:22px;color:#111827;">${meta.title}</h2>
+    <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">${meta.body}</p>
     <div style="background:#f8fafc;border-radius:8px;padding:24px;text-align:center;margin:20px 0;">
       <div style="font-size:36px;letter-spacing:8px;font-weight:700;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:#111827;">${args.code}</div>
     </div>
-    <p style="margin:0;font-size:12px;color:#9ca3af;">Code expires in 10 minutes. If you didn't request this, you can safely ignore this message.</p>
+    <p style="margin:0;font-size:12px;color:#9ca3af;">Code expires in 10 minutes. If you didn't request this, contact support immediately.</p>
   `, args.code);
 
-  const text = `${title}\n\nCode: ${args.code}\n\nExpires in 10 minutes.`;
+  const text = `${meta.title}\n\nCode: ${args.code}\n\nExpires in 10 minutes.`;
 
   await sendSystem({
     to: args.to,
     toName: args.toName,
-    subject: args.purpose === "setup" ? "Verify your email for 2FA" : `Your code: ${args.code}`,
+    subject: meta.subject(args.code),
     html, text,
     refType: `staff_otp_${args.purpose}`,
     refId: args.staffId,

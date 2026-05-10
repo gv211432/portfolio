@@ -178,7 +178,9 @@ function LoginForm({
 }
 
 // ─── Forgot password flow ──────────────────────────────────────────────────────
-type FpStep = "email" | "otp" | "success";
+// Requires BOTH TOTP + EMAIL_OTP to be enrolled for self-service reset.
+// If only one method enrolled → show clear "contact support" message.
+type FpStep = "email" | "verify" | "success";
 
 function ForgotPasswordFlow({
   onBack, onContactSupport, onDone,
@@ -187,121 +189,181 @@ function ForgotPasswordFlow({
   onContactSupport: () => void;
   onDone: () => void;
 }) {
-  const [fpStep, setFpStep] = useState<FpStep>("email");
-
-  // "email" step state
-  const [email, setEmail] = useState("");
+  const [fpStep, setFpStep]         = useState<FpStep>("email");
+  const [email, setEmail]           = useState("");
   const [maskedEmail, setMaskedEmail] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  // "otp" step state
-  const [code, setCode] = useState("");
-  const [newPw, setNewPw] = useState("");
-  const [confirmPw, setConfirmPw] = useState("");
-  const [showPw, setShowPw] = useState(false);
-  const [otpBusy, setOtpBusy] = useState(false);
-  const [otpError, setOtpError] = useState<string | null>(null);
+  const [emailOtpCode, setEmailOtpCode] = useState("");
+  const [totpCode, setTotpCode]     = useState("");
+  const [newPw, setNewPw]           = useState("");
+  const [confirmPw, setConfirmPw]   = useState("");
+  const [showPw, setShowPw]         = useState(false);
+  const [busy, setBusy]             = useState(false);
+  const [error, setError]           = useState<string | null>(null);
+  // enrolledMethods returned by the API when canReset: false
+  const [enrolledMethods, setEnrolledMethods] = useState<string[]>([]);
 
   async function requestCode(e: React.FormEvent) {
     e.preventDefault();
-    setBusy(true); setError(null);
-    const res = await fetch("/api/staff/auth/forgot-password", {
-      method: "POST",
+    setBusy(true); setError(null); setEnrolledMethods([]);
+    const res  = await fetch("/api/staff/auth/forgot-password", {
+      method:  "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: email.trim() }),
+      body:    JSON.stringify({ email: email.trim() }),
     });
     const data = await res.json();
     setBusy(false);
 
     if (!res.ok) { setError(data.error ?? "Request failed"); return; }
 
-    if (!data.hasRecovery) {
-      // No recovery email on the account — prompt to contact support
-      setError("__no_recovery__");
+    if (!data.canReset) {
+      setEnrolledMethods(data.enrolledMethods ?? []);
+      setError("__cannot_reset__");
       return;
     }
 
-    setMaskedEmail(data.maskedEmail ?? "your recovery email");
-    setFpStep("otp");
+    setMaskedEmail(data.maskedEmail ?? "your 2FA email");
+    setFpStep("verify");
   }
 
-  async function verifyCode(e: React.FormEvent) {
+  async function verifyAndReset(e: React.FormEvent) {
     e.preventDefault();
-    setOtpError(null);
-    if (newPw.length < 10) { setOtpError("Password must be at least 10 characters"); return; }
-    if (newPw !== confirmPw) { setOtpError("Passwords don't match"); return; }
+    setError(null);
+    if (newPw.length < 10) { setError("Password must be at least 10 characters"); return; }
+    if (newPw !== confirmPw) { setError("Passwords don't match"); return; }
 
-    setOtpBusy(true);
-    const res = await fetch("/api/staff/auth/forgot-password/verify", {
-      method: "POST",
+    setBusy(true);
+    const res  = await fetch("/api/staff/auth/forgot-password/verify", {
+      method:  "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: email.trim(), code: code.trim(), newPassword: newPw }),
+      body:    JSON.stringify({ email: email.trim(), emailOtpCode, totpCode, newPassword: newPw }),
     });
     const data = await res.json();
-    setOtpBusy(false);
+    setBusy(false);
 
-    if (!res.ok) { setOtpError(data.error ?? "Verification failed"); return; }
+    if (!res.ok) { setError(data.error ?? "Verification failed"); return; }
     setFpStep("success");
   }
 
   // ── step: enter email ──────────────────────────────────────────
   if (fpStep === "email") {
-    const noRecovery = error === "__no_recovery__";
+    const cannotReset = error === "__cannot_reset__";
+    const hasTotp     = enrolledMethods.includes("TOTP");
+    const hasEmail    = enrolledMethods.includes("EMAIL_OTP");
+    const hasNeither  = enrolledMethods.length === 0;
+
     return (
       <form onSubmit={requestCode} className="space-y-4">
         <button type="button" onClick={onBack} className="text-sm text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 flex items-center gap-1">
           ← Back to sign in
         </button>
 
-        <p className="text-sm text-gray-600 dark:text-slate-300">
-          Enter your work email address and we'll send a reset code to your registered recovery email.
-        </p>
+        {/* Instructions — always visible */}
+        <div className="rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 px-4 py-3 space-y-1">
+          <p className="text-sm font-medium text-blue-800 dark:text-blue-200">How password reset works</p>
+          <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
+            You need <strong>both</strong> your authenticator app (TOTP) <em>and</em> your 2FA email to reset your password.
+            If you only have one method set up, you cannot self-reset — please contact your admin.
+          </p>
+        </div>
 
         <LabeledInput label="Work email address" type="email" value={email} onChange={setEmail} required autoFocus />
 
-        {noRecovery && (
-          <div className="rounded-lg bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-700/60 p-4 space-y-2">
-            <p className="text-sm font-medium text-amber-800 dark:text-amber-300">No recovery email on file</p>
-            <p className="text-xs text-amber-700 dark:text-amber-400">
-              Your account doesn't have a recovery email. Please contact support to regain access.
+        {/* Cannot-reset banner (shown after server responds) */}
+        {cannotReset && (
+          <div className="rounded-lg bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-700/60 p-4 space-y-3">
+            <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">
+              Self-reset not available
             </p>
+            {hasNeither ? (
+              <p className="text-xs text-amber-700 dark:text-amber-400">
+                No 2FA methods are enrolled on this account, or the account doesn't exist.
+              </p>
+            ) : (
+              <>
+                <p className="text-xs text-amber-700 dark:text-amber-400">
+                  You only have{" "}
+                  <strong>{hasTotp ? "an authenticator app (TOTP)" : "email OTP"}</strong>{" "}
+                  enrolled. Both TOTP <em>and</em> email 2FA are required for self-service reset.
+                  Enrol both methods when you next log in, or contact support now.
+                </p>
+                <div className="flex flex-wrap gap-2 text-xs">
+                  <span className={`px-2 py-0.5 rounded-full font-medium ${hasTotp ? "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300" : "bg-gray-100 dark:bg-slate-800 text-gray-400"}`}>
+                    {hasTotp ? "✓ Authenticator (TOTP)" : "✗ Authenticator (TOTP)"}
+                  </span>
+                  <span className={`px-2 py-0.5 rounded-full font-medium ${hasEmail ? "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300" : "bg-gray-100 dark:bg-slate-800 text-gray-400"}`}>
+                    {hasEmail ? "✓ Email OTP" : "✗ Email OTP"}
+                  </span>
+                </div>
+              </>
+            )}
             <button
               type="button"
               onClick={onContactSupport}
-              className="mt-1 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-amber-600 hover:bg-amber-700 text-white transition"
+              className="w-full py-2 text-xs font-medium rounded-lg bg-amber-600 hover:bg-amber-700 text-white transition"
             >
-              Contact support →
+              Contact support for manual reset →
             </button>
           </div>
         )}
 
-        {error && error !== "__no_recovery__" && <ErrorMsg text={error} />}
+        {error && error !== "__cannot_reset__" && <ErrorMsg text={error} />}
 
         <button type="submit" disabled={busy}
           className="w-full py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition disabled:opacity-50">
-          {busy ? "Sending code…" : "Send reset code"}
+          {busy ? "Checking account…" : "Send reset code"}
         </button>
       </form>
     );
   }
 
-  // ── step: enter OTP + new password ────────────────────────────
-  if (fpStep === "otp") {
+  // ── step: enter both codes + new password ──────────────────────
+  if (fpStep === "verify") {
     return (
-      <form onSubmit={verifyCode} className="space-y-4">
-        <button type="button" onClick={() => { setFpStep("email"); setCode(""); setOtpError(null); }}
+      <form onSubmit={verifyAndReset} className="space-y-4">
+        <button type="button" onClick={() => { setFpStep("email"); setError(null); }}
           className="text-sm text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200">
           ← Change email
         </button>
 
-        <div className="rounded-lg bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-200 dark:border-indigo-700/60 px-4 py-3 text-sm text-indigo-800 dark:text-indigo-200">
-          We sent a 6-digit code to <strong>{maskedEmail}</strong>. It expires in 15 minutes.
+        <div className="rounded-lg bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-200 dark:border-indigo-700/60 px-4 py-3 text-sm text-indigo-800 dark:text-indigo-200 space-y-1">
+          <p className="font-medium">Two factors required to reset your password</p>
+          <p className="text-xs opacity-90">
+            A 6-digit code was sent to <strong>{maskedEmail}</strong> (expires in 10 min).
+            You also need the current code from your authenticator app.
+          </p>
         </div>
 
-        <LabeledInput label="Reset code" value={code} onChange={setCode} required autoFocus
-          placeholder="6-digit code" />
+        {/* Factor 1: Email OTP */}
+        <div>
+          <label className="block text-xs font-medium text-gray-500 dark:text-slate-400 mb-1">
+            Email code <span className="text-gray-400 dark:text-slate-500 font-normal">(sent to {maskedEmail})</span>
+          </label>
+          <input
+            type="text" inputMode="numeric" maxLength={6}
+            value={emailOtpCode}
+            onChange={(e) => setEmailOtpCode(e.target.value.replace(/\D/g, ""))}
+            placeholder="000000"
+            className="w-full px-3 py-2.5 rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-sm text-center font-mono tracking-widest text-gray-900 dark:text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition"
+            required autoFocus
+          />
+        </div>
 
+        {/* Factor 2: TOTP */}
+        <div>
+          <label className="block text-xs font-medium text-gray-500 dark:text-slate-400 mb-1">
+            Authenticator code <span className="text-gray-400 dark:text-slate-500 font-normal">(from your app)</span>
+          </label>
+          <input
+            type="text" inputMode="numeric" maxLength={6}
+            value={totpCode}
+            onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, ""))}
+            placeholder="000000"
+            className="w-full px-3 py-2.5 rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-sm text-center font-mono tracking-widest text-gray-900 dark:text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition"
+            required
+          />
+        </div>
+
+        {/* New password */}
         <div>
           <label className="block text-xs font-medium text-gray-500 dark:text-slate-400 mb-1">New password</label>
           <div className="relative">
@@ -309,8 +371,7 @@ function ForgotPasswordFlow({
               type={showPw ? "text" : "password"}
               value={newPw}
               onChange={(e) => setNewPw(e.target.value)}
-              required
-              minLength={10}
+              required minLength={10}
               className="w-full px-3 py-2.5 pr-10 rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-sm text-gray-900 dark:text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition"
             />
             <button type="button" onClick={() => setShowPw(!showPw)}
@@ -318,16 +379,18 @@ function ForgotPasswordFlow({
               {showPw ? "Hide" : "Show"}
             </button>
           </div>
+          <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">Minimum 10 characters</p>
         </div>
 
         <LabeledInput label="Confirm new password" type={showPw ? "text" : "password"}
           value={confirmPw} onChange={setConfirmPw} required />
 
-        {otpError && <ErrorMsg text={otpError} />}
+        {error && <ErrorMsg text={error} />}
 
-        <button type="submit" disabled={otpBusy || !code || !newPw || !confirmPw}
+        <button type="submit"
+          disabled={busy || emailOtpCode.length < 6 || totpCode.length < 6 || newPw.length < 10 || !confirmPw}
           className="w-full py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition disabled:opacity-50">
-          {otpBusy ? "Verifying…" : "Reset password"}
+          {busy ? "Verifying…" : "Reset password"}
         </button>
       </form>
     );
@@ -339,7 +402,7 @@ function ForgotPasswordFlow({
       <div className="rounded-lg bg-green-50 dark:bg-green-950/60 border border-green-200 dark:border-green-700/60 px-4 py-4 text-center">
         <div className="text-2xl mb-2">✓</div>
         <p className="text-sm font-medium text-green-800 dark:text-green-200">Password reset successfully</p>
-        <p className="text-xs text-green-700 dark:text-green-300 mt-1">You can now sign in with your new password.</p>
+        <p className="text-xs text-green-700 dark:text-green-300 mt-1">All active sessions have been signed out. Sign in with your new password.</p>
       </div>
       <button onClick={onDone}
         className="w-full py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition">
@@ -488,24 +551,52 @@ function PasswordResetForm({ onDone }: { onDone: () => void }) {
 }
 
 function TwoFactorSetup({ me, onDone, onLogout }: { me: any; onDone: () => void; onLogout: () => void }) {
-  const [picked, setPicked] = useState<"TOTP" | "EMAIL_OTP" | null>(null);
+  const [picked, setPicked]         = useState<"TOTP" | "EMAIL_OTP" | "RESET_TOTP" | null>(null);
   const [confirmLogout, setConfirmLogout] = useState(false);
-  const totpEnabled = !!me?.twoFactor?.find((f: any) => f.method === "TOTP" && f.enabled);
+  const totpEnabled  = !!me?.twoFactor?.find((f: any) => f.method === "TOTP"      && f.enabled);
   const emailEnabled = !!me?.twoFactor?.find((f: any) => f.method === "EMAIL_OTP" && f.enabled);
-  const anyEnabled = totpEnabled || emailEnabled;
+  const bothEnabled  = totpEnabled && emailEnabled;
+  const anyEnabled   = totpEnabled || emailEnabled;
 
-  if (picked === "TOTP") return <TotpEnroll onBack={() => setPicked(null)} onDone={onDone} />;
-  if (picked === "EMAIL_OTP") return <EmailOtpEnroll me={me} onBack={() => setPicked(null)} onDone={onDone} />;
+  if (picked === "TOTP")       return <TotpEnroll onBack={() => setPicked(null)} onDone={onDone} />;
+  if (picked === "EMAIL_OTP")  return <EmailOtpEnroll me={me} onBack={() => setPicked(null)} onDone={onDone} />;
+  if (picked === "RESET_TOTP") return <TotpResetFlow onBack={() => setPicked(null)} onDone={() => { setPicked(null); onDone(); }} />;
 
   return (
     <div className="space-y-4">
+      {/* Warning: only one method — can't self-reset password */}
+      {anyEnabled && !bothEnabled && (
+        <div className="rounded-lg bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-700/60 px-3 py-2.5 flex gap-2">
+          <span className="text-amber-500 shrink-0 mt-0.5">⚠</span>
+          <div>
+            <p className="text-xs font-semibold text-amber-800 dark:text-amber-300">Enable both methods for account recovery</p>
+            <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5 leading-relaxed">
+              If you ever forget your password, you'll need <strong>both</strong> an authenticator app and email OTP to reset it yourself.
+              With only one method, you'll have to contact your admin for a manual reset.
+            </p>
+          </div>
+        </div>
+      )}
+
       <p className="text-sm text-gray-600 dark:text-slate-300">
-        Set up <strong>at least one</strong> factor. You can add both for extra security.
+        Set up <strong>at least one</strong> factor. Enable both for full self-service account recovery.
       </p>
       <div className="space-y-2">
         <MethodCard title="Authenticator app (TOTP)" desc="Google Authenticator, 1Password, etc. — scan a QR code." enabled={totpEnabled} onClick={() => setPicked("TOTP")} />
         <MethodCard title="Email one-time code" desc="We send a 6-digit code to your email." enabled={emailEnabled} onClick={() => setPicked("EMAIL_OTP")} />
       </div>
+
+      {/* TOTP reset option — shown only when TOTP is enabled and email OTP is also available */}
+      {totpEnabled && emailEnabled && (
+        <button
+          type="button"
+          onClick={() => setPicked("RESET_TOTP")}
+          className="w-full text-left px-3 py-2.5 rounded-lg border border-dashed border-gray-300 dark:border-slate-600 hover:border-gray-400 dark:hover:border-slate-500 transition text-xs text-gray-500 dark:text-slate-400"
+        >
+          Lost access to your authenticator? <span className="text-indigo-600 dark:text-indigo-400 font-medium">Reset TOTP →</span>
+        </button>
+      )}
+
       {anyEnabled && (
         <button onClick={onDone} className="w-full py-2.5 rounded-lg bg-gray-900 dark:bg-slate-800 text-white text-sm font-medium">
           Continue to mailbox
@@ -561,12 +652,144 @@ function MethodCard({ title, desc, enabled, onClick }: { title: string; desc: st
   );
 }
 
+// ─── TOTP reset flow (password + email OTP → disable TOTP → re-enroll) ────────
+function TotpResetFlow({ onBack, onDone }: { onBack: () => void; onDone: () => void }) {
+  const [step, setStep]           = useState<"send" | "verify" | "success">("send");
+  const [maskedEmail, setMaskedEmail] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [emailOtpCode, setEmailOtpCode] = useState("");
+  const [showPw, setShowPw]       = useState(false);
+  const [busy, setBusy]           = useState(false);
+  const [error, setError]         = useState<string | null>(null);
+  const [showReEnroll, setShowReEnroll] = useState(false);
+
+  async function sendOtp() {
+    setBusy(true); setError(null);
+    const res  = await fetch("/api/staff/auth/2fa/totp/reset");
+    const data = await res.json();
+    setBusy(false);
+    if (!res.ok) { setError(data.error ?? "Failed to send code"); return; }
+    setMaskedEmail(data.maskedEmail);
+    setStep("verify");
+  }
+
+  async function verifyAndReset(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true); setError(null);
+    const res  = await fetch("/api/staff/auth/2fa/totp/reset", {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ currentPassword, emailOtpCode }),
+    });
+    const data = await res.json();
+    setBusy(false);
+    if (!res.ok) { setError(data.error ?? "Verification failed"); return; }
+    setStep("success");
+  }
+
+  if (step === "success" && showReEnroll) {
+    return <TotpEnroll onBack={() => setShowReEnroll(false)} onDone={onDone} />;
+  }
+
+  if (step === "success") {
+    return (
+      <div className="space-y-4">
+        <div className="rounded-lg bg-green-50 dark:bg-green-950/60 border border-green-200 dark:border-green-700/60 px-4 py-4 text-center">
+          <div className="text-2xl mb-2">✓</div>
+          <p className="text-sm font-medium text-green-800 dark:text-green-200">Authenticator disabled</p>
+          <p className="text-xs text-green-700 dark:text-green-300 mt-1">Set up a new authenticator app now to keep your account secure.</p>
+        </div>
+        <button onClick={() => setShowReEnroll(true)}
+          className="w-full py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition">
+          Set up new authenticator →
+        </button>
+        <button onClick={onBack} className="w-full text-xs text-gray-400 dark:text-slate-500 hover:underline">
+          Do it later
+        </button>
+      </div>
+    );
+  }
+
+  if (step === "send") {
+    return (
+      <div className="space-y-4">
+        <button type="button" onClick={onBack} className="text-sm text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200">
+          ← Back
+        </button>
+        <div className="rounded-lg bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-700/60 px-4 py-3 space-y-1">
+          <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">Reset authenticator app</p>
+          <p className="text-xs text-amber-700 dark:text-amber-400 leading-relaxed">
+            This will disable your current TOTP. You'll need your <strong>current password</strong> and a code sent to your <strong>2FA email</strong> to confirm.
+          </p>
+        </div>
+        {error && <ErrorMsg text={error} />}
+        <button onClick={sendOtp} disabled={busy}
+          className="w-full py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition disabled:opacity-50">
+          {busy ? "Sending code…" : "Send email verification code →"}
+        </button>
+      </div>
+    );
+  }
+
+  // step === "verify"
+  return (
+    <form onSubmit={verifyAndReset} className="space-y-4">
+      <button type="button" onClick={() => { setStep("send"); setError(null); }}
+        className="text-sm text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200">
+        ← Back
+      </button>
+      <div className="rounded-lg bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-200 dark:border-indigo-700/60 px-4 py-3 text-xs text-indigo-800 dark:text-indigo-200">
+        Code sent to <strong>{maskedEmail}</strong>. Enter it below along with your current password.
+      </div>
+
+      <div>
+        <label className="block text-xs font-medium text-gray-500 dark:text-slate-400 mb-1">
+          Email code <span className="text-gray-400 dark:text-slate-500 font-normal">(sent to {maskedEmail})</span>
+        </label>
+        <input
+          type="text" inputMode="numeric" maxLength={6}
+          value={emailOtpCode}
+          onChange={(e) => setEmailOtpCode(e.target.value.replace(/\D/g, ""))}
+          placeholder="000000" autoFocus required
+          className="w-full px-3 py-2.5 rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-sm text-center font-mono tracking-widest text-gray-900 dark:text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition"
+        />
+      </div>
+
+      <div>
+        <label className="block text-xs font-medium text-gray-500 dark:text-slate-400 mb-1">Current password</label>
+        <div className="relative">
+          <input
+            type={showPw ? "text" : "password"}
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            required
+            className="w-full px-3 py-2.5 pr-10 rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-sm text-gray-900 dark:text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition"
+          />
+          <button type="button" onClick={() => setShowPw((p) => !p)}
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs">
+            {showPw ? "Hide" : "Show"}
+          </button>
+        </div>
+      </div>
+
+      {error && <ErrorMsg text={error} />}
+
+      <button type="submit" disabled={busy || emailOtpCode.length < 6 || !currentPassword}
+        className="w-full py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium transition disabled:opacity-50">
+        {busy ? "Verifying…" : "Disable authenticator"}
+      </button>
+    </form>
+  );
+}
+
+// ─── TOTP enrolment ────────────────────────────────────────────────────────────
 function TotpEnroll({ onBack, onDone }: { onBack: () => void; onDone: () => void }) {
-  const [qr, setQr] = useState<string | null>(null);
+  const [qr, setQr]         = useState<string | null>(null);
   const [secret, setSecret] = useState<string | null>(null);
-  const [code, setCode] = useState("");
-  const [err, setErr] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [code, setCode]     = useState("");
+  const [err, setErr]       = useState<string | null>(null);
+  const [busy, setBusy]     = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     fetch("/api/staff/auth/2fa/totp/setup", { method: "POST" })
@@ -586,19 +809,53 @@ function TotpEnroll({ onBack, onDone }: { onBack: () => void; onDone: () => void
     onDone();
   }
 
+  async function copySecret() {
+    if (!secret) return;
+    await navigator.clipboard.writeText(secret);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
   return (
     <form onSubmit={verify} className="space-y-4">
       <button type="button" onClick={onBack} className="text-sm text-gray-500">← Back</button>
       <h3 className="font-medium text-gray-900 dark:text-white">Authenticator app</h3>
       {qr ? (
         <>
-          <img src={qr} alt="QR code" className="mx-auto rounded-lg border border-gray-200 dark:border-slate-700" />
+          {/* White background forced so QR is readable in both light and dark mode */}
+          <div className="mx-auto w-fit p-3 bg-white rounded-xl border border-gray-200 dark:border-slate-600 shadow-sm">
+            <img src={qr} alt="QR code" width={200} height={200} />
+          </div>
+
           {secret && (
-            <div className="text-center">
-              <p className="text-xs text-gray-500 mb-1">Or enter this secret manually</p>
-              <code className="text-xs font-mono bg-gray-100 dark:bg-slate-800 px-2 py-1 rounded">{secret}</code>
+            <div>
+              <p className="text-xs text-gray-500 dark:text-slate-400 mb-1.5 text-center">
+                Can't scan? Enter this key manually in your app
+              </p>
+              <div className="flex items-center gap-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg px-3 py-2">
+                <code className="flex-1 text-xs font-mono text-gray-800 dark:text-slate-200 tracking-widest break-all">
+                  {secret}
+                </code>
+                <button
+                  type="button"
+                  onClick={copySecret}
+                  title="Copy secret key"
+                  className="shrink-0 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition"
+                >
+                  {copied ? (
+                    <svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  ) : (
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                  )}
+                </button>
+              </div>
             </div>
           )}
+
           <LabeledInput label="Enter 6-digit code from your app" value={code} onChange={setCode} required autoFocus />
           {err && <ErrorMsg text={err} />}
           <button type="submit" disabled={busy}
@@ -615,7 +872,7 @@ function TotpEnroll({ onBack, onDone }: { onBack: () => void; onDone: () => void
 
 function EmailOtpEnroll({ me, onBack, onDone }: { me: any; onBack: () => void; onDone: () => void }) {
   const [stage, setStage] = useState<"SENDING" | "CONFIRM">("SENDING");
-  const [target, setTarget] = useState(me?.staff?.email ?? "");
+  const [target, setTarget] = useState(me?.staff?.recoveryEmail ?? "");
   const [code, setCode] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -651,7 +908,9 @@ function EmailOtpEnroll({ me, onBack, onDone }: { me: any; onBack: () => void; o
         <button onClick={onBack} className="text-sm text-gray-500">← Back</button>
         <h3 className="font-medium text-gray-900 dark:text-white">Email one-time code</h3>
         <LabeledInput label="Send codes to" type="email" value={target} onChange={setTarget} required />
-        <p className="text-xs text-gray-500">Defaults to your new mailbox address; change it if SES isn't receiving yet.</p>
+        <p className="text-xs text-gray-500">
+          Use a personal email you control — not your work mailbox. Pre-filled from the email your admin used when creating your account.
+        </p>
         {err && <ErrorMsg text={err} />}
         <button onClick={sendCode} disabled={busy}
           className="w-full py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium disabled:opacity-50">

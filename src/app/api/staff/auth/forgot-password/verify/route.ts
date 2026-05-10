@@ -1,35 +1,40 @@
 /**
  * POST /api/staff/auth/forgot-password/verify
- * Body: { email, code, newPassword }
+ * Body: { email, emailOtpCode, totpCode, newPassword }
  *
- * Verifies the OTP stored in ChatKVStore and updates the password.
+ * Verifies BOTH factors before resetting the password:
+ *   1. EMAIL_OTP code — matched against pending "pwd_reset" OTP in StaffTwoFactor
+ *   2. TOTP code      — verified against the stored TOTP secret
+ *
+ * Both must pass. Either failure returns 401.
  * No auth required (pre-login).
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
+import speakeasy from "speakeasy";
 import prisma from "@/lib/prisma";
 import { hashPassword } from "@/lib/mail/staffAuth";
 
-const KV_PREFIX = "pwd_reset:";
-
 export async function POST(req: NextRequest) {
   try {
-    const { email, code, newPassword } = await req.json();
+    const { email, emailOtpCode, totpCode, newPassword } = await req.json();
 
-    if (typeof email !== "string" || typeof code !== "string" || typeof newPassword !== "string") {
-      return NextResponse.json({ error: "email, code and newPassword required" }, { status: 400 });
+    if (
+      typeof email        !== "string" ||
+      typeof emailOtpCode !== "string" ||
+      typeof totpCode     !== "string" ||
+      typeof newPassword  !== "string"
+    ) {
+      return NextResponse.json({ error: "email, emailOtpCode, totpCode and newPassword are all required" }, { status: 400 });
     }
-    if (newPassword.length < 10) {
-      return NextResponse.json({ error: "Password must be at least 10 characters" }, { status: 400 });
-    }
-    if (newPassword.length > 256) {
-      return NextResponse.json({ error: "Password too long" }, { status: 400 });
-    }
+
+    if (newPassword.length < 10) return NextResponse.json({ error: "Password must be at least 10 characters" }, { status: 400 });
+    if (newPassword.length > 256) return NextResponse.json({ error: "Password too long" }, { status: 400 });
 
     const staffAddr = await prisma.staffEmailAddress.findUnique({
       where: { email: email.trim().toLowerCase() },
-      include: { staff: true },
+      include: { staff: { include: { twoFactor: true } } },
     });
 
     if (!staffAddr || staffAddr.staff.status !== "ACTIVE") {
@@ -37,39 +42,62 @@ export async function POST(req: NextRequest) {
     }
 
     const { staff } = staffAddr;
-    const kvKey = KV_PREFIX + staff.id;
+    const factors = staff.twoFactor;
 
-    const kv = await prisma.chatKVStore.findUnique({ where: { key: kvKey } });
-    if (!kv) {
-      return NextResponse.json({ error: "No reset request found. Please request a new code." }, { status: 400 });
+    // ── Verify EMAIL_OTP ──────────────────────────────────────────────────────
+    const emailRec = factors.find((f) => f.method === "EMAIL_OTP" && f.enabled);
+    if (!emailRec?.pendingOtpHash || emailRec.pendingOtpPurpose !== "pwd_reset") {
+      return NextResponse.json({ error: "No reset code found. Request a new one." }, { status: 400 });
+    }
+    if (!emailRec.pendingOtpExpires || emailRec.pendingOtpExpires < new Date()) {
+      // Clear expired OTP
+      await prisma.staffTwoFactor.update({
+        where: { staffId_method: { staffId: staff.id, method: "EMAIL_OTP" } },
+        data: { pendingOtpHash: null, pendingOtpExpires: null, pendingOtpPurpose: null },
+      });
+      return NextResponse.json({ error: "Code expired. Request a new one." }, { status: 401 });
     }
 
-    let parsed: { hash: string; expiresAt: string; staffId: string };
-    try {
-      parsed = JSON.parse(kv.value);
-    } catch {
-      return NextResponse.json({ error: "Invalid reset token" }, { status: 400 });
+    const emailOtpValid = await bcrypt.compare(emailOtpCode.trim(), emailRec.pendingOtpHash);
+    if (!emailOtpValid) {
+      return NextResponse.json({ error: "Invalid email code." }, { status: 401 });
     }
 
-    if (new Date(parsed.expiresAt) < new Date()) {
-      await prisma.chatKVStore.delete({ where: { key: kvKey } }).catch(() => {});
-      return NextResponse.json({ error: "Code has expired. Please request a new one." }, { status: 401 });
+    // ── Verify TOTP ───────────────────────────────────────────────────────────
+    const totpRec = factors.find((f) => f.method === "TOTP" && f.enabled && f.totpSecret);
+    if (!totpRec?.totpSecret) {
+      return NextResponse.json({ error: "Authenticator not set up." }, { status: 400 });
     }
 
-    const valid = await bcrypt.compare(code.trim(), parsed.hash);
-    if (!valid) {
-      return NextResponse.json({ error: "Incorrect code" }, { status: 401 });
-    }
-
-    // Update password and clear mustResetPassword flag
-    const passwordHash = await hashPassword(newPassword);
-    await prisma.staff.update({
-      where: { id: staff.id },
-      data: { passwordHash, mustResetPassword: false },
+    const totpValid = speakeasy.totp.verify({
+      secret:   totpRec.totpSecret,
+      encoding: "base32",
+      token:    totpCode.trim().replace(/\s/g, ""),
+      window:   1,
     });
+    if (!totpValid) {
+      return NextResponse.json({ error: "Invalid authenticator code." }, { status: 401 });
+    }
 
-    // Clean up OTP
-    await prisma.chatKVStore.delete({ where: { key: kvKey } }).catch(() => {});
+    // ── Both factors verified — reset password ────────────────────────────────
+    const passwordHash = await hashPassword(newPassword);
+
+    await prisma.$transaction([
+      prisma.staff.update({
+        where: { id: staff.id },
+        data: { passwordHash, mustResetPassword: false },
+      }),
+      // Clear the used OTP
+      prisma.staffTwoFactor.update({
+        where: { staffId_method: { staffId: staff.id, method: "EMAIL_OTP" } },
+        data: { pendingOtpHash: null, pendingOtpExpires: null, pendingOtpPurpose: null },
+      }),
+      // Revoke all active sessions for security
+      prisma.staffSession.updateMany({
+        where: { staffId: staff.id, revokedAt: null },
+        data:  { revokedAt: new Date() },
+      }),
+    ]);
 
     return NextResponse.json({ ok: true });
   } catch (err) {
