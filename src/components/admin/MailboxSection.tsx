@@ -77,11 +77,11 @@ export default function MailboxSection() {
         <div className="inline-flex rounded-lg bg-slate-100 dark:bg-slate-800 p-1">
           <button
             onClick={() => setView("mailbox")}
-            className={`px-3 py-1.5 text-sm rounded ${view === "mailbox" ? "bg-white dark:bg-slate-900 shadow" : "text-slate-500"}`}
+            className={`px-3 py-1.5 text-sm rounded ${view === "mailbox" ? "bg-white dark:bg-slate-900 shadow text-slate-900 dark:text-white" : "text-slate-500"}`}
           >Impersonate Mailbox</button>
           <button
             onClick={() => setView("outbox")}
-            className={`px-3 py-1.5 text-sm rounded ${view === "outbox" ? "bg-white dark:bg-slate-900 shadow" : "text-slate-500"}`}
+            className={`px-3 py-1.5 text-sm rounded ${view === "outbox" ? "bg-white dark:bg-slate-900 shadow text-slate-900 dark:text-white" : "text-slate-500"}`}
           >Outbox Review</button>
         </div>
       </div>
