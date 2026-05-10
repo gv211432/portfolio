@@ -100,6 +100,50 @@ export async function verifySetupToken(token: string): Promise<string | null> {
 }
 
 /**
+ * Token issued after TOTP is verified but before recovery email is set up.
+ * Allows only the email-setup endpoints — no dashboard access.
+ */
+export async function signEmailSetupToken(adminId: string): Promise<string> {
+  return new SignJWT({ adminId, purpose: "email_setup" })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime("30m")
+    .sign(secret);
+}
+
+export async function verifyEmailSetupToken(token: string): Promise<string | null> {
+  try {
+    const { payload } = await jwtVerify(token, secret);
+    if (payload.purpose !== "email_setup") return null;
+    return payload.adminId as string;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Token issued after forgot-password identity verification passes.
+ * Allows only the password-reset endpoint.
+ */
+export async function signPasswordResetToken(adminId: string): Promise<string> {
+  return new SignJWT({ adminId, purpose: "password_reset" })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime("15m")
+    .sign(secret);
+}
+
+export async function verifyPasswordResetToken(token: string): Promise<string | null> {
+  try {
+    const { payload } = await jwtVerify(token, secret);
+    if (payload.purpose !== "password_reset") return null;
+    return payload.adminId as string;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Returns the current IST hour (0–23).
  * The admin path /admin/[hour] is valid only when [hour] === getISTHour().
  */

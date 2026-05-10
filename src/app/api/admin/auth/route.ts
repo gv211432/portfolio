@@ -5,6 +5,7 @@ import speakeasy from "speakeasy";
 import {
   signAdminToken,
   signSetupToken,
+  signEmailSetupToken,
   setAdminCookie,
   clearAdminCookie,
   requireAdmin,
@@ -12,7 +13,7 @@ import {
 
 type RecoveryCode = { hash: string; used: boolean };
 
-/** POST /api/admin/auth — login (username + password + optional TOTP) */
+/** POST /api/admin/auth — login (username + password + TOTP always expected) */
 export async function POST(request: NextRequest) {
   try {
     const { username, password, totp } = await request.json();
@@ -38,7 +39,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ── 2FA not set up yet ──────────────────────────────────────────────────
+    if (!admin.isActive) {
+      return NextResponse.json(
+        { success: false, message: "Account is disabled. Contact your super admin." },
+        { status: 403 }
+      );
+    }
+
+    // ── TOTP not set up yet → first-login setup flow ───────────────────────
     if (!admin.totpEnabled) {
       const setupToken = await signSetupToken(admin.id);
       return NextResponse.json(
@@ -47,7 +55,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ── 2FA required ────────────────────────────────────────────────────────
+    // ── TOTP required ──────────────────────────────────────────────────────
     if (!totp) {
       return NextResponse.json(
         { success: false, message: "Authenticator code required" },
@@ -89,6 +97,15 @@ export async function POST(request: NextRequest) {
         where: { id: admin.id },
         data: { recoveryCodes: codes },
       });
+    }
+
+    // ── Recovery email not yet verified → must set it up before dashboard ──
+    if (!admin.recoveryEmailVerified) {
+      const emailSetupToken = await signEmailSetupToken(admin.id);
+      return NextResponse.json(
+        { success: false, requiresEmailSetup: true, emailSetupToken },
+        { status: 200 }
+      );
     }
 
     await prisma.adminUser.update({

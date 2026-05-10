@@ -16,6 +16,7 @@ import MailboxSection from "./MailboxSection";
 import InvoiceSection from "./InvoiceSection";
 import RbacSection from "./RbacSection";
 import Breadcrumb from "./shared/Breadcrumb";
+import AdminProfileDrawer from "./AdminProfileDrawer";
 import { useBreadcrumbStore } from "@/Atoms/globalAtoms";
 
 type Section = "dashboard" | "contacts" | "careers" | "chats" | "database" | "ngo" | "notifications" | "staff" | "mailbox" | "policy" | "activity" | "invoice" | "rbac";
@@ -145,6 +146,7 @@ function Sidebar({
   setActive,
   username,
   onLogout,
+  onOpenProfile,
   onClose,
   collapsed,
   onToggleCollapse,
@@ -153,6 +155,7 @@ function Sidebar({
   setActive: (s: Section) => void;
   username: string;
   onLogout: () => void;
+  onOpenProfile: () => void;
   onClose?: () => void;
   collapsed: boolean;
   onToggleCollapse: () => void;
@@ -239,14 +242,15 @@ function Sidebar({
       {/* User footer */}
       <div className={`border-t border-slate-800 ${collapsed ? "px-2 py-3" : "px-3 py-3"}`}>
         {collapsed ? (
-          /* Collapsed: just avatar + sign-out stacked */
+          /* Collapsed: avatar (profile) + sign-out stacked */
           <div className="flex flex-col items-center gap-2">
-            <div
-              title={username}
-              className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-sm font-bold shrink-0"
+            <button
+              onClick={onOpenProfile}
+              title={`${username} — Profile & Security`}
+              className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-sm font-bold shrink-0 hover:bg-indigo-500 transition"
             >
               {username.charAt(0).toUpperCase()}
-            </div>
+            </button>
             <button
               onClick={onLogout}
               title="Sign out"
@@ -260,13 +264,17 @@ function Sidebar({
         ) : (
           /* Expanded: full user row */
           <div className="flex items-center gap-3 px-2 py-1.5 rounded-xl">
-            <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-sm font-bold shrink-0">
+            <button
+              onClick={onOpenProfile}
+              title="Profile & Security"
+              className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-sm font-bold shrink-0 hover:bg-indigo-500 transition"
+            >
               {username.charAt(0).toUpperCase()}
-            </div>
-            <div className="flex-1 min-w-0">
+            </button>
+            <button onClick={onOpenProfile} className="flex-1 min-w-0 text-left hover:opacity-80 transition">
               <p className="text-sm font-medium text-white truncate">{username}</p>
-              <p className="text-xs text-slate-500">Admin</p>
-            </div>
+              <p className="text-xs text-slate-500">Profile & Security</p>
+            </button>
             <button
               onClick={onLogout}
               title="Sign out"
@@ -302,6 +310,7 @@ export default function AdminShell() {
   const [active, setActiveState] = useState<Section>("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const { crumbs, setCrumbs } = useBreadcrumbStore();
 
   // Persist collapse state in localStorage
@@ -402,6 +411,7 @@ export default function AdminShell() {
           setActive={setActive}
           username={username}
           onLogout={handleLogout}
+          onOpenProfile={() => setProfileOpen(true)}
           onClose={() => setSidebarOpen(false)}
           collapsed={collapsed}
           onToggleCollapse={toggleCollapse}
@@ -481,6 +491,9 @@ export default function AdminShell() {
           </main>
         )}
       </div>
+
+      {/* Profile & Security drawer */}
+      {profileOpen && <AdminProfileDrawer onClose={() => setProfileOpen(false)} />}
     </div>
   );
 }

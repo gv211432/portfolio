@@ -208,6 +208,20 @@ model AdminUser {
   totpEnabled   Boolean          @default(false)
   recoveryCodes Json?
 
+  // Recovery email — OTP-verified personal email for account recovery
+  recoveryEmail         String?
+  recoveryEmailVerified Boolean   @default(false)
+
+  // Pending staged email (change-email flow — new address awaiting OTP confirm)
+  pendingNewEmail        String?
+
+  // Email OTP state (shared across all OTP-based flows)
+  pendingEmailOtpHash    String?
+  pendingEmailOtpExpires DateTime?
+  pendingEmailOtpPurpose String?   // "setup_email" | "forgot_password" | "change_password" | "change_email"
+  pendingEmailOtpAttempts Int      @default(0)
+  lastOtpSentAt          DateTime?
+
   // RBAC
   roles        AdminUserRole[]
   activityLogs AdminActivityLog[]

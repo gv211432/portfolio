@@ -4,10 +4,11 @@ import { useState, useEffect, useRef } from "react";
 
 interface Props {
   setupToken: string;
-  onComplete: () => void; // go back to login
+  /** Called when the full setup (TOTP + email) is complete and a session is issued */
+  onComplete: (username?: string) => void;
 }
 
-type Step = "qr" | "verify" | "recovery";
+type Step = "qr" | "verify" | "recovery" | "email_setup" | "email_otp";
 
 export default function TotpSetup({ setupToken, onComplete }: Props) {
   const [step, setStep]           = useState<Step>("qr");
@@ -15,6 +16,11 @@ export default function TotpSetup({ setupToken, onComplete }: Props) {
   const [secret, setSecret]       = useState("");
   const [totpCode, setTotpCode]   = useState("");
   const [recoveryCodes, setRecoveryCodes] = useState<string[]>([]);
+  const [emailSetupToken, setEmailSetupToken] = useState("");
+  const [recoveryEmail, setRecoveryEmail] = useState("");
+  const [emailOtp, setEmailOtp]   = useState("");
+  const [maskedEmail, setMaskedEmail] = useState("");
+  const [otpSent, setOtpSent]     = useState(false);
   const [error, setError]         = useState("");
   const [loading, setLoading]     = useState(false);
   const [copied, setCopied]       = useState(false);
@@ -66,6 +72,7 @@ export default function TotpSetup({ setupToken, onComplete }: Props) {
         return;
       }
       setRecoveryCodes(data.recoveryCodes);
+      if (data.emailSetupToken) setEmailSetupToken(data.emailSetupToken);
       setStep("recovery");
     } catch {
       setError("Network error. Please try again.");
@@ -117,20 +124,25 @@ export default function TotpSetup({ setupToken, onComplete }: Props) {
 
         {/* step indicator */}
         <div className="flex items-center justify-center gap-2 mb-6">
-          {(["qr", "verify", "recovery"] as Step[]).map((s, i) => (
-            <div key={s} className="flex items-center gap-2">
-              <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-                step === s
-                  ? "bg-indigo-600 text-white"
-                  : (["qr","verify","recovery"].indexOf(step) > i)
-                    ? "bg-green-600 text-white"
-                    : "bg-slate-800 text-slate-500"
-              }`}>
-                {(["qr","verify","recovery"].indexOf(step) > i) ? "✓" : i + 1}
+          {(["qr", "verify", "recovery", "email_setup"] as Step[]).map((s, i) => {
+            const ALL: Step[] = ["qr", "verify", "recovery", "email_setup", "email_otp"];
+            const currentIdx = ALL.indexOf(step);
+            const thisIdx    = ALL.indexOf(s);
+            return (
+              <div key={s} className="flex items-center gap-2">
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                  currentIdx === thisIdx
+                    ? "bg-indigo-600 text-white"
+                    : currentIdx > thisIdx
+                      ? "bg-green-600 text-white"
+                      : "bg-slate-800 text-slate-500"
+                }`}>
+                  {currentIdx > thisIdx ? "✓" : i + 1}
+                </div>
+                {i < 3 && <div className={`w-6 h-0.5 ${currentIdx > thisIdx ? "bg-green-600" : "bg-slate-800"}`} />}
               </div>
-              {i < 2 && <div className={`w-8 h-0.5 ${(["qr","verify","recovery"].indexOf(step) > i) ? "bg-green-600" : "bg-slate-800"}`} />}
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <div className="bg-slate-900 rounded-2xl p-6 shadow-xl border border-slate-800">
@@ -269,16 +281,108 @@ export default function TotpSetup({ setupToken, onComplete }: Props) {
                   Download Recovery Codes
                 </button>
                 <button
-                  onClick={onComplete}
+                  onClick={() => { setError(""); setStep("email_setup"); }}
                   className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg py-2.5 text-sm transition"
                 >
-                  Continue to Login →
+                  Continue — Set Up Recovery Email →
                 </button>
               </div>
 
               <p className="text-center text-slate-600 text-xs mt-3">
                 You will not be able to view these codes again.
               </p>
+            </div>
+          )}
+
+          {/* ── Step 4: Recovery Email Entry ── */}
+          {step === "email_setup" && (
+            <div>
+              <h2 className="text-white font-semibold mb-1">Set up recovery email</h2>
+              <p className="text-slate-400 text-xs mb-5">
+                A personal email used for account recovery and security verifications. A code will be sent to confirm it.
+              </p>
+              {error && (
+                <div className="mb-3 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">{error}</div>
+              )}
+              <input
+                type="email"
+                value={recoveryEmail}
+                onChange={(e) => setRecoveryEmail(e.target.value)}
+                placeholder="your@personal-email.com"
+                className="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition mb-4"
+                autoComplete="email"
+              />
+              <button
+                onClick={async () => {
+                  setError(""); setLoading(true);
+                  try {
+                    const res  = await fetch("/api/admin/auth/setup-email", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ emailSetupToken, email: recoveryEmail }),
+                    });
+                    const data = await res.json();
+                    if (!res.ok) { setError(data.error ?? "Failed to send code"); return; }
+                    setMaskedEmail(data.maskedEmail);
+                    setOtpSent(true);
+                    setStep("email_otp");
+                  } catch { setError("Network error"); }
+                  finally { setLoading(false); }
+                }}
+                disabled={loading || !recoveryEmail.includes("@")}
+                className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white font-medium rounded-lg py-2.5 text-sm transition"
+              >
+                {loading ? "Sending…" : "Send Verification Code →"}
+              </button>
+            </div>
+          )}
+
+          {/* ── Step 5: Email OTP ── */}
+          {step === "email_otp" && (
+            <div>
+              <h2 className="text-white font-semibold mb-1">Verify your email</h2>
+              <p className="text-slate-400 text-xs mb-5">
+                Enter the 6-digit code sent to <strong className="text-slate-300">{maskedEmail}</strong>. Expires in 10 minutes.
+              </p>
+              {error && (
+                <div className="mb-3 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">{error}</div>
+              )}
+              <input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={6}
+                value={emailOtp}
+                onChange={(e) => setEmailOtp(e.target.value.replace(/[^0-9]/g, ""))}
+                placeholder="000000"
+                className="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-3 text-center text-2xl tracking-[0.5em] font-mono focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition mb-4"
+              />
+              <button
+                onClick={async () => {
+                  setError(""); setLoading(true);
+                  try {
+                    const res  = await fetch("/api/admin/auth/verify-setup-email", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ emailSetupToken, email: recoveryEmail, otp: emailOtp }),
+                    });
+                    const data = await res.json();
+                    if (!res.ok || !data.success) { setError(data.error ?? "Verification failed"); return; }
+                    onComplete(data.username);
+                  } catch { setError("Network error"); }
+                  finally { setLoading(false); }
+                }}
+                disabled={loading || emailOtp.length < 6}
+                className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white font-medium rounded-lg py-2.5 text-sm transition"
+              >
+                {loading ? "Verifying…" : "Verify & Enter Dashboard →"}
+              </button>
+              <button
+                onClick={() => { setStep("email_setup"); setEmailOtp(""); setError(""); setOtpSent(false); }}
+                className="w-full mt-2 text-slate-500 hover:text-slate-300 text-xs transition"
+              >
+                ← Change email address
+              </button>
             </div>
           )}
         </div>

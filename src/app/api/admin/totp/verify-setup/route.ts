@@ -13,7 +13,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import speakeasy from "speakeasy";
-import { verifySetupToken } from "@/lib/adminAuth";
+import { verifySetupToken, signEmailSetupToken } from "@/lib/adminAuth";
 import { randomBytes } from "crypto";
 
 function generateRecoveryCodes(count = 8): string[] {
@@ -73,7 +73,9 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({ success: true, recoveryCodes: plainCodes });
+    // Issue emailSetupToken — admin must now verify a recovery email before dashboard access
+    const emailSetupToken = await signEmailSetupToken(adminId);
+    return NextResponse.json({ success: true, recoveryCodes: plainCodes, emailSetupToken });
   } catch (err) {
     console.error("[TOTP verify-setup]", err);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
