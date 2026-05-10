@@ -237,14 +237,16 @@ export async function generateInvoicePdf(data: PdfInvoiceData): Promise<Buffer> 
     y = sectionBottom + 20;
 
     // ── Work Table ────────────────────────────────────────────────────────────
-    // Columns: Description 55%, Hours 15%, Amount 30%
+    // Columns: Description 49%, Hours 11%, Rate 18%, Amount 22%
     const TBL_W  = B_W;
-    const COL_D  = TBL_W * 0.55;
-    const COL_H  = TBL_W * 0.15;
-    const COL_A  = TBL_W * 0.30;
+    const COL_D  = TBL_W * 0.49;
+    const COL_H  = TBL_W * 0.11;
+    const COL_R  = TBL_W * 0.18;
+    const COL_A  = TBL_W * 0.22;
     const DESC_X = B_PAD;
     const HRS_X  = B_PAD + COL_D;
-    const AMT_X  = B_PAD + COL_D + COL_H;
+    const RATE_X = B_PAD + COL_D + COL_H;
+    const AMT_X  = B_PAD + COL_D + COL_H + COL_R;
     const TH_H   = 32;
 
     // Table header background
@@ -254,8 +256,9 @@ export async function generateInvoicePdf(data: PdfInvoiceData): Promise<Buffer> 
     doc.font("Helvetica-Bold").fontSize(8).fill(LABEL_CLR).fillOpacity(1);
     const TH_Y = y + (TH_H - 8) / 2;
     doc.text("DESCRIPTION", DESC_X + 14, TH_Y, { characterSpacing: 1 });
-    doc.text("HOURS",       HRS_X,        TH_Y, { width: COL_H, align: "center", characterSpacing: 1 });
-    doc.text("AMOUNT",      AMT_X,        TH_Y, { width: COL_A - 14, align: "right", characterSpacing: 1 });
+    doc.text("HOURS",  HRS_X,  TH_Y, { width: COL_H, align: "center", characterSpacing: 1 });
+    doc.text("RATE",   RATE_X, TH_Y, { width: COL_R, align: "center", characterSpacing: 1 });
+    doc.text("AMOUNT", AMT_X,  TH_Y, { width: COL_A - 14, align: "right", characterSpacing: 1 });
     y += TH_H;
 
     // Table rows
@@ -288,16 +291,24 @@ export async function generateInvoicePdf(data: PdfInvoiceData): Promise<Buffer> 
         rowDescY += doc.heightOfString(line, { width: COL_D - 28, lineGap: 3 }) + 2;
       }
 
-      // Hours (centered) — flat items show "-"
       const numY = y + (rowH - 11) / 2;
+
       if (item.flat) {
+        // Hours: em-dash + "(flat)" label
         doc.font("Helvetica").fontSize(10).fill(MID_TEXT)
           .text("—", HRS_X, numY, { width: COL_H, align: "center" });
         doc.font("Helvetica").fontSize(8).fill(GREY_TEXT)
           .text("(flat)", HRS_X, numY + 12, { width: COL_H, align: "center" });
+        // Rate: blank for flat items
+        doc.font("Helvetica").fontSize(10).fill(GREY_TEXT)
+          .text("—", RATE_X, numY, { width: COL_R, align: "center" });
       } else {
+        // Hours
         doc.font("Helvetica").fontSize(10).fill(MID_TEXT)
           .text(`${fmtNum(item.hours)} hr${item.hours !== 1 ? "s" : ""}`, HRS_X, numY, { width: COL_H, align: "center" });
+        // Rate
+        doc.font("Helvetica").fontSize(10).fill(MID_TEXT)
+          .text(fmt(item.rate, data.currency), RATE_X, numY, { width: COL_R, align: "center" });
       }
 
       // Amount (right)
@@ -312,8 +323,9 @@ export async function generateInvoicePdf(data: PdfInvoiceData): Promise<Buffer> 
     doc.rect(B_PAD, y, TBL_W, 30).fill(GREY_BG);
     doc.moveTo(B_PAD, y + 30).lineTo(PW - B_PAD, y + 30).lineWidth(0.5).strokeColor(LIGHT_BDR).stroke();
 
+    // Label must end before HRS_X to avoid overlap: width = HRS_X - (DESC_X+14) - 6
     doc.font("Helvetica-Bold").fontSize(10).fill(GREY_TEXT)
-      .text("Total Hours", DESC_X + 14, y + 10, { width: COL_D - 28, align: "right" });
+      .text("Total Hours", DESC_X + 14, y + 10, { width: HRS_X - DESC_X - 20, align: "right" });
     doc.font("Helvetica-Bold").fontSize(10).fill(PURPLE)
       .text(`${fmtNum(totalHours)} hr${totalHours !== 1 ? "s" : ""}`, HRS_X, y + 10, { width: COL_H, align: "center" });
     y += 38;
@@ -322,7 +334,7 @@ export async function generateInvoicePdf(data: PdfInvoiceData): Promise<Buffer> 
     const SUM_W  = 240;
     const SUM_X  = PW - B_PAD - SUM_W;
     const sumRows: [string, string][] = [
-      [`Subtotal (${fmtNum(totalHours)} hrs @ ${fmt(data.items[0]?.rate ?? 0, data.currency)}/hr)`, fmt(data.subtotal, data.currency)],
+      ["Subtotal", fmt(data.subtotal, data.currency)],
     ];
     if (data.adjustment !== 0) {
       sumRows.push(["Adjustment", fmt(data.adjustment, data.currency)]);
