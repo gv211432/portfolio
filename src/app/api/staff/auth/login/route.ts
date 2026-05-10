@@ -5,6 +5,12 @@
  * Verifies credentials, creates a DB session with the appropriate stage,
  * and returns the next required step so the client can route the user.
  *
+ * Trusted-device logic:
+ *   If a valid `staff_device_token` cookie is present for this staff member,
+ *   EMAIL_OTP is skipped (TOTP is always still required when enrolled).
+ *   The skip only activates when TOTP is also enrolled — EMAIL_OTP-only users
+ *   always go through their factor regardless.
+ *
  * Possible nextStep values:
  *   "PASSWORD_RESET" | "2FA_SETUP" | "TOTP" | "EMAIL_OTP" | "DONE"
  */
@@ -18,6 +24,7 @@ import {
   computeNextStage,
   clientIp,
 } from "@/lib/mail/staffAuth";
+import { verifyDeviceToken } from "@/lib/mail/staffDevice";
 import { logActivity, Activity } from "@/lib/mail/activity";
 
 function stageToStep(stage: string): string {
@@ -38,8 +45,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Email and password required" }, { status: 400 });
     }
 
-    const ip = clientIp(req);
-    const ua = req.headers.get("user-agent");
+    const ip         = clientIp(req);
+    const ua         = req.headers.get("user-agent");
     const normalized = email.toLowerCase().trim();
 
     const addr = await prisma.staffEmailAddress.findUnique({
@@ -49,12 +56,12 @@ export async function POST(req: NextRequest) {
 
     if (!addr || addr.staff.status !== "ACTIVE") {
       await logActivity({
-        actorType: "SYSTEM",
+        actorType:  "SYSTEM",
         actorLabel: normalized,
-        action: Activity.StaffLoginFailed,
-        metadata: { reason: "unknown_email_or_inactive" },
-        ipAddress: ip,
-        userAgent: ua,
+        action:     Activity.StaffLoginFailed,
+        metadata:   { reason: "unknown_email_or_inactive" },
+        ipAddress:  ip,
+        userAgent:  ua,
       });
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
     }
@@ -62,20 +69,28 @@ export async function POST(req: NextRequest) {
     const ok = await verifyPassword(password, addr.staff.passwordHash);
     if (!ok) {
       await logActivity({
-        actorType: "STAFF",
-        actorId: addr.staff.id,
+        actorType:  "STAFF",
+        actorId:    addr.staff.id,
         actorLabel: normalized,
-        action: Activity.StaffLoginFailed,
-        metadata: { reason: "bad_password" },
-        ipAddress: ip,
-        userAgent: ua,
+        action:     Activity.StaffLoginFailed,
+        metadata:   { reason: "bad_password" },
+        ipAddress:  ip,
+        userAgent:  ua,
       });
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
     }
 
-    const stage = await computeNextStage(addr.staff.id, new Set());
+    // Recognised trusted device? → skip EMAIL_OTP (TOTP still required)
+    const { trusted: isTrustedDevice } = await verifyDeviceToken(addr.staff.id, req);
+
+    const stage = await computeNextStage(
+      addr.staff.id,
+      new Set(),
+      { skipEmailOtp: isTrustedDevice },
+    );
+
     const token = await createStaffSession({
-      staffId: addr.staff.id,
+      staffId:   addr.staff.id,
       stage,
       ipAddress: ip,
       userAgent: ua,
@@ -83,20 +98,20 @@ export async function POST(req: NextRequest) {
 
     await prisma.staff.update({
       where: { id: addr.staff.id },
-      data: { lastLoginAt: new Date(), lastLoginIp: ip ?? undefined },
+      data:  { lastLoginAt: new Date(), lastLoginIp: ip ?? undefined },
     });
 
     await logActivity({
-      actorType: "STAFF",
-      actorId: addr.staff.id,
+      actorType:  "STAFF",
+      actorId:    addr.staff.id,
       actorLabel: normalized,
-      action: Activity.StaffLoginSuccess,
-      metadata: { stage },
-      ipAddress: ip,
-      userAgent: ua,
+      action:     Activity.StaffLoginSuccess,
+      metadata:   { stage, trustedDevice: isTrustedDevice },
+      ipAddress:  ip,
+      userAgent:  ua,
     });
 
-    const res = NextResponse.json({ nextStep: stageToStep(stage) });
+    const res = NextResponse.json({ nextStep: stageToStep(stage), trustedDevice: isTrustedDevice });
     return setStaffCookie(res, token);
   } catch (err) {
     console.error("[staff/login]", err);

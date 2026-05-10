@@ -134,7 +134,18 @@ export function clearStaffCookie(res: NextResponse): NextResponse {
  * current enrollment state. Called from /login AND after password reset AND
  * after each 2FA factor passes.
  */
-export async function computeNextStage(staffId: string, passedFactors: Set<string>): Promise<SessionStage> {
+export async function computeNextStage(
+  staffId: string,
+  passedFactors: Set<string>,
+  opts?: {
+    /**
+     * Skip EMAIL_OTP challenge — only honoured when TOTP is also enrolled,
+     * so the user always completes at least one factor.
+     * Set this when the login comes from a recognised trusted device.
+     */
+    skipEmailOtp?: boolean;
+  },
+): Promise<SessionStage> {
   const staff = await prisma.staff.findUnique({
     where: { id: staffId },
     include: { twoFactor: true },
@@ -147,10 +158,14 @@ export async function computeNextStage(staffId: string, passedFactors: Set<strin
   if (enabled.length === 0) return "PENDING_2FA_SETUP";
 
   const hasTotp = enabled.some((f) => f.method === "TOTP");
-  const hasOtp = enabled.some((f) => f.method === "EMAIL_OTP");
+  const hasOtp  = enabled.some((f) => f.method === "EMAIL_OTP");
 
   if (hasTotp && !passedFactors.has("TOTP")) return "PENDING_TOTP";
-  if (hasOtp && !passedFactors.has("EMAIL_OTP")) return "PENDING_EMAIL_OTP";
+
+  // Skip EMAIL_OTP only when: trusted device AND TOTP is also present
+  // (prevents dropping to zero factors for EMAIL_OTP-only users)
+  const emailOtpSkipped = opts?.skipEmailOtp && hasTotp;
+  if (hasOtp && !passedFactors.has("EMAIL_OTP") && !emailOtpSkipped) return "PENDING_EMAIL_OTP";
 
   return "ACTIVE";
 }

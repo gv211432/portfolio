@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import {
   X, User, Lock, Shield, Palette, Check, AlertTriangle,
   Eye, EyeOff, Smartphone, Mail, Loader2, ChevronRight,
+  Monitor, Trash2,
 } from "lucide-react";
 
 interface Me {
@@ -769,6 +770,9 @@ export default function MailSettings({ me, onClose, onDirChange }: Props) {
 
                       {emailMsg && <Msg ok={emailMsg.ok} text={emailMsg.text} />}
                     </div>
+
+                    {/* ── Trusted Devices ── */}
+                    <TrustedDevicesPanel />
                   </>
                 )}
               </div>
@@ -824,6 +828,132 @@ function Msg({ ok, text }: { ok: boolean; text: string }) {
     }`}>
       {ok ? <Check size={14} /> : <AlertTriangle size={14} />}
       {text}
+    </div>
+  );
+}
+
+// ─── Trusted devices panel ─────────────────────────────────────────────────────
+
+interface TrustedDevice {
+  id: string;
+  label: string | null;
+  ipAddress: string | null;
+  createdAt: string;
+  lastSeenAt: string;
+  expiresAt: string;
+  isCurrent: boolean;
+}
+
+function relTime(ts: string): string {
+  const diff = Date.now() - new Date(ts).getTime();
+  const m = Math.floor(diff / 60_000);
+  if (m < 1)   return "just now";
+  if (m < 60)  return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24)  return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+}
+
+function TrustedDevicesPanel() {
+  const [devices, setDevices] = useState<TrustedDevice[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [revoking, setRevoking] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/staff/auth/devices")
+      .then((r) => r.json())
+      .then((d) => { if (d.devices) setDevices(d.devices); })
+      .finally(() => setLoading(false));
+  }, []);
+
+  async function revoke(id: string) {
+    setRevoking(id);
+    await fetch(`/api/staff/auth/devices/${id}`, { method: "DELETE" });
+    setDevices((prev) => prev.filter((d) => d.id !== id));
+    setRevoking(null);
+  }
+
+  async function revokeAll() {
+    if (!confirm("Remove all trusted devices? You'll need to complete full 2FA on every device next time.")) return;
+    setLoading(true);
+    await fetch("/api/staff/auth/devices", { method: "DELETE" });
+    setDevices([]);
+    setLoading(false);
+  }
+
+  if (loading) return (
+    <div className="flex items-center gap-2 text-xs text-gray-400 py-2">
+      <Loader2 size={13} className="animate-spin" /> Loading trusted devices…
+    </div>
+  );
+
+  return (
+    <div className="rounded-xl border border-gray-200 dark:border-gray-800 p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
+            <Monitor size={16} className="text-gray-400" />
+            Trusted Devices
+          </div>
+          <p className="text-xs text-gray-500 mt-0.5">
+            Recognised devices skip the email OTP step — TOTP is still always required.
+          </p>
+        </div>
+        {devices.length > 1 && (
+          <button
+            onClick={revokeAll}
+            className="text-xs text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition"
+          >
+            Revoke all
+          </button>
+        )}
+      </div>
+
+      {devices.length === 0 ? (
+        <p className="text-xs text-gray-400 dark:text-gray-500 italic">
+          No trusted devices yet. After completing full 2FA on a device, it will appear here (7-day trust window).
+        </p>
+      ) : (
+        <div className="divide-y divide-gray-100 dark:divide-gray-800">
+          {devices.map((d) => (
+            <div key={d.id} className="flex items-start justify-between gap-3 py-2.5 first:pt-0 last:pb-0">
+              <div className="flex items-start gap-2.5 min-w-0">
+                <Monitor size={14} className="text-gray-400 shrink-0 mt-0.5" />
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">
+                      {d.label ?? "Unknown device"}
+                    </span>
+                    {d.isCurrent && (
+                      <span className="text-xs bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 px-1.5 py-0.5 rounded-full font-medium shrink-0">
+                        This device
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-xs text-gray-400 dark:text-gray-500 mt-0.5 space-x-2">
+                    {d.ipAddress && <span>{d.ipAddress}</span>}
+                    <span>· Last seen {relTime(d.lastSeenAt)}</span>
+                    <span>· Expires {relTime(new Date(d.expiresAt).getTime() > Date.now()
+                      ? new Date(d.expiresAt).toLocaleDateString()
+                      : "expired")}</span>
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => revoke(d.id)}
+                disabled={revoking === d.id}
+                title="Remove this trusted device"
+                className="shrink-0 text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition disabled:opacity-40"
+              >
+                {revoking === d.id
+                  ? <Loader2 size={14} className="animate-spin" />
+                  : <Trash2 size={14} />
+                }
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -19,6 +19,7 @@ import {
   clientIp,
 } from "@/lib/mail/staffAuth";
 import { sendWelcomeEmailIfFirst } from "@/lib/mail/staffWelcome";
+import { issueTrustCookie } from "@/lib/mail/staffDevice";
 import { logActivity, Activity } from "@/lib/mail/activity";
 
 function generateRecoveryCodes(count = 8): string[] {
@@ -82,7 +83,10 @@ export async function POST(req: NextRequest) {
       userAgent: req.headers.get("user-agent"),
     });
 
-    return NextResponse.json({ ok: true, recoveryCodes: plainCodes, nextStep });
+    const response = NextResponse.json({ ok: true, recoveryCodes: plainCodes, nextStep });
+    // Trust this device when the initial setup flow completes to ACTIVE
+    if (nextStep === "ACTIVE") await issueTrustCookie(s.staff.id, req, response);
+    return response;
   } catch (err) {
     console.error("[staff/totp/verify-setup]", err);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });

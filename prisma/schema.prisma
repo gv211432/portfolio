@@ -345,12 +345,32 @@ model Staff {
   emailAddress     StaffEmailAddress?
   twoFactor        StaffTwoFactor[]
   sessions         StaffSession[]
+  trustedDevices   StaffTrustedDevice[]
   emails           Email[]
   drafts           EmailDraft[]
   outbox           OutboxEmail[]
   labels           EmailLabel[]
 
   @@index([status])
+}
+
+// Trusted devices — after passing both 2FA factors, we issue a 7-day token per device.
+// On future logins from the same device, EMAIL_OTP is skipped (TOTP still required).
+// Security: token bound to staffId + browser/OS family. Revoked when TOTP is disabled.
+model StaffTrustedDevice {
+  id         String   @id @default(cuid())
+  staffId    String
+  staff      Staff    @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  tokenHash  String   @unique            // sha256 of the opaque cookie value
+  label      String?                     // "Chrome on macOS", "Safari on iPhone", …
+  ipAddress  String?                     // IP at time of trust
+  userAgent  String?                     // full UA for similarity check
+  createdAt  DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+  expiresAt  DateTime
+
+  @@index([staffId])
+  @@index([expiresAt])
 }
 
 enum StaffStatus {

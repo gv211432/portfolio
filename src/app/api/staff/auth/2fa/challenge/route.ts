@@ -28,6 +28,7 @@ import {
 import { generateNumericOtp } from "@/lib/mail/text";
 import { sendOtpCode } from "@/lib/mail/systemMail";
 import { sendWelcomeEmailIfFirst } from "@/lib/mail/staffWelcome";
+import { issueTrustCookie } from "@/lib/mail/staffDevice";
 import { logActivity, Activity } from "@/lib/mail/activity";
 import type { SessionStage } from "@prisma/client";
 
@@ -165,7 +166,10 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    return NextResponse.json({ nextStep: stageToStep(nextStage) });
+    const response = NextResponse.json({ nextStep: stageToStep(nextStage) });
+    // Issue (or refresh TTL of) the trusted-device cookie when login completes
+    if (nextStage === "ACTIVE") await issueTrustCookie(s.staff.id, req, response);
+    return response;
   } catch (err) {
     console.error("[staff/2fa/challenge]", err);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
