@@ -37,7 +37,7 @@ export default function InvoicePreview(props: Props) {
   } = props;
 
   const subtotal = items.reduce((s, i) => s + i.hours * i.rate, 0);
-  const totalHours = items.reduce((s, i) => s + i.hours, 0);
+  const totalHours = items.filter((i) => !i.flat).reduce((s, i) => s + i.hours, 0);
   const gstAmt = gstEnabled && gstRate ? (subtotal * gstRate) / 100 : 0;
   const total = subtotal + adjustment + gstAmt;
 
@@ -144,8 +144,13 @@ export default function InvoicePreview(props: Props) {
                 )}
                 <p className="text-xs text-gray-700 leading-relaxed whitespace-pre-line">{item.description || "—"}</p>
               </div>
-              <p className="text-xs text-gray-600 text-right pt-0.5">{item.hours}</p>
-              <p className="text-xs text-gray-600 text-right pt-0.5">{fmt(item.rate, currency)}</p>
+              <div className="text-right pt-0.5">
+                {item.flat
+                  ? <><p className="text-xs text-gray-400">—</p><p className="text-[9px] text-gray-400">(flat)</p></>
+                  : <p className="text-xs text-gray-600">{item.hours}</p>
+                }
+              </div>
+              <p className="text-xs text-gray-600 text-right pt-0.5">{item.flat ? "—" : fmt(item.rate, currency)}</p>
               <p className="text-xs font-semibold text-gray-800 text-right pt-0.5">{fmt(item.hours * item.rate, currency)}</p>
             </div>
           ))}

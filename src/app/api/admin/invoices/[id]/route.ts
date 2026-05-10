@@ -80,12 +80,13 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     itemOps = {
       items: {
         deleteMany: {},
-        create: items.map((item: { dateLabel?: string; description: string; hours: number; rate: number }, idx: number) => ({
+        create: items.map((item: { dateLabel?: string; description: string; hours: number; rate: number; flat?: boolean }, idx: number) => ({
           dateLabel: item.dateLabel ?? "",
           description: item.description,
           hours: safeDecimal(item.hours),
           rate: safeDecimal(item.rate),
           amount: safeDecimal(item.hours * item.rate),
+          flat: item.flat ?? false,
           sortOrder: idx,
         })),
       },

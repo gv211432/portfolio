@@ -82,6 +82,7 @@ export async function POST(req: NextRequest, { params }: Params) {
       hours:       Number(item.hours),
       rate:        Number(item.rate),
       amount:      Number(item.amount),
+      flat:        item.flat,
     })),
     subtotal:   Number(invoice.subtotal),
     adjustment: Number(invoice.adjustment),

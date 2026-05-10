@@ -17,6 +17,7 @@ const EMPTY_ITEM = (): LineItem => ({
   dateLabel: "", description: "", hours: 0, rate: 0, amount: 0, sortOrder: 0,
 });
 
+const DEFAULT_RATE = 30;
 const TODAY = new Date().toISOString().slice(0, 10);
 const DUE_DATE = new Date(Date.now() + 15 * 86400000).toISOString().slice(0, 10);
 
@@ -31,9 +32,10 @@ export default function InvoiceEditor({ invoiceId, onSaved, onClose, onLoaded }:
   const [dueDate, setDueDate] = useState(DUE_DATE);
   const [paymentTerms, setPaymentTerms] = useState("Net 15");
   const [currency, setCurrency] = useState("USD");
-  const [items, setItems] = useState<LineItem[]>([{ ...EMPTY_ITEM() }]);
+  const [defaultRate, setDefaultRate] = useState(DEFAULT_RATE);
+  const [items, setItems] = useState<LineItem[]>([{ ...EMPTY_ITEM(), rate: DEFAULT_RATE }]);
+  const [itemModes, setItemModes] = useState<("hourly" | "flat")[]>(["hourly"]);
   const [adjustment, setAdjustment] = useState(0);
-  const [defaultRate, setDefaultRate] = useState(30);
   const [gstEnabled, setGstEnabled] = useState(false);
   const [gstRate, setGstRate] = useState(18);
   const [paymentProfileId, setPaymentProfileId] = useState<string | null>(null);
@@ -83,12 +85,15 @@ export default function InvoiceEditor({ invoiceId, onSaved, onClose, onLoaded }:
           setDueDate(invoice.dueDate.slice(0, 10));
           setPaymentTerms(invoice.paymentTerms);
           setCurrency(invoice.currency);
-          setItems(invoice.items.map((i: LineItem) => ({
+          const loadedItems = invoice.items.map((i: LineItem) => ({
             ...i,
             hours: Number(i.hours),
             rate: Number(i.rate),
             amount: Number(i.amount),
-          })));
+            flat: i.flat ?? false,
+          }));
+          setItems(loadedItems);
+          setItemModes(loadedItems.map((i: LineItem) => (i.flat ? "flat" : "hourly") as "hourly" | "flat"));
           setAdjustment(Number(invoice.adjustment));
           setGstEnabled(invoice.gstEnabled);
           if (invoice.gstRate) setGstRate(Number(invoice.gstRate));
@@ -168,14 +173,13 @@ export default function InvoiceEditor({ invoiceId, onSaved, onClose, onLoaded }:
   }
 
   function addItem() {
-    setItems((prev) => [
-      ...prev,
-      { ...EMPTY_ITEM(), rate: defaultRate, sortOrder: prev.length },
-    ]);
+    setItems((prev) => [...prev, { ...EMPTY_ITEM(), rate: defaultRate, sortOrder: prev.length }]);
+    setItemModes((prev) => [...prev, "hourly"]);
   }
 
   function removeItem(idx: number) {
     setItems((prev) => prev.filter((_, i) => i !== idx).map((it, i) => ({ ...it, sortOrder: i })));
+    setItemModes((prev) => prev.filter((_, i) => i !== idx));
   }
 
   function updateItem(idx: number, field: keyof LineItem, value: string | number) {
@@ -187,6 +191,27 @@ export default function InvoiceEditor({ invoiceId, onSaved, onClose, onLoaded }:
         return updated;
       })
     );
+  }
+
+  function updateFlatAmount(idx: number, amount: number) {
+    setItems((prev) =>
+      prev.map((it, i) => i !== idx ? it : { ...it, hours: 1, rate: amount, amount })
+    );
+  }
+
+  function toggleItemMode(idx: number) {
+    const current = itemModes[idx];
+    setItemModes((prev) => prev.map((m, i) => i !== idx ? m : (m === "hourly" ? "flat" : "hourly")));
+    if (current === "hourly") {
+      // Normalise to hours=1, rate=calculatedAmount so DB stays consistent
+      setItems((prev) =>
+        prev.map((it, i) => {
+          if (i !== idx) return it;
+          const amt = Number(it.hours) * Number(it.rate);
+          return { ...it, hours: 1, rate: amt, amount: amt };
+        })
+      );
+    }
   }
 
   const subtotal = items.reduce((s, i) => s + Number(i.hours) * Number(i.rate), 0);
@@ -201,7 +226,7 @@ export default function InvoiceEditor({ invoiceId, onSaved, onClose, onLoaded }:
     const body = {
       clientId, clientName, clientAddress, clientEmail,
       invoiceDate, dueDate, paymentTerms, currency,
-      items: items.map((i) => ({ ...i, hours: Number(i.hours), rate: Number(i.rate) })),
+      items: items.map((i, idx) => ({ ...i, hours: Number(i.hours), rate: Number(i.rate), flat: itemModes[idx] === "flat" })),
       adjustment, gstEnabled, gstRate: gstEnabled ? gstRate : null,
       paymentProfileId, notes,
     };
@@ -228,7 +253,7 @@ export default function InvoiceEditor({ invoiceId, onSaved, onClose, onLoaded }:
       body: JSON.stringify({
         clientId, clientName, clientAddress, clientEmail,
         invoiceDate, dueDate, paymentTerms, currency,
-        items: items.map((i) => ({ ...i, hours: Number(i.hours), rate: Number(i.rate) })),
+        items: items.map((i, idx) => ({ ...i, hours: Number(i.hours), rate: Number(i.rate), flat: itemModes[idx] === "flat" })),
         adjustment, gstEnabled, gstRate: gstEnabled ? gstRate : null,
         paymentProfileId, notes,
       }),
@@ -460,35 +485,64 @@ export default function InvoiceEditor({ invoiceId, onSaved, onClose, onLoaded }:
                     className="w-full px-2 py-1.5 rounded border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-xs text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-none mb-2"
                     disabled={isReadOnly}
                   />
-                  <div className="flex gap-2 items-center">
-                    <div className="flex-1">
-                      <label className="text-[10px] text-gray-400 block mb-0.5">Hours</label>
-                      <input
-                        type="number"
-                        step="0.5"
-                        value={item.hours}
-                        onChange={(e) => updateItem(idx, "hours", parseFloat(e.target.value) || 0)}
-                        className="w-full px-2 py-1.5 rounded border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-xs text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                        disabled={isReadOnly}
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <label className="text-[10px] text-gray-400 block mb-0.5">Rate</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={item.rate}
-                        onChange={(e) => updateItem(idx, "rate", parseFloat(e.target.value) || 0)}
-                        className="w-full px-2 py-1.5 rounded border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-xs text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                        disabled={isReadOnly}
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <label className="text-[10px] text-gray-400 block mb-0.5">Amount</label>
-                      <div className="px-2 py-1.5 rounded border border-gray-100 dark:border-slate-700 bg-gray-100 dark:bg-slate-700 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
-                        {fmtMoney(item.hours * item.rate, currency)}
+                  <div className="flex gap-2 items-end">
+                    {!isReadOnly && (
+                      <button
+                        onClick={() => toggleItemMode(idx)}
+                        title={itemModes[idx] === "flat" ? "Switch to hourly (hrs × rate)" : "Switch to flat fee"}
+                        className={`shrink-0 px-2 py-1.5 rounded border text-[10px] font-semibold transition ${
+                          itemModes[idx] === "flat"
+                            ? "border-indigo-500 bg-indigo-600 text-white"
+                            : "border-gray-300 dark:border-slate-600 text-gray-400 hover:border-indigo-400 hover:text-indigo-500"
+                        }`}
+                      >
+                        {itemModes[idx] === "flat" ? "Flat" : "Hrly"}
+                      </button>
+                    )}
+                    {itemModes[idx] === "flat" ? (
+                      <div className="flex-1">
+                        <label className="text-[10px] text-gray-400 block mb-0.5">Amount</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={item.amount}
+                          onChange={(e) => updateFlatAmount(idx, parseFloat(e.target.value) || 0)}
+                          className="w-full px-2 py-1.5 rounded border border-indigo-400 dark:border-indigo-500 bg-white dark:bg-slate-700 text-xs text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                          disabled={isReadOnly}
+                        />
                       </div>
-                    </div>
+                    ) : (
+                      <>
+                        <div className="flex-1">
+                          <label className="text-[10px] text-gray-400 block mb-0.5">Hours</label>
+                          <input
+                            type="number"
+                            step="0.5"
+                            value={item.hours}
+                            onChange={(e) => updateItem(idx, "hours", parseFloat(e.target.value) || 0)}
+                            className="w-full px-2 py-1.5 rounded border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-xs text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                            disabled={isReadOnly}
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <label className="text-[10px] text-gray-400 block mb-0.5">Rate</label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={item.rate}
+                            onChange={(e) => updateItem(idx, "rate", parseFloat(e.target.value) || 0)}
+                            className="w-full px-2 py-1.5 rounded border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-xs text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                            disabled={isReadOnly}
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <label className="text-[10px] text-gray-400 block mb-0.5">Amount</label>
+                          <div className="px-2 py-1.5 rounded border border-gray-100 dark:border-slate-700 bg-gray-100 dark:bg-slate-700 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
+                            {fmtMoney(item.hours * item.rate, currency)}
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               ))}

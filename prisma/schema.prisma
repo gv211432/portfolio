@@ -825,6 +825,7 @@ model InvoiceItem {
   hours       Decimal @db.Decimal(8, 2)
   rate        Decimal @db.Decimal(10, 2)
   amount      Decimal @db.Decimal(12, 2)
+  flat        Boolean @default(false)
   sortOrder   Int     @default(0)
 
   @@index([invoiceId, sortOrder])

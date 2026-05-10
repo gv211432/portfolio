@@ -14,6 +14,7 @@ export interface PdfLineItem {
   hours: number;
   rate: number;
   amount: number;
+  flat?: boolean;
 }
 export interface PdfPaymentInfo {
   accountName?: string | null;
@@ -287,10 +288,17 @@ export async function generateInvoicePdf(data: PdfInvoiceData): Promise<Buffer> 
         rowDescY += doc.heightOfString(line, { width: COL_D - 28, lineGap: 3 }) + 2;
       }
 
-      // Hours (centered)
+      // Hours (centered) — flat items show "-"
       const numY = y + (rowH - 11) / 2;
-      doc.font("Helvetica").fontSize(10).fill(MID_TEXT)
-        .text(`${fmtNum(item.hours)} hr${item.hours !== 1 ? "s" : ""}`, HRS_X, numY, { width: COL_H, align: "center" });
+      if (item.flat) {
+        doc.font("Helvetica").fontSize(10).fill(MID_TEXT)
+          .text("—", HRS_X, numY, { width: COL_H, align: "center" });
+        doc.font("Helvetica").fontSize(8).fill(GREY_TEXT)
+          .text("(flat)", HRS_X, numY + 12, { width: COL_H, align: "center" });
+      } else {
+        doc.font("Helvetica").fontSize(10).fill(MID_TEXT)
+          .text(`${fmtNum(item.hours)} hr${item.hours !== 1 ? "s" : ""}`, HRS_X, numY, { width: COL_H, align: "center" });
+      }
 
       // Amount (right)
       doc.font("Helvetica-Bold").fontSize(10).fill(DARK_TEXT)
@@ -299,8 +307,8 @@ export async function generateInvoicePdf(data: PdfInvoiceData): Promise<Buffer> 
       y += rowH;
     }
 
-    // Total Hours row
-    const totalHours = data.items.reduce((s, i) => s + i.hours, 0);
+    // Total Hours row — exclude flat-fee items from hour count
+    const totalHours = data.items.filter((i) => !i.flat).reduce((s, i) => s + i.hours, 0);
     doc.rect(B_PAD, y, TBL_W, 30).fill(GREY_BG);
     doc.moveTo(B_PAD, y + 30).lineTo(PW - B_PAD, y + 30).lineWidth(0.5).strokeColor(LIGHT_BDR).stroke();
 

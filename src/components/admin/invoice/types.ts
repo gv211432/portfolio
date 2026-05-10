@@ -7,6 +7,7 @@ export interface LineItem {
   hours: number;
   rate: number;
   amount: number;
+  flat?: boolean;
   sortOrder: number;
 }
 
