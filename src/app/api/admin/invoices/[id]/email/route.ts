@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin/permissions";
-import { downloadPdf, signedPdfUrl } from "@/lib/invoice/s3";
+import { downloadPdfVersion, signedPdfUrl } from "@/lib/invoice/s3";
 import { generateInvoicePdf } from "@/lib/invoice/pdf";
 import { decryptOpt } from "@/lib/invoice/encryption";
 import { INVOICE_ENV } from "@/lib/invoice/env";
@@ -110,7 +110,7 @@ export async function POST(req: NextRequest, { params }: Params) {
   // Get PDF — download existing or generate on-the-fly
   let pdfBuffer: Buffer;
   if (invoice.pdfS3Key) {
-    pdfBuffer = await downloadPdf(id);
+    pdfBuffer = await downloadPdfVersion(id, invoice.currentVersion);
   } else {
     // Generate without saving (unsigned send case)
     const company = await prisma.invoiceCompanyProfile.findUnique({ where: { id: "default" } });
@@ -164,8 +164,8 @@ export async function POST(req: NextRequest, { params }: Params) {
     pdfBuffer = await generateInvoicePdf(pdfData);
   }
 
-  // 24h signed download link
-  const downloadUrl = await signedPdfUrl(id, 86400);
+  // 24h signed download link (versioned key — matches what uploadPdf wrote)
+  const downloadUrl = await signedPdfUrl(id, 86400, invoice.currentVersion);
 
   const company = await prisma.invoiceCompanyProfile.findUnique({ where: { id: "default" } });
   const companyName = company?.name || "Gaurav Dot One";
