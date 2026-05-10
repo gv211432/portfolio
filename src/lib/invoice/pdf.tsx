@@ -109,7 +109,7 @@ export async function generateInvoicePdf(data: PdfInvoiceData): Promise<Buffer> 
 
     // ─── HEADER ──────────────────────────────────────────────────────────────
     // gradient: left block + right darker overlay
-    const HDR_H  = 100;
+    const HDR_H  = 115;  // extra height gives bottom padding below address text
     const H_PAD  = 32;
     const H_VPAD = 22;
 
@@ -117,16 +117,17 @@ export async function generateInvoicePdf(data: PdfInvoiceData): Promise<Buffer> 
     // slight darkening toward right to simulate the gradient
     doc.rect(PW * 0.55, 0, PW * 0.45, HDR_H).fillOpacity(0.30).fill(PURPLE2).fillOpacity(1);
 
-    // Logo circle — white bordered circle
+    // Logo circle — white bordered circle, vertically centered in header
     const LOGO_D  = 50;
     const LOGO_CX = H_PAD + LOGO_D / 2;
-    const LOGO_CY = H_VPAD + LOGO_D / 2;
+    const LOGO_CY = HDR_H / 2;
+    const LOGO_Y  = LOGO_CY - LOGO_D / 2;
 
     // White border circle
     doc.circle(LOGO_CX, LOGO_CY, LOGO_D / 2 + 2).fillOpacity(0.45).fill(WHITE).fillOpacity(1);
 
     if (logoPng) {
-      doc.image(logoPng, H_PAD, H_VPAD, { width: LOGO_D, height: LOGO_D });
+      doc.image(logoPng, H_PAD, LOGO_Y, { width: LOGO_D, height: LOGO_D });
     } else {
       doc.circle(LOGO_CX, LOGO_CY, LOGO_D / 2).fill(WHITE);
       doc.font(CB).fontSize(22).fill(PURPLE).text("G", LOGO_CX - 8, LOGO_CY - 13);
@@ -134,7 +135,7 @@ export async function generateInvoicePdf(data: PdfInvoiceData): Promise<Buffer> 
 
     // Company name — Cinzel Bold, white, next to logo
     const NAME_X  = H_PAD + LOGO_D + 12;
-    const NAME_W  = PW * 0.48 - NAME_X; // left 48% for company info
+    const NAME_W  = PW * 0.58 - NAME_X; // extend to 58% so long address lines don't wrap
     doc.font(CB).fontSize(13).fill(WHITE).fillOpacity(1);
 
     // Split name at natural break if long
@@ -159,8 +160,9 @@ export async function generateInvoicePdf(data: PdfInvoiceData): Promise<Buffer> 
     doc.font("Helvetica").fontSize(8).fillOpacity(0.88).fill(WHITE);
     let dy = ny + 2;
     for (const line of details) {
+      const lineH = doc.heightOfString(line, { width: NAME_W, lineGap: 1 });
       doc.text(line, NAME_X, dy, { width: NAME_W, lineGap: 1 });
-      dy += 10;
+      dy += lineH + 1;
     }
     doc.fillOpacity(1);
 
@@ -359,8 +361,17 @@ export async function generateInvoicePdf(data: PdfInvoiceData): Promise<Buffer> 
       // Two-column grid with box
       const COLS   = 2;
       const CELL_W = B_W / COLS;
-      const CELL_H = 30;
-      const PAY_H  = Math.ceil(payFields.length / COLS) * CELL_H + 42;
+
+      // Compute per-row heights based on actual value content (handles wrapped values)
+      const rowHeights: number[] = [];
+      for (let i = 0; i < payFields.length; i += COLS) {
+        const rowH = Math.max(30, ...payFields.slice(i, i + COLS).map(([, val]) => {
+          const valH = doc.font("Helvetica-Bold").fontSize(10).heightOfString(val, { width: CELL_W - 20 });
+          return Math.ceil(9 + valH + 10); // label(9px) + value + bottom gap(10px)
+        }));
+        rowHeights.push(rowH);
+      }
+      const PAY_H = rowHeights.reduce((s, h) => s + h, 0) + 42;
 
       doc.roundedRect(B_PAD, y, B_W, PAY_H, 8).fill(PAY_BG);
       doc.roundedRect(B_PAD, y, B_W, PAY_H, 8).strokeColor(GREY_BDR).lineWidth(0.5).stroke();
@@ -370,18 +381,19 @@ export async function generateInvoicePdf(data: PdfInvoiceData): Promise<Buffer> 
         .text("P A Y M E N T   I N F O R M A T I O N", B_PAD + 16, y + 14, { characterSpacing: 1 });
 
       let pi = 0;
+      let rowIdx = 0;
       let px = B_PAD + 16;
       let py = y + 30;
       for (const [lbl, val] of payFields) {
         doc.font("Helvetica").fontSize(8).fill(LABEL_CLR)
           .text(lbl.toUpperCase(), px, py, { characterSpacing: 0.4 });
-        // Monospace-like for account numbers
         doc.font("Helvetica-Bold").fontSize(10).fill(DARK_TEXT)
           .text(val, px, py + 9, { width: CELL_W - 20 });
         pi++;
         if (pi % COLS === 0) {
-          px  = B_PAD + 16;
-          py += CELL_H;
+          px = B_PAD + 16;
+          py += rowHeights[rowIdx];
+          rowIdx++;
         } else {
           px = B_PAD + CELL_W + 8;
         }

@@ -4,10 +4,17 @@ import { useState, useEffect } from "react";
 import { CompanyProfile, PaymentProfile, InvoiceClient, CURRENCIES } from "./types";
 import { useUrlState } from "@/hooks/useUrlState";
 
+// ─── Shared skeleton primitive ────────────────────────────────────────────────
+
+function Skeleton({ className = "" }: { className?: string }) {
+  return <div className={`animate-pulse rounded-lg bg-gray-200 dark:bg-slate-700 ${className}`} />;
+}
+
 // ─── Company Profile ─────────────────────────────────────────────────────────
 
 function CompanySection() {
   const [form, setForm] = useState<Partial<CompanyProfile>>({});
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
@@ -15,7 +22,8 @@ function CompanySection() {
   useEffect(() => {
     fetch("/api/admin/invoice-company-profile")
       .then((r) => r.json())
-      .then(({ profile }) => { if (profile) setForm(profile); });
+      .then(({ profile }) => { if (profile) setForm(profile); })
+      .finally(() => setLoading(false));
   }, []);
 
   function set(field: string, value: string) {
@@ -37,6 +45,22 @@ function CompanySection() {
   }
 
   const inp = `w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500`;
+
+  if (loading) return (
+    <div className="space-y-4 max-w-xl">
+      <Skeleton className="h-3 w-72" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <Skeleton className="col-span-2 h-9" />
+        <Skeleton className="col-span-2 h-20" />
+        <Skeleton className="h-9" />
+        <Skeleton className="h-9" />
+        <Skeleton className="h-9" />
+        <Skeleton className="h-9" />
+        <Skeleton className="h-9" />
+      </div>
+      <Skeleton className="h-9 w-36" />
+    </div>
+  );
 
   return (
     <div className="space-y-4 max-w-xl">
@@ -194,17 +218,20 @@ function PaymentProfileModal({ existing, onClose, onSaved }: PPModalProps) {
 
 function PaymentSection() {
   const [profiles, setProfiles] = useState<PaymentProfile[]>([]);
+  const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState<"add" | PaymentProfile | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [error, setError] = useState("");
 
-  function load() {
+  function load(initial = false) {
+    if (initial) setLoading(true);
     fetch("/api/admin/invoice-payment-profiles")
       .then((r) => r.json())
-      .then(({ profiles }) => setProfiles(profiles ?? []));
+      .then(({ profiles }) => setProfiles(profiles ?? []))
+      .finally(() => setLoading(false));
   }
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(true); }, []);
 
   async function del(id: string) {
     if (!confirm("Delete this payment profile?")) return;
@@ -231,7 +258,11 @@ function PaymentSection() {
         </svg>
         Add Profile
       </button>
-      {profiles.length === 0 ? (
+      {loading ? (
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => <Skeleton key={i} className="h-16 w-full" />)}
+        </div>
+      ) : profiles.length === 0 ? (
         <p className="text-sm text-gray-400">No payment profiles yet.</p>
       ) : (
         <div className="space-y-3">
@@ -356,17 +387,20 @@ function ClientsSection() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState<"add" | InvoiceClient | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [error, setError] = useState("");
   const limit = 20;
 
   function load() {
+    setLoading(true);
     const sp = new URLSearchParams({ page: String(page), limit: String(limit) });
     if (search) sp.set("search", search);
     fetch(`/api/admin/invoice-clients?${sp}`)
       .then((r) => r.json())
-      .then(({ clients, total }) => { setClients(clients ?? []); setTotal(total ?? 0); });
+      .then(({ clients, total }) => { setClients(clients ?? []); setTotal(total ?? 0); })
+      .finally(() => setLoading(false));
   }
 
   useEffect(() => { load(); }, [page, search]);
@@ -408,7 +442,11 @@ function ClientsSection() {
         </button>
       </div>
 
-      {clients.length === 0 ? (
+      {loading ? (
+        <div className="space-y-2">
+          {[1, 2, 3].map((i) => <Skeleton key={i} className="h-16 w-full" />)}
+        </div>
+      ) : clients.length === 0 ? (
         <p className="text-sm text-gray-400">No clients found.</p>
       ) : (
         <div className="space-y-2">
