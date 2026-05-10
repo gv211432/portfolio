@@ -27,6 +27,7 @@ import {
 } from "@/lib/mail/staffAuth";
 import { generateNumericOtp } from "@/lib/mail/text";
 import { sendOtpCode } from "@/lib/mail/systemMail";
+import { sendWelcomeEmailIfFirst } from "@/lib/mail/staffWelcome";
 import { logActivity, Activity } from "@/lib/mail/activity";
 import type { SessionStage } from "@prisma/client";
 
@@ -142,6 +143,7 @@ export async function POST(req: NextRequest) {
 
     const nextStage = await computeNextStage(s.staff.id, passed);
     await updateSessionStage(s.session.id, nextStage);
+    if (nextStage === "ACTIVE") void sendWelcomeEmailIfFirst(s.staff.id);
 
     await logActivity({
       actorType: "STAFF",

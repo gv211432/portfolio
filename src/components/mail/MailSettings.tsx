@@ -38,7 +38,7 @@ interface TwoFactorStatus {
   emailOtpTarget?: string;
 }
 
-type TotpStep = "idle" | "setup" | "verify";
+type TotpStep = "idle" | "setup" | "recovery" | "regenerate";
 type EmailOtpStep = "idle" | "setup" | "verify";
 
 function FieldRow({ label, children }: { label: string; children: React.ReactNode }) {
@@ -99,12 +99,15 @@ export default function MailSettings({ me, onClose, onDirChange }: Props) {
   const [twoFaLoading, setTwoFaLoading] = useState(true);
 
   // TOTP setup flow
-  const [totpStep, setTotpStep] = useState<TotpStep>("idle");
-  const [totpQr, setTotpQr] = useState("");
-  const [totpSecret, setTotpSecret] = useState("");
-  const [totpCode, setTotpCode] = useState("");
-  const [totpBusy, setTotpBusy] = useState(false);
-  const [totpMsg, setTotpMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [totpStep, setTotpStep]         = useState<TotpStep>("idle");
+  const [totpQr, setTotpQr]             = useState("");
+  const [totpSecret, setTotpSecret]     = useState("");
+  const [totpCode, setTotpCode]         = useState("");
+  const [totpBusy, setTotpBusy]         = useState(false);
+  const [totpMsg, setTotpMsg]           = useState<{ ok: boolean; text: string } | null>(null);
+  const [recoveryCodes, setRecoveryCodes] = useState<string[]>([]);
+  const [regenCode, setRegenCode]       = useState("");
+  const [secretCopied, setSecretCopied] = useState(false);
 
   // Email OTP setup flow
   const [emailStep, setEmailStep] = useState<EmailOtpStep>("idle");
@@ -230,9 +233,14 @@ export default function MailSettings({ me, onClose, onDirChange }: Props) {
       const data = await res.json();
       if (!res.ok) { setTotpMsg({ ok: false, text: data.error ?? "Invalid code" }); return; }
       setTwoFa((p) => ({ ...p, totp: true }));
-      setTotpStep("idle");
       setTotpCode("");
-      setTotpMsg({ ok: true, text: "TOTP enabled" });
+      if (data.recoveryCodes?.length) {
+        setRecoveryCodes(data.recoveryCodes);
+        setTotpStep("recovery");
+      } else {
+        setTotpStep("idle");
+        setTotpMsg({ ok: true, text: "TOTP enabled" });
+      }
     } finally {
       setTotpBusy(false);
     }
@@ -245,6 +253,7 @@ export default function MailSettings({ me, onClose, onDirChange }: Props) {
       const res = await fetch("/api/staff/auth/2fa/totp/disable", { method: "POST" });
       if (!res.ok) { setTotpMsg({ ok: false, text: "Failed to disable" }); return; }
       setTwoFa((p) => ({ ...p, totp: false }));
+      setRecoveryCodes([]);
       setTotpMsg({ ok: true, text: "TOTP disabled" });
     } finally {
       setTotpBusy(false);
@@ -519,41 +528,155 @@ export default function MailSettings({ me, onClose, onDirChange }: Props) {
                             Scan this QR code with your authenticator app, then enter the 6-digit code below.
                           </p>
                           {totpQr && (
-                            <div className="flex gap-4 items-start">
-                              <img src={totpQr} alt="TOTP QR code" className="w-36 h-36 rounded-lg border border-gray-200 dark:border-gray-700" />
-                              <div className="flex-1">
-                                <div className="text-xs text-gray-500 mb-1">Manual entry key:</div>
-                                <code className="text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md break-all select-all font-mono">
-                                  {totpSecret}
-                                </code>
+                            <div className="flex gap-4 items-start flex-wrap">
+                              {/* White background so QR is readable in light + dark mode */}
+                              <div className="p-2 bg-white rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm shrink-0">
+                                <img src={totpQr} alt="TOTP QR code" className="w-32 h-32" />
+                              </div>
+                              <div className="flex-1 min-w-0 space-y-1.5">
+                                <div className="text-xs text-gray-500 dark:text-gray-400">Can't scan? Enter this key manually:</div>
+                                <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-2.5 py-1.5">
+                                  <code className="flex-1 text-xs font-mono text-gray-800 dark:text-gray-200 break-all">
+                                    {totpSecret}
+                                  </code>
+                                  <button
+                                    type="button"
+                                    onClick={async () => {
+                                      await navigator.clipboard.writeText(totpSecret);
+                                      setSecretCopied(true);
+                                      setTimeout(() => setSecretCopied(false), 2000);
+                                    }}
+                                    title="Copy secret"
+                                    className="shrink-0 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition"
+                                  >
+                                    {secretCopied
+                                      ? <Check size={13} className="text-green-500" />
+                                      : <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                                    }
+                                  </button>
+                                </div>
                               </div>
                             </div>
                           )}
                           <div className="flex gap-2">
                             <input
-                              type="text"
-                              inputMode="numeric"
-                              pattern="[0-9]*"
-                              maxLength={6}
+                              type="text" inputMode="numeric" pattern="[0-9]*" maxLength={6}
                               value={totpCode}
                               onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, ""))}
                               placeholder="6-digit code"
                               className="w-36 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1a1a1a] text-sm font-mono tracking-widest focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 transition"
                             />
-                            <button
-                              onClick={verifyTotp}
-                              disabled={totpBusy || totpCode.length < 6}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-50 transition"
-                            >
+                            <button onClick={verifyTotp} disabled={totpBusy || totpCode.length < 6}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-50 transition">
                               {totpBusy ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
                               Verify
                             </button>
-                            <button
-                              onClick={() => { setTotpStep("idle"); setTotpCode(""); setTotpMsg(null); }}
-                              className="px-3 py-1.5 text-xs font-medium rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition"
-                            >
+                            <button onClick={() => { setTotpStep("idle"); setTotpCode(""); setTotpMsg(null); }}
+                              className="px-3 py-1.5 text-xs font-medium rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
                               Cancel
                             </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Recovery codes — shown once immediately after TOTP is verified */}
+                      {totpStep === "recovery" && (
+                        <div className="space-y-3 rounded-lg border border-amber-200 dark:border-amber-700/50 bg-amber-50 dark:bg-amber-950/40 p-4">
+                          <div className="flex items-start gap-2">
+                            <AlertTriangle size={15} className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                            <div>
+                              <p className="text-xs font-semibold text-amber-800 dark:text-amber-300">Save your recovery codes now</p>
+                              <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5 leading-relaxed">
+                                These 8 codes are shown <strong>only once</strong>. Each can be used once to sign in if you lose your authenticator. Store them in a password manager or print them.
+                              </p>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-1.5">
+                            {recoveryCodes.map((c) => (
+                              <code key={c} className="text-center text-xs font-mono bg-white dark:bg-gray-900 border border-amber-200 dark:border-amber-800/50 rounded-md py-1.5 text-gray-800 dark:text-gray-200 select-all">
+                                {c}
+                              </code>
+                            ))}
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const text = ["Webmail TOTP Recovery Codes", `Generated: ${new Date().toLocaleString()}`, "Each code can only be used once.", "", ...recoveryCodes].join("\n");
+                                const a = document.createElement("a");
+                                a.href = URL.createObjectURL(new Blob([text], { type: "text/plain" }));
+                                a.download = "recovery-codes.txt"; a.click();
+                              }}
+                              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-amber-400 dark:border-amber-600 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/30 transition"
+                            >
+                              Download .txt
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => { setTotpStep("idle"); setRecoveryCodes([]); setTotpMsg({ ok: true, text: "TOTP enabled — recovery codes saved" }); }}
+                              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-amber-600 hover:bg-amber-700 text-white transition"
+                            >
+                              <Check size={12} /> Done, I've saved them
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Regenerate recovery codes — shown when TOTP is enabled and idle */}
+                      {totpStep === "idle" && twoFa.totp && (
+                        <div className="pt-1">
+                          {totpStep === "idle" && !recoveryCodes.length && (
+                            <>
+                              {/* Inline regenerate button */}
+                              <button
+                                type="button"
+                                onClick={() => { setTotpStep("regenerate"); setRegenCode(""); setTotpMsg(null); }}
+                                className="text-xs text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 underline underline-offset-2 transition"
+                              >
+                                Regenerate recovery codes
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      )}
+
+                      {totpStep === "regenerate" && (
+                        <div className="space-y-2 rounded-lg border border-gray-200 dark:border-gray-700 p-3">
+                          <p className="text-xs text-gray-600 dark:text-gray-400">Enter your current authenticator code to regenerate recovery codes. This will invalidate all existing codes.</p>
+                          <div className="flex gap-2">
+                            <input
+                              type="text" inputMode="numeric" maxLength={6}
+                              value={regenCode}
+                              onChange={(e) => setRegenCode(e.target.value.replace(/\D/g, ""))}
+                              placeholder="6-digit code"
+                              className="w-32 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1a1a1a] text-sm font-mono tracking-widest focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 transition"
+                            />
+                            <button
+                              disabled={totpBusy || regenCode.length < 6}
+                              onClick={async () => {
+                                setTotpBusy(true); setTotpMsg(null);
+                                try {
+                                  const res = await fetch("/api/staff/auth/2fa/totp/recovery-codes", {
+                                    method: "POST",
+                                    headers: { "content-type": "application/json" },
+                                    body: JSON.stringify({ totpCode: regenCode }),
+                                  });
+                                  const d = await res.json();
+                                  if (!res.ok) { setTotpMsg({ ok: false, text: d.error ?? "Failed" }); return; }
+                                  setRecoveryCodes(d.recoveryCodes);
+                                  setTotpStep("recovery");
+                                  setRegenCode("");
+                                } finally { setTotpBusy(false); }
+                              }}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-50 transition"
+                            >
+                              {totpBusy ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
+                              Regenerate
+                            </button>
+                            <button
+                              onClick={() => { setTotpStep("idle"); setRegenCode(""); setTotpMsg(null); }}
+                              className="px-3 py-1.5 text-xs font-medium rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+                            >Cancel</button>
                           </div>
                         </div>
                       )}

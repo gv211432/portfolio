@@ -2,11 +2,14 @@
  * POST /api/staff/auth/2fa/totp/verify-setup
  * Body: { code }
  *
- * Confirms a TOTP code against the pending secret and flips `enabled = true`.
- * Advances session stage if we were in PENDING_2FA_SETUP.
+ * Confirms a TOTP code against the pending secret, flips `enabled = true`,
+ * generates 8 one-time recovery codes (returned plaintext once, stored hashed),
+ * and advances the session stage if we were in PENDING_2FA_SETUP.
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { randomBytes } from "node:crypto";
+import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
 import speakeasy from "speakeasy";
 import {
@@ -15,7 +18,15 @@ import {
   computeNextStage,
   clientIp,
 } from "@/lib/mail/staffAuth";
+import { sendWelcomeEmailIfFirst } from "@/lib/mail/staffWelcome";
 import { logActivity, Activity } from "@/lib/mail/activity";
+
+function generateRecoveryCodes(count = 8): string[] {
+  return Array.from({ length: count }, () => {
+    const hex = randomBytes(6).toString("hex").toUpperCase();
+    return `${hex.slice(0, 4)}-${hex.slice(4, 8)}-${hex.slice(8, 10)}`;
+  });
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -35,17 +46,22 @@ export async function POST(req: NextRequest) {
     }
 
     const valid = speakeasy.totp.verify({
-      secret: record.totpSecret,
+      secret:   record.totpSecret,
       encoding: "base32",
-      token: code.trim(),
-      window: 1,
+      token:    code.trim(),
+      window:   1,
     });
-
     if (!valid) return NextResponse.json({ error: "Invalid code" }, { status: 401 });
+
+    // Generate 8 one-time recovery codes
+    const plainCodes  = generateRecoveryCodes(8);
+    const hashedCodes = await Promise.all(
+      plainCodes.map(async (c) => ({ hash: await bcrypt.hash(c, 10), used: false }))
+    );
 
     await prisma.staffTwoFactor.update({
       where: { staffId_method: { staffId: s.staff.id, method: "TOTP" } },
-      data: { enabled: true },
+      data: { enabled: true, recoveryCodes: hashedCodes },
     });
 
     let nextStep: string | null = null;
@@ -53,17 +69,20 @@ export async function POST(req: NextRequest) {
       const next = await computeNextStage(s.staff.id, new Set());
       await updateSessionStage(s.session.id, next);
       nextStep = next;
+      if (next === "ACTIVE") {
+        void sendWelcomeEmailIfFirst(s.staff.id);
+      }
     }
 
     await logActivity({
       actorType: "STAFF",
-      actorId: s.staff.id,
-      action: Activity.StaffTotpEnabled,
+      actorId:   s.staff.id,
+      action:    Activity.StaffTotpEnabled,
       ipAddress: clientIp(req),
       userAgent: req.headers.get("user-agent"),
     });
 
-    return NextResponse.json({ ok: true, nextStep });
+    return NextResponse.json({ ok: true, recoveryCodes: plainCodes, nextStep });
   } catch (err) {
     console.error("[staff/totp/verify-setup]", err);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });

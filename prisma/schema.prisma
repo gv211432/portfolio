@@ -335,6 +335,7 @@ model Staff {
   lastLoginAt      DateTime?
   lastLoginIp      String?
   status           StaffStatus @default(ACTIVE)
+  welcomeEmailSent Boolean     @default(false)
 
   // Policy override — if non-null, replaces GlobalPolicy.allowedDomains entirely.
   // null → fall back to global policy. Empty array → block ALL outgoing (explicit lockdown).
@@ -380,7 +381,8 @@ model StaffTwoFactor {
   enabled    Boolean           @default(false)  // only true after setup verified
 
   // TOTP fields
-  totpSecret String?           // base32, stored only after verification
+  totpSecret    String?         // base32, stored only after verification
+  recoveryCodes Json?           // [{ hash: string, used: boolean }] — shown once after setup
 
   // EMAIL_OTP fields
   otpTargetEmail String?       // which email receives the OTP (staff's own address once verified)
