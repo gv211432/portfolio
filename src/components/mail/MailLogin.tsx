@@ -365,21 +365,39 @@ function ForgotPasswordFlow({
 
         {/* New password */}
         <div>
-          <label className="block text-xs font-medium text-gray-500 dark:text-slate-400 mb-1">New password</label>
+          <div className="flex items-center justify-between mb-1">
+            <label className="text-xs font-medium text-gray-500 dark:text-slate-400">New password</label>
+            {/* Live character count — turns green at 10+ */}
+            <span className={`text-xs font-mono tabular-nums ${
+              newPw.length === 0 ? "text-gray-300 dark:text-slate-600"
+              : newPw.length < 10 ? "text-amber-500 dark:text-amber-400"
+              : "text-emerald-500 dark:text-emerald-400"
+            }`}>
+              {newPw.length}/10
+            </span>
+          </div>
           <div className="relative">
             <input
               type={showPw ? "text" : "password"}
               value={newPw}
               onChange={(e) => setNewPw(e.target.value)}
-              required minLength={10}
-              className="w-full px-3 py-2.5 pr-10 rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-sm text-gray-900 dark:text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition"
+              required
+              className={`w-full px-3 py-2.5 pr-14 rounded-lg border text-sm text-gray-900 dark:text-white outline-none transition bg-white dark:bg-slate-950 focus:ring-1 focus:ring-indigo-500 ${
+                newPw.length > 0 && newPw.length < 10
+                  ? "border-amber-400 dark:border-amber-500"
+                  : "border-gray-200 dark:border-slate-700 focus:border-indigo-500"
+              }`}
             />
             <button type="button" onClick={() => setShowPw(!showPw)}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs">
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xs transition">
               {showPw ? "Hide" : "Show"}
             </button>
           </div>
-          <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">Minimum 10 characters</p>
+          {newPw.length > 0 && newPw.length < 10 && (
+            <p className="text-xs text-amber-500 dark:text-amber-400 mt-1">
+              {10 - newPw.length} more character{10 - newPw.length !== 1 ? "s" : ""} needed
+            </p>
+          )}
         </div>
 
         <LabeledInput label="Confirm new password" type={showPw ? "text" : "password"}
@@ -387,8 +405,10 @@ function ForgotPasswordFlow({
 
         {error && <ErrorMsg text={error} />}
 
+        {/* Button enabled as soon as both codes are 6 digits and password fields are non-empty.
+            Length + match validation fires on submit and surfaces via ErrorMsg. */}
         <button type="submit"
-          disabled={busy || emailOtpCode.length < 6 || totpCode.length < 6 || newPw.length < 10 || !confirmPw}
+          disabled={busy || emailOtpCode.length < 6 || totpCode.length < 6 || !newPw || !confirmPw}
           className="w-full py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition disabled:opacity-50">
           {busy ? "Verifying…" : "Reset password"}
         </button>
