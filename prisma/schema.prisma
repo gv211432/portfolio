@@ -196,15 +196,82 @@ model ChatMessage {
 model AdminUser {
   id           String    @id @default(cuid())
   username     String    @unique
+  displayName  String?
   passwordHash String
+  isActive     Boolean   @default(true)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   lastLoginAt  DateTime?
 
   // TOTP 2FA
-  totpSecret    String?          // base32 secret (stored only after setup verified)
+  totpSecret    String?
   totpEnabled   Boolean          @default(false)
-  recoveryCodes Json?            // [{ hash: string, used: boolean }]
+  recoveryCodes Json?
+
+  // RBAC
+  roles        AdminUserRole[]
+  activityLogs AdminActivityLog[]
+}
+
+// ── RBAC ─────────────────────────────────────────────────────────────────────
+
+model AdminRole {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  color       String?  @default("#6366f1")
+  isSystem    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  permissions AdminRolePermission[]
+  users       AdminUserRole[]
+}
+
+model AdminAction {
+  id          String   @id
+  method      String
+  path        String
+  section     String
+  label       String
+  description String?
+  isReadOnly  Boolean  @default(false)
+  isEnabled   Boolean  @default(true)
+  isSystem    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  permissions AdminRolePermission[]
+}
+
+model AdminRolePermission {
+  roleId   String
+  actionId String
+  role     AdminRole   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  action   AdminAction @relation(fields: [actionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, actionId])
+}
+
+model AdminUserRole {
+  userId     String
+  roleId     String
+  assignedAt DateTime  @default(now())
+  assignedBy String?
+  user       AdminUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role       AdminRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+}
+
+model AdminActivityLog {
+  id        String    @id @default(cuid())
+  createdAt DateTime  @default(now())
+  adminId   String
+  admin     AdminUser @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  event     String
+  metadata  Json?
+  ipAddress String?
 }
 
 // Chat leads — visitors who expressed interest via the chatbot

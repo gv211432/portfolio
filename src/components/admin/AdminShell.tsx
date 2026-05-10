@@ -14,10 +14,11 @@ import PolicySection from "./PolicySection";
 import ActivitySection from "./ActivitySection";
 import MailboxSection from "./MailboxSection";
 import InvoiceSection from "./InvoiceSection";
+import RbacSection from "./RbacSection";
 import Breadcrumb from "./shared/Breadcrumb";
 import { useBreadcrumbStore } from "@/Atoms/globalAtoms";
 
-type Section = "dashboard" | "contacts" | "careers" | "chats" | "database" | "ngo" | "notifications" | "staff" | "mailbox" | "policy" | "activity" | "invoice";
+type Section = "dashboard" | "contacts" | "careers" | "chats" | "database" | "ngo" | "notifications" | "staff" | "mailbox" | "policy" | "activity" | "invoice" | "rbac";
 
 const NAV: { id: Section; label: string; icon: React.ReactNode }[] = [
   {
@@ -125,6 +126,15 @@ const NAV: { id: Section; label: string; icon: React.ReactNode }[] = [
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+      </svg>
+    ),
+  },
+  {
+    id: "rbac",
+    label: "RBAC",
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
       </svg>
     ),
   },
@@ -312,7 +322,7 @@ export default function AdminShell() {
   useEffect(() => {
     const sp = new URLSearchParams(window.location.search);
     const tab = sp.get("tab") as Section | null;
-    if (tab && ["dashboard", "contacts", "careers", "chats", "database", "ngo", "notifications", "staff", "mailbox", "policy", "activity", "invoice"].includes(tab)) {
+    if (tab && ["dashboard", "contacts", "careers", "chats", "database", "ngo", "notifications", "staff", "mailbox", "policy", "activity", "invoice", "rbac"].includes(tab)) {
       setActiveState(tab);
     }
   }, []);
@@ -446,10 +456,14 @@ export default function AdminShell() {
           </div>
         </header>
 
-        {/* Content — invoice manages its own layout/scroll; others get default padding */}
+        {/* Content — invoice + rbac manage their own layout/scroll; others get default padding */}
         {active === "invoice" ? (
           <main className="flex-1 overflow-hidden min-h-0">
             <InvoiceSection />
+          </main>
+        ) : active === "rbac" ? (
+          <main className="flex-1 overflow-hidden min-h-0">
+            <RbacSection />
           </main>
         ) : (
           <main className="flex-1 p-4 sm:p-6 overflow-y-auto min-h-0">

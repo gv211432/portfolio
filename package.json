@@ -64,7 +64,7 @@
   },
   "private": true,
   "scripts": {
-    "dev": "bun x next dev",
+    "dev": "bun x next dev --turbopack",
     "build": "bun tools/sitemap.ts && next build",
     "start": "next start",
     "serve": "bunx serve@latest out",
@@ -77,6 +77,8 @@
     "db:seed-admin": "bun prisma/seed-admin.ts",
     "db:seed-company": "bun prisma/seed-company.ts",
     "db:seed-invoice": "bun prisma/seed-invoice.ts",
+    "db:seed": "bun prisma/seed.ts",
+    "seed:sync-actions": "bun prisma/seed.ts",
     "lint": "bun x next lint",
     "lambda:deploy": "bash lambda/scripts/deploy.sh"
   },
