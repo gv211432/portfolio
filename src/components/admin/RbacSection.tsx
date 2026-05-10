@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect } from "react";
 import { useUrlState } from "@/hooks/useUrlState";
+import { useBreadcrumbStore } from "@/Atoms/globalAtoms";
 import AdminUsersList from "./rbac/AdminUsersList";
 import RolesList from "./rbac/RolesList";
 import ActionsTable from "./rbac/ActionsTable";
@@ -13,10 +15,19 @@ const TABS: { id: RbacView; label: string }[] = [
   { id: "actions", label: "Actions" },
 ];
 
+const TAB_LABELS: Record<RbacView, string> = {
+  users: "Admin Users", roles: "Roles", actions: "Actions",
+};
+
 export default function RbacSection() {
   const [params, setParams] = useUrlState({ rbacView: "users" });
   const view = (["users", "roles", "actions"].includes(params.rbacView)
     ? params.rbacView : "users") as RbacView;
+  const { setCrumbs } = useBreadcrumbStore();
+
+  useEffect(() => {
+    setCrumbs([{ label: "RBAC" }, { label: TAB_LABELS[view] }]);
+  }, [view, setCrumbs]);
 
   return (
     <div className="flex flex-col h-full overflow-hidden">

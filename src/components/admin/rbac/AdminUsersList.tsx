@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useBreadcrumbStore } from "@/Atoms/globalAtoms";
 import AdminUserForm from "./AdminUserForm";
 import AdminUserActivityLog from "./AdminUserActivityLog";
 
@@ -42,6 +43,21 @@ export default function AdminUsersList() {
   const [loading, setLoading] = useState(true);
   const [panel, setPanel]   = useState<Panel>(null);
   const [toggling, setToggling] = useState<string | null>(null);
+  const { setCrumbs } = useBreadcrumbStore();
+
+  useEffect(() => {
+    const backToList = { label: "Admin Users", onClick: () => setPanel(null) };
+    if (!panel) {
+      setCrumbs([{ label: "RBAC" }, { label: "Admin Users" }]);
+    } else if (panel.type === "form" && !panel.userId) {
+      setCrumbs([{ label: "RBAC" }, backToList, { label: "New User" }]);
+    } else if (panel.type === "form" && panel.userId) {
+      const user = users.find((u) => u.id === panel.userId);
+      setCrumbs([{ label: "RBAC" }, backToList, { label: user?.username ?? "Edit User" }]);
+    } else if (panel.type === "activity") {
+      setCrumbs([{ label: "RBAC" }, backToList, { label: `${panel.username} — Activity` }]);
+    }
+  }, [panel, users, setCrumbs]);
 
   const load = useCallback(async () => {
     setLoading(true);

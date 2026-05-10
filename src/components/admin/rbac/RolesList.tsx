@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useBreadcrumbStore } from "@/Atoms/globalAtoms";
 import RoleForm from "./RoleForm";
 
 interface Role {
@@ -18,6 +19,19 @@ export default function RolesList() {
   const [editingRole, setEditingRole] = useState<string | null>(null); // roleId or "new"
   const [deleting, setDeleting]     = useState<string | null>(null);
   const [error, setError]           = useState("");
+  const { setCrumbs } = useBreadcrumbStore();
+
+  useEffect(() => {
+    const backToList = { label: "Roles", onClick: () => setEditingRole(null) };
+    if (!editingRole) {
+      setCrumbs([{ label: "RBAC" }, { label: "Roles" }]);
+    } else if (editingRole === "new") {
+      setCrumbs([{ label: "RBAC" }, backToList, { label: "New Role" }]);
+    } else {
+      const role = roles.find((r) => r.id === editingRole);
+      setCrumbs([{ label: "RBAC" }, backToList, { label: role?.name ?? "Edit Role" }]);
+    }
+  }, [editingRole, roles, setCrumbs]);
 
   const load = useCallback(async () => {
     setLoading(true);
