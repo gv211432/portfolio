@@ -6,6 +6,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useBreadcrumbStore } from "@/Atoms/globalAtoms";
 
 interface StaffRow {
   id: string;
@@ -36,6 +37,22 @@ export default function StaffSection() {
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const { setCrumbs } = useBreadcrumbStore();
+
+  useEffect(() => {
+    const backToList = { label: "Staff", onClick: () => setView("list") };
+    if (view === "list") {
+      setCrumbs([{ label: "Staff" }]);
+    } else if (view === "create") {
+      setCrumbs([backToList, { label: "Add Staff" }]);
+    } else if (view === "detail" && selectedId) {
+      const row = rows.find((r) => r.id === selectedId);
+      const name = row
+        ? (row.displayName ?? `${row.firstName} ${row.lastName}`)
+        : "Staff Member";
+      setCrumbs([backToList, { label: name }]);
+    }
+  }, [view, selectedId, rows, setCrumbs]);
 
   const load = useCallback(async () => {
     setLoading(true);

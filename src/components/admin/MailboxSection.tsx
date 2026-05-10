@@ -93,7 +93,7 @@ export default function MailboxSection() {
             <select
               value={staffId ?? ""}
               onChange={(e) => pickStaff(e.target.value)}
-              className="px-3 py-1.5 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm"
+              className="px-3 py-1.5 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm"
             >
               <option value="">— select —</option>
               {staffList.map((s) => (
