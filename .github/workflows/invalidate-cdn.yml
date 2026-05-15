@@ -1,31 +1,31 @@
-# name: Invalidate CloudFront Cache
+name: Invalidate CloudFront Cache
 
-# on:
-#   push:
-#     branches:
-#       - production
+on:
+  push:
+    branches:
+      - production
 
-# jobs:
-#   invalidate:
-#     name: Purge HTML page cache
-#     runs-on: ubuntu-latest
-#     steps:
-#       - name: Configure AWS credentials
-#         uses: aws-actions/configure-aws-credentials@v4
-#         with:
-#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-#           aws-region: us-east-1
+jobs:
+  invalidate:
+    name: Purge HTML page cache
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
 
-#       - name: Invalidate CloudFront HTML pages
-#         run: |
-#           aws cloudfront create-invalidation \
-#             --distribution-id E2RQCLGUZRUS6B \
-#             --paths \
-#               "/" \
-#               "/contact"
-#         # Notes:
-#         # - /_next/static/* is NOT invalidated — files are content-hashed (immutable)
-#         # - Subdomain homepages (ngo.gaurav.one etc.) are served from the same "/" path
-#         #   but keyed by Host header, so this invalidation clears them all
-#         # - Pages are 2h TTL, so without this they'd update within 2h anyway
+      - name: Invalidate CloudFront HTML pages
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id E2RQCLGUZRUS6B \
+            --paths \
+              "/" \
+              "/contact"
+        # Notes:
+        # - /_next/static/* is NOT invalidated — files are content-hashed (immutable)
+        # - Subdomain homepages (ngo.gaurav.one etc.) are served from the same "/" path
+        #   but keyed by Host header, so this invalidation clears them all
+        # - Pages are 2h TTL, so without this they'd update within 2h anyway

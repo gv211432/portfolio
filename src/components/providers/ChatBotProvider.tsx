@@ -35,8 +35,6 @@ export default function ChatBotProvider() {
   const [isChat, setIsChat] = useState(false);
   const pathname = usePathname();
 
-  if (pathname?.startsWith("/admin")) return null;
-
   // Detect chat subdomain — suppress FAB/popup on full-page chat UI
   useEffect(() => {
     const host = window.location.hostname;
@@ -108,6 +106,7 @@ export default function ChatBotProvider() {
     return () => observer.disconnect();
   }, [chatToken]);
 
+  if (pathname?.startsWith("/admin")) return null;
   if (isChat) return null;
 
   return (

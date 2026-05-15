@@ -101,7 +101,6 @@ export async function logAdminActivity(
   ipAddress?: string,
 ) {
   await prisma.adminActivityLog.create({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     data: { adminId, event, metadata: (metadata ?? null) as any, ipAddress: ipAddress ?? null },
   });
 }

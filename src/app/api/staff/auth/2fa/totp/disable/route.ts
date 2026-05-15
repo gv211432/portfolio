@@ -19,7 +19,6 @@ export async function POST(req: NextRequest) {
 
     await prisma.staffTwoFactor.updateMany({
       where: { staffId: s.staff.id, method: "TOTP" },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       data:  { enabled: false, totpSecret: null, recoveryCodes: null as any },
     });
 
