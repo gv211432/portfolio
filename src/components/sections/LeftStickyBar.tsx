@@ -5,6 +5,7 @@ import {
   faGithub,
   faLinkedin,
   faTwitter,
+  faYoutube,
 } from "@fortawesome/free-brands-svg-icons";
 import { motion } from "framer-motion";
 import gaurav_img from "../../assets/img/gaurav_sq_img.webp";
@@ -133,6 +134,13 @@ export default function LeftStickyBar() {
                   height={30}
                   className="m-2 h-8 text-gray-700 dark:text-white hover:scale-110 cursor-pointer"
                   icon={faTwitter}
+                />
+              </a>
+              <a href={meConfig.youtube} target="_blank" rel="noopener noreferrer">
+                <FontAwesomeIcon
+                  height={30}
+                  className="m-2 h-8 text-gray-700 dark:text-white hover:scale-110 cursor-pointer"
+                  icon={faYoutube}
                 />
               </a>
               <a href="https://leetcode.com/v_gaurav/">

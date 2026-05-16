@@ -1,7 +1,7 @@
 "use client";
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faGithub, faLinkedin, faTelegram, faTwitter } from '@fortawesome/free-brands-svg-icons';
+import { faGithub, faLinkedin, faTelegram, faTwitter, faYoutube } from '@fortawesome/free-brands-svg-icons';
 import { faHeart, faEnvelope } from '@fortawesome/free-solid-svg-icons';
 import Link from 'next/link';
 import { globalConfig } from '@/config/global';
@@ -26,6 +26,12 @@ const Footer = () => {
       name: 'Twitter',
       icon: faTwitter,
       url: globalConfig.twitter,
+      color: ' hover:scale-110'
+    },
+    {
+      name: 'YouTube',
+      icon: faYoutube,
+      url: globalConfig.youtube,
       color: ' hover:scale-110'
     },
     {

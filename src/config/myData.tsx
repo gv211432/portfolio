@@ -64,6 +64,20 @@ export const myPapers: CardProps[] = [
 
 export const myExperiences: CardProps[] = [
   {
+    title: "Blockchain Advisor",
+    subtitle: "Debut Infotech",
+    description: "Advised on blockchain software solutions including CEX, DEX, Liquidity Pools, ICO/TGE, Price & DEX Aggregators, and Payment Aggregators. Integrated broker APIs and third-party services such as KuCoin, Persona, and Sumsub KYC.",
+    icon: <FaBriefcase />,
+    link: "https://debutinfotech.com",
+  },
+  {
+    title: "Founder",
+    subtitle: "Gaurav Dot One",
+    description: "Crafted compliant payment solutions for banks in Australia, UAE, and the US. Delivered ICO/TGE structuring for corporates, utility tokens for less-regulated clients, and built payment rails with settlement layers spanning Open Banking and crypto — integrating BVNK, Lightspark, North Capital, and more.",
+    icon: <FaBriefcase />,
+    link: "https://www.gaurav.one",
+  },
+  {
     title: "Full Stack Engineer",
     subtitle: "Motilal Oswal Financial Services",
     description: "Contributed to internal tools and dashboards used for financial reporting and investment tracking.",
@@ -87,6 +101,7 @@ export const myExperiences: CardProps[] = [
     description: "Worked on cinema-tech integrations, including payment APIs and mobile app enhancements.",
     icon: <FaBriefcase />,
   }
+  
 ];
 
 export const myFreelancing: CardProps[] = [

@@ -35,6 +35,7 @@ export const globalConfig = {
   github: "https://github.com/organizations/Gaurav-Dot-One",
   linkedin: "https://www.linkedin.com/company/gaurav-dot-one",
   twitter: "https://twitter.com/formal_gaurav",
+  youtube: "https://www.youtube.com/@formalgaurav",
   telegram: "https://t.me/gaaaalileo",
   leetcode: ""
 };
@@ -46,6 +47,7 @@ export const meConfig = {
   github: "https://github.com/gv211432",
   linkedin: "https://linkedin.com/in/vishwakarmagaurav",
   twitter: "https://twitter.com/formal_gaurav",
+  youtube: "https://www.youtube.com/@formalgaurav",
   telegram: "https://t.me/gaaaalileo",
   leetcode: ""
 };
