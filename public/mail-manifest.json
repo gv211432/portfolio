@@ -1,0 +1,26 @@
+{
+  "name": "Gaurav.One Webmail",
+  "short_name": "Webmail",
+  "description": "Gaurav.One staff webmail client",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#0f172a",
+  "background_color": "#0f172a",
+  "categories": ["productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/img/logo/gaurav-dot-one-primary.webp",
+      "sizes": "192x192",
+      "type": "image/webp",
+      "purpose": "any"
+    },
+    {
+      "src": "/img/logo/gaurav-dot-one-primary.webp",
+      "sizes": "512x512",
+      "type": "image/webp",
+      "purpose": "any maskable"
+    }
+  ]
+}
