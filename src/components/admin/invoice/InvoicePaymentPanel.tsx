@@ -25,9 +25,15 @@ export default function InvoicePaymentPanel({
 
   const balance = total - paidAmount;
   const pct     = total > 0 ? Math.min((paidAmount / total) * 100, 100) : 0;
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const isFutureDate = date > todayStr;
 
   async function recordPayment() {
     if (!amount || Number(amount) <= 0) { setError("Enter a valid amount"); return; }
+    if (date > new Date().toISOString().slice(0, 10)) {
+      setError("Payment date can't be in the future — check the month.");
+      return;
+    }
     setSaving(true); setError(null);
     try {
       const res = await fetch(`/api/admin/invoices/${invoiceId}/payments`, {
@@ -97,7 +103,18 @@ export default function InvoicePaymentPanel({
             </div>
             <div>
               <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">Date</label>
-              <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={inputCls} />
+              <input
+                type="date"
+                value={date}
+                max={todayStr}
+                onChange={(e) => setDate(e.target.value)}
+                className={`${inputCls} ${isFutureDate ? "border-amber-400 dark:border-amber-500 focus:ring-amber-500" : ""}`}
+              />
+              <p className={`mt-1 text-xs ${isFutureDate ? "text-amber-600 dark:text-amber-400 font-medium" : "text-gray-400 dark:text-slate-500"}`}>
+                {isFutureDate
+                  ? `⚠ ${fmtDate(date)} is in the future — check the month`
+                  : fmtDate(date)}
+              </p>
             </div>
           </div>
 
