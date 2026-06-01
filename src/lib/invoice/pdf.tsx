@@ -69,6 +69,12 @@ const WHITE     = "#ffffff";
 const PW = 595.28;
 const PH = 841.89;
 
+// Pagination guards — content must never be drawn below CONTENT_BOTTOM, and
+// continuation pages start at TOP_MARGIN.
+const TOP_MARGIN     = 40;
+const CONTENT_BOTTOM = PH - 40;
+const FOOTER_RESERVE = 72;  // vertical space the footer block needs
+
 // Font paths
 const F = (n: string) => path.join(process.cwd(), "public", "fonts", n);
 const CINZEL     = F("Cinzel-Regular.ttf");
@@ -95,7 +101,7 @@ export async function generateInvoicePdf(data: PdfInvoiceData): Promise<Buffer> 
   const hasCinzel = fs.existsSync(CINZEL) && fs.existsSync(CINZEL_B);
 
   return new Promise<Buffer>((resolve, reject) => {
-    const doc = new PDFDocument({ size: "A4", margin: 0, compress: true });
+    const doc = new PDFDocument({ size: "A4", margin: 0, compress: true, bufferPages: true });
     const chunks: Buffer[] = [];
     doc.on("data", (c: Buffer) => chunks.push(c));
     doc.on("end", () => resolve(Buffer.concat(chunks)));
@@ -249,17 +255,31 @@ export async function generateInvoicePdf(data: PdfInvoiceData): Promise<Buffer> 
     const AMT_X  = B_PAD + COL_D + COL_H + COL_R;
     const TH_H   = 32;
 
-    // Table header background
-    doc.rect(B_PAD, y, TBL_W, TH_H).fill(GREY_BG);
-    doc.moveTo(B_PAD, y + TH_H).lineTo(PW - B_PAD, y + TH_H).lineWidth(1.5).strokeColor(GREY_BDR).stroke();
+    // Draws the table header at the current `y` and advances past it.
+    const drawTableHeader = () => {
+      doc.rect(B_PAD, y, TBL_W, TH_H).fill(GREY_BG);
+      doc.moveTo(B_PAD, y + TH_H).lineTo(PW - B_PAD, y + TH_H).lineWidth(1.5).strokeColor(GREY_BDR).stroke();
 
-    doc.font("Helvetica-Bold").fontSize(8).fill(LABEL_CLR).fillOpacity(1);
-    const TH_Y = y + (TH_H - 8) / 2;
-    doc.text("DESCRIPTION", DESC_X + 14, TH_Y, { characterSpacing: 1 });
-    doc.text("HOURS",  HRS_X,  TH_Y, { width: COL_H, align: "center", characterSpacing: 1 });
-    doc.text("RATE",   RATE_X, TH_Y, { width: COL_R, align: "center", characterSpacing: 1 });
-    doc.text("AMOUNT", AMT_X,  TH_Y, { width: COL_A - 14, align: "right", characterSpacing: 1 });
-    y += TH_H;
+      doc.font("Helvetica-Bold").fontSize(8).fill(LABEL_CLR).fillOpacity(1);
+      const THY = y + (TH_H - 8) / 2;
+      doc.text("DESCRIPTION", DESC_X + 14, THY, { characterSpacing: 1 });
+      doc.text("HOURS",  HRS_X,  THY, { width: COL_H, align: "center", characterSpacing: 1 });
+      doc.text("RATE",   RATE_X, THY, { width: COL_R, align: "center", characterSpacing: 1 });
+      doc.text("AMOUNT", AMT_X,  THY, { width: COL_A - 14, align: "right", characterSpacing: 1 });
+      y += TH_H;
+    };
+
+    // Breaks to a fresh page (resetting `y` to the top margin) when the next
+    // block of height `blockH` would overflow the printable area. Returns true
+    // when a page break happened so callers can redraw continuation chrome.
+    const ensureSpace = (blockH: number): boolean => {
+      if (y + blockH <= CONTENT_BOTTOM) return false;
+      doc.addPage();
+      y = TOP_MARGIN;
+      return true;
+    };
+
+    drawTableHeader();
 
     // Table rows
     for (const item of data.items) {
@@ -268,6 +288,10 @@ export async function generateInvoicePdf(data: PdfInvoiceData): Promise<Buffer> 
       const textH     = doc.font("Helvetica").fontSize(10)
         .heightOfString(descLines.join("\n"), { width: COL_D - 28, lineGap: 3 });
       const rowH = Math.max(44, badgeH + textH + 20);
+
+      // Page-break before drawing the row; redraw the column header so the
+      // continuation page still reads as a table.
+      if (ensureSpace(rowH)) drawTableHeader();
 
       // Row separator
       doc.moveTo(B_PAD, y + rowH).lineTo(PW - B_PAD, y + rowH)
@@ -320,6 +344,7 @@ export async function generateInvoicePdf(data: PdfInvoiceData): Promise<Buffer> 
 
     // Total Hours row — exclude flat-fee items from hour count
     const totalHours = data.items.filter((i) => !i.flat).reduce((s, i) => s + i.hours, 0);
+    ensureSpace(38);
     doc.rect(B_PAD, y, TBL_W, 30).fill(GREY_BG);
     doc.moveTo(B_PAD, y + 30).lineTo(PW - B_PAD, y + 30).lineWidth(0.5).strokeColor(LIGHT_BDR).stroke();
 
@@ -345,6 +370,8 @@ export async function generateInvoicePdf(data: PdfInvoiceData): Promise<Buffer> 
     const SUM_ROWS_H = sumRows.length * 18 + 36; // rows + total row
     const SUM_H      = SUM_ROWS_H + 20;
 
+    // Keep the whole summary card on one page.
+    ensureSpace(SUM_H);
     doc.roundedRect(SUM_X, y, SUM_W, SUM_H, 8).fill(GREY_BG);
     doc.roundedRect(SUM_X, y, SUM_W, SUM_H, 8).strokeColor(LIGHT_BDR).lineWidth(0.5).stroke();
 
@@ -393,6 +420,8 @@ export async function generateInvoicePdf(data: PdfInvoiceData): Promise<Buffer> 
       }
       const PAY_H = rowHeights.reduce((s, h) => s + h, 0) + 42;
 
+      // Keep the payment card intact — if it doesn't fit, push it to a new page.
+      ensureSpace(PAY_H);
       doc.roundedRect(B_PAD, y, B_W, PAY_H, 8).fill(PAY_BG);
       doc.roundedRect(B_PAD, y, B_W, PAY_H, 8).strokeColor(GREY_BDR).lineWidth(0.5).stroke();
 
@@ -422,6 +451,13 @@ export async function generateInvoicePdf(data: PdfInvoiceData): Promise<Buffer> 
     }
 
     // ── Footer ────────────────────────────────────────────────────────────────
+    // Anchor the footer to the bottom of the page. If the remaining space can't
+    // hold it, move to a fresh page first (prevents the footer lines from each
+    // spilling onto their own blank auto-paginated page).
+    if (y + FOOTER_RESERVE > CONTENT_BOTTOM) {
+      doc.addPage();
+      y = TOP_MARGIN;
+    }
     const FOOTER_Y = Math.max(y, PH - 80);
     doc.moveTo(B_PAD, FOOTER_Y).lineTo(PW - B_PAD, FOOTER_Y)
       .strokeColor(LIGHT_BDR).lineWidth(0.8).stroke();
@@ -440,6 +476,23 @@ export async function generateInvoicePdf(data: PdfInvoiceData): Promise<Buffer> 
     if (contact) {
       doc.font("Helvetica").fontSize(8.5).fill(LABEL_CLR)
         .text(contact, 0, FOOTER_Y + 50, { align: "center", width: PW });
+    }
+
+    // ── Page counter (1 / N) ──────────────────────────────────────────────────
+    // Stamped after all content exists, since the total page count is only known
+    // once the document is fully laid out. Drawn on every page so none is missed.
+    const range = doc.bufferedPageRange(); // { start, count }
+    for (let i = 0; i < range.count; i++) {
+      doc.switchToPage(range.start + i);
+      const label = `Page ${i + 1} / ${range.count}`;
+      // Pill background, bottom-right, clear of the centred footer text.
+      const PILL_W = doc.font("Helvetica-Bold").fontSize(8).widthOfString(label) + 18;
+      const PILL_H = 16;
+      const PILL_X = PW - B_PAD - PILL_W;
+      const PILL_Y = PH - 26;
+      doc.roundedRect(PILL_X, PILL_Y, PILL_W, PILL_H, 8).fill(PURPLE);
+      doc.font("Helvetica-Bold").fontSize(8).fill(WHITE)
+        .text(label, PILL_X, PILL_Y + 4, { width: PILL_W, align: "center" });
     }
 
     doc.end();

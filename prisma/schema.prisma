@@ -856,6 +856,8 @@ model InvoiceEmailLog {
 
   toEmail      String
   toName       String?
+  ccEmails     String[]           @default([])
+  bccEmails    String[]           @default([])
   subject      String
   status       InvoiceEmailStatus @default(PENDING)
   sesMessageId String?

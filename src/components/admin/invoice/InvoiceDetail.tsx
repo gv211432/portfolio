@@ -23,15 +23,27 @@ function EmailModal({ invoice, onClose, onSent }: {
   const [message, setMessage] = useState(
     `Please find your invoice ${invoice.invoiceNumber} attached.\n\nTotal due: ${fmtMoney(invoice.total, invoice.currency)}.\nPayment by: ${fmtDate(invoice.dueDate)}.\n\nThank you for your business!`
   );
+  const [ccCompany, setCcCompany] = useState(true);
+  const [cc, setCc]   = useState("");
+  const [bcc, setBcc] = useState("");
+  const [showCcBcc, setShowCcBcc] = useState(false);
+  const [companyEmail, setCompanyEmail] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [error, setError]     = useState("");
+
+  useEffect(() => {
+    fetch("/api/admin/invoice-company-profile")
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => setCompanyEmail(d?.profile?.email ?? null))
+      .catch(() => {});
+  }, []);
 
   async function send() {
     if (!toEmail.trim()) { setError("Recipient email is required"); return; }
     setSending(true); setError("");
     const res  = await fetch(`/api/admin/invoices/${invoice.id}/email`, {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ toEmail, toName, subject, message }),
+      body: JSON.stringify({ toEmail, toName, subject, message, ccCompany, cc, bcc }),
     });
     const data = await res.json();
     setSending(false);
@@ -59,6 +71,27 @@ function EmailModal({ invoice, onClose, onSent }: {
           </div>
           <div><label className="text-xs text-gray-500 mb-1 block">Subject</label><input value={subject} onChange={(e) => setSubject(e.target.value)} className={inp} /></div>
           <div><label className="text-xs text-gray-500 mb-1 block">Message</label><textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={5} className={`${inp} resize-none`} /></div>
+
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <input type="checkbox" checked={ccCompany} onChange={(e) => setCcCompany(e.target.checked)}
+              className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
+            <span className="text-sm text-gray-700 dark:text-gray-300">
+              CC my company email{companyEmail ? <span className="text-gray-400"> ({companyEmail})</span> : ""}
+            </span>
+          </label>
+
+          {!showCcBcc ? (
+            <button type="button" onClick={() => setShowCcBcc(true)}
+              className="text-xs text-indigo-600 hover:text-indigo-700 font-medium">
+              + Add CC / BCC
+            </button>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div><label className="text-xs text-gray-500 mb-1 block">CC (comma-separated)</label><input value={cc} onChange={(e) => setCc(e.target.value)} placeholder="a@x.com, b@y.com" className={inp} /></div>
+              <div><label className="text-xs text-gray-500 mb-1 block">BCC (comma-separated)</label><input value={bcc} onChange={(e) => setBcc(e.target.value)} placeholder="hidden@z.com" className={inp} /></div>
+            </div>
+          )}
+
           <p className="text-xs text-gray-400 flex items-center gap-1.5">
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
             PDF attached automatically

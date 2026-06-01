@@ -83,6 +83,8 @@ export interface EmailLog {
   id: string;
   toEmail: string;
   toName?: string | null;
+  ccEmails?: string[];
+  bccEmails?: string[];
   subject: string;
   status: "PENDING" | "SENT" | "FAILED";
   sentAt?: string | null;

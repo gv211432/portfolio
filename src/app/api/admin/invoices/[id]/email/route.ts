@@ -10,6 +10,24 @@ import type { PdfInvoiceData, PdfCompany, PdfPaymentInfo } from "@/lib/invoice/p
 
 type Params = { params: Promise<{ id: string }> };
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** Split a comma/semicolon/newline list into validated, de-duplicated emails. */
+function parseEmailList(raw: string | undefined, exclude: Set<string>): { emails: string[]; invalid: string[] } {
+  const emails: string[] = [];
+  const invalid: string[] = [];
+  for (const part of (raw ?? "").split(/[,;\n]/)) {
+    const e = part.trim();
+    if (!e) continue;
+    const lower = e.toLowerCase();
+    if (!EMAIL_RE.test(e)) { invalid.push(e); continue; }
+    if (exclude.has(lower)) continue;
+    exclude.add(lower);
+    emails.push(e);
+  }
+  return { emails, invalid };
+}
+
 function buildEmailHtml(opts: {
   invoiceNumber: string;
   clientName: string;
@@ -83,11 +101,14 @@ export async function POST(req: NextRequest, { params }: Params) {
 
   const { id } = await params;
   const body = await req.json();
-  const { toEmail, toName, subject, message } = body as {
+  const { toEmail, toName, subject, message, ccCompany, cc, bcc } = body as {
     toEmail: string;
     toName?: string;
     subject?: string;
     message?: string;
+    ccCompany?: boolean;
+    cc?: string;
+    bcc?: string;
   };
 
   if (!toEmail?.trim()) {
@@ -172,6 +193,23 @@ export async function POST(req: NextRequest, { params }: Params) {
   const companyName = company?.name || "Gaurav Dot One";
   const companyEmail = company?.email || INVOICE_ENV.SES_FROM_EMAIL;
 
+  // Build CC / BCC lists. Exclude the primary recipient and de-dupe across all
+  // fields so nobody is addressed twice.
+  const seen = new Set<string>([toEmail.trim().toLowerCase()]);
+  const ccList: string[] = [];
+  if (ccCompany && companyEmail && EMAIL_RE.test(companyEmail)) {
+    ccList.push(companyEmail);
+    seen.add(companyEmail.toLowerCase());
+  }
+  const ccExtra = parseEmailList(cc, seen);
+  const bccExtra = parseEmailList(bcc, seen);
+  const invalid = [...ccExtra.invalid, ...bccExtra.invalid];
+  if (invalid.length) {
+    return NextResponse.json({ error: `Invalid email address(es): ${invalid.join(", ")}` }, { status: 400 });
+  }
+  ccList.push(...ccExtra.emails);
+  const bccList = bccExtra.emails;
+
   const emailSubject = subject?.trim() || `Invoice ${invoice.invoiceNumber} from ${companyName}`;
   const emailMessage = message?.trim() ||
     `Please find your invoice ${invoice.invoiceNumber} attached. The total amount due is ${Number(invoice.total).toFixed(2)} ${invoice.currency}.\n\nPlease make payment by ${new Date(invoice.dueDate).toLocaleDateString("en-IN")} as per the payment terms.`;
@@ -195,6 +233,8 @@ export async function POST(req: NextRequest, { params }: Params) {
       invoiceId: id,
       toEmail: toEmail.trim(),
       toName: toName?.trim() || null,
+      ccEmails: ccList,
+      bccEmails: bccList,
       subject: emailSubject,
       status: "PENDING",
     },
@@ -204,6 +244,8 @@ export async function POST(req: NextRequest, { params }: Params) {
     const result = await sendViaSes({
       from: { email: INVOICE_ENV.SES_FROM_EMAIL, name: companyName },
       to: [{ email: toEmail.trim(), name: toName?.trim() || invoice.clientName }],
+      cc: ccList.map((email) => ({ email })),
+      bcc: bccList.map((email) => ({ email })),
       subject: emailSubject,
       bodyText: emailMessage,
       bodyHtml: htmlBody,
