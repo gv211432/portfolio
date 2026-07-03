@@ -73,7 +73,7 @@ const PH = 841.89;
 // continuation pages start at TOP_MARGIN.
 const TOP_MARGIN     = 40;
 const CONTENT_BOTTOM = PH - 40;
-const FOOTER_RESERVE = 72;  // vertical space the footer block needs
+const FOOTER_ANCHOR  = PH - 80;  // fixed bottom position the footer block is pinned to
 
 // Font paths
 const F = (n: string) => path.join(process.cwd(), "public", "fonts", n);
@@ -451,14 +451,16 @@ export async function generateInvoicePdf(data: PdfInvoiceData): Promise<Buffer> 
     }
 
     // ── Footer ────────────────────────────────────────────────────────────────
-    // Anchor the footer to the bottom of the page. If the remaining space can't
-    // hold it, move to a fresh page first (prevents the footer lines from each
-    // spilling onto their own blank auto-paginated page).
-    if (y + FOOTER_RESERVE > CONTENT_BOTTOM) {
+    // The footer is pinned to a fixed position near the bottom (FOOTER_ANCHOR).
+    // Only break to a fresh page when the content would actually collide with
+    // that anchor — otherwise the footer sits below the content on the same
+    // page. (A reserve-based guard here spawned a blank trailing page whenever
+    // content ended in the band just above the anchor.)
+    if (y > FOOTER_ANCHOR) {
       doc.addPage();
       y = TOP_MARGIN;
     }
-    const FOOTER_Y = Math.max(y, PH - 80);
+    const FOOTER_Y = Math.max(y, FOOTER_ANCHOR);
     doc.moveTo(B_PAD, FOOTER_Y).lineTo(PW - B_PAD, FOOTER_Y)
       .strokeColor(LIGHT_BDR).lineWidth(0.8).stroke();
 
